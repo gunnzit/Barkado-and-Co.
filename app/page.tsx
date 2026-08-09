@@ -52,24 +52,24 @@ export default async function Home() {
     <main style={{ background: "var(--cream)", paddingBottom: 90 }}>
       <EmergencyButton />
       {/* ===== Nav ===== */}
-      <nav className="flex justify-between items-center px-6 py-5 max-w-6xl mx-auto">
-        <span className="text-lg font-bold flex items-center gap-2">
-          <PawPrint size={22} color="var(--forest)" /> PawConnect
+      <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
+        <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <PawPrint size={20} color="var(--forest)" /> PawConnect
         </span>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
           <Show when="signed-out">
-            <Link href="/sign-in" className="text-sm font-medium">Sign in</Link>
-            <Link href="/sign-up" className="btn-primary text-sm">Book now</Link>
+            <Link href="/sign-in" className="hidden sm:inline text-sm font-medium whitespace-nowrap">Sign in</Link>
+            <Link href="/sign-up" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Book now</Link>
           </Show>
           <Show when="signed-in">
-            <Link href="/owner/dashboard" className="btn-primary text-sm">Dashboard</Link>
+            <Link href="/owner/dashboard" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Dashboard</Link>
           </Show>
         </div>
       </nav>
 
       {/* ===== Hero ===== */}
-      <section className="max-w-6xl mx-auto px-6 mb-8 grid md:grid-cols-2 gap-10 items-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 grid md:grid-cols-2 gap-10 items-center">
         <div className="animate-fade-up">
           {verifiedCount > 0 && (
             <span className="trust-chip mb-5">
@@ -109,7 +109,7 @@ export default async function Home() {
 {/* ===== Shop accessories — highlighted, maximum prominence ===== */}
       {products.length > 0 && (
         <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
           <div
             className="rounded-3xl p-6 md:p-10"
             style={{ background: "linear-gradient(180deg, #fdf3ea 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
@@ -152,7 +152,7 @@ export default async function Home() {
 
 {/* ===== Offers — real, functioning, gradient cards ===== */}
       <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
         <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,7 +182,7 @@ export default async function Home() {
 
       {/* ===== The ecosystem — services grid ===== */}
       <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>The ecosystem</p>
         <div className="flex justify-between items-end mb-8">
           <h2 className="text-2xl md:text-3xl font-bold max-w-lg">Not a marketplace. An experience for every part of their week.</h2>
@@ -222,7 +222,7 @@ export default async function Home() {
 
       {/* ===== Paw Passport ===== */}
       <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <div className="card grid md:grid-cols-2 gap-8 items-center" style={{ background: "var(--forest)", color: "white", border: "none" }}>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--gold)" }}>Paw Passport</p>
@@ -255,7 +255,7 @@ export default async function Home() {
       {/* ===== Trust — real verified providers ===== */}
       {providers.length > 0 && (
         <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
           <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Trust beats discounts</p>
           <h2 className="text-2xl md:text-3xl font-bold mb-8">Every pro is verified and reviewed.</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -280,7 +280,7 @@ export default async function Home() {
 
       {/* ===== Final CTA ===== */}
       <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--forest)" }}>
           <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--gold)" }}>One ecosystem</p>
           <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 max-w-xl mx-auto">
@@ -298,7 +298,7 @@ export default async function Home() {
       </ScrollReveal>
 
       {/* ===== Footer ===== */}
-      <footer className="max-w-6xl mx-auto px-6 py-10" style={{ borderTop: "1px solid var(--border)" }}>
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-10" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-2">
           <PawPrint size={18} color="var(--terracotta)" />
           <span className="font-bold">PawConnect</span>
