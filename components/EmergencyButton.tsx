@@ -19,5 +19,3 @@ export default function EmergencyButton() {
     </Link>
   );
 }
-'@
-[System.IO.File]::WriteAllText("$PWD\components\EmergencyButton.tsx", $content, [System.Text.UTF8Encoding]::new($false))
