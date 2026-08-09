@@ -21,6 +21,7 @@ export default function CartClient() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
 
   const load = async () => {
     const res = await fetch("/api/cart");
@@ -45,7 +46,11 @@ export default function CartClient() {
 
   const checkout = async () => {
     setCheckingOut(true);
-    const res = await fetch("/api/orders/checkout", { method: "POST" });
+    const res = await fetch("/api/orders/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ promoCode }),
+    });
     if (!res.ok) {
       setCheckingOut(false);
       alert("Checkout failed — please try again.");
@@ -125,9 +130,28 @@ export default function CartClient() {
             </div>
 
             <div className="px-6 mt-6">
+              <input
+                type="text"
+                placeholder="Promo code (e.g. WELCOME10)"
+                className="w-full border rounded-xl px-3 py-2 text-sm mb-4"
+                style={{ borderColor: "var(--border)" }}
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+              />
               <div className="flex justify-between items-center mb-4">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-lg">₹{(total / 100).toFixed(0)}</span>
+                <span className="font-bold text-lg">
+                  {promoCode.trim().toUpperCase() === "WELCOME10" ? (
+                    <>
+                      <span className="line-through text-sm mr-2" style={{ color: "var(--muted)" }}>
+                        ₹{(total / 100).toFixed(0)}
+                      </span>
+                      ₹{((total * 0.9) / 100).toFixed(0)}
+                    </>
+                  ) : (
+                    `₹${(total / 100).toFixed(0)}`
+                  )}
+                </span>
               </div>
               <button onClick={checkout} disabled={checkingOut} className="btn-primary w-full tap-scale">
                 {checkingOut ? "Preparing checkout…" : "Checkout"}

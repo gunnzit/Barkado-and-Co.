@@ -3,9 +3,17 @@ import Razorpay from "razorpay";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 
-export async function POST() {
+// Real, functioning promo code — 10% off, matches the "WELCOME10" offer shown on the homepage.
+const PROMO_CODES: Record<string, number> = {
+  WELCOME10: 0.1,
+};
+
+export async function POST(req: Request) {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const promoCode = typeof body.promoCode === "string" ? body.promoCode.trim().toUpperCase() : "";
 
   const cartItems = await prisma.cartItem.findMany({
     where: { userId: user.id },
@@ -15,7 +23,9 @@ export async function POST() {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const discountRate = PROMO_CODES[promoCode] ?? 0;
+  const totalAmount = Math.round(subtotal * (1 - discountRate));
 
   const order = await prisma.order.create({
     data: {
@@ -55,5 +65,6 @@ export async function POST() {
     internalOrderId: order.id,
     amount: razorpayOrder.amount,
     keyId: process.env.RAZORPAY_KEY_ID,
+    discountApplied: discountRate > 0,
   });
 }
