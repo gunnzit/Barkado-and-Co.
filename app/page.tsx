@@ -43,7 +43,7 @@ export default async function Home() {
     }),
     prisma.booking.count({ where: { status: "COMPLETED" } }),
     prisma.provider.aggregate({ where: { verified: true }, _avg: { ratingAvg: true } }),
-    prisma.product.findMany({ where: { active: true }, take: 4, orderBy: { createdAt: "desc" } }),
+    prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" } }),
   ]);
 
   const avgRating = ratingAgg._avg.ratingAvg;
@@ -105,6 +105,80 @@ export default async function Home() {
 
       {/* ===== Upcoming events ===== */}
       <UpcomingEvents />
+
+{/* ===== Shop accessories — highlighted, maximum prominence ===== */}
+      {products.length > 0 && (
+        <ScrollReveal>
+        <section className="max-w-6xl mx-auto px-6 mb-16">
+          <div
+            className="rounded-3xl p-6 md:p-10"
+            style={{ background: "linear-gradient(180deg, #fdf3ea 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
+          >
+            <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
+              <div>
+                <span className="trust-chip mb-3" style={{ background: "var(--terracotta)", color: "white", border: "none" }}>
+                  🔥 The Curated Shelf
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold mt-3">Shop accessories.</h2>
+                <p className="text-sm mt-2" style={{ color: "var(--muted)" }}>
+                  Everyday essentials for your dog — picked to last.
+                </p>
+              </div>
+              <Link href="/accessories" className="btn-primary tap-scale">
+                See all accessories →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {products.map((p, i) => (
+                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative" style={{ background: "white", border: "1px solid var(--border)" }}>
+                  {i === 0 && (
+                    <span
+                      className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-1 rounded-full"
+                      style={{ background: "var(--gold)", color: "var(--forest)" }}
+                    >
+                      Bestseller
+                    </span>
+                  )}
+                  <p className="font-semibold text-sm mb-1">{p.name}</p>
+                  <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{p.category}</p>
+                  <p className="font-bold text-base" style={{ color: "var(--terracotta)" }}>₹{(p.price / 100).toFixed(0)}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      </ScrollReveal>
+      )}
+
+{/* ===== Offers — real, functioning, gradient cards ===== */}
+      <ScrollReveal>
+        <section className="max-w-6xl mx-auto px-6 mb-16">
+        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
+        <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            href="/book?service=WALKING"
+            className="tap-scale rounded-2xl p-6"
+            style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
+          >
+            <p className="font-bold text-xl mb-1 text-white">Your dog's first walk is free 🎉</p>
+            <p className="text-sm text-white/85">
+              Automatically applied — no code needed. Just book your pet's first Adventure Walk.
+            </p>
+          </Link>
+          <Link
+            href="/accessories"
+            className="tap-scale rounded-2xl p-6"
+            style={{ background: "linear-gradient(135deg, #16281f 0%, #3a5c46 100%)" }}
+          >
+            <p className="font-bold text-xl mb-1 text-white">10% off accessories</p>
+            <p className="text-sm text-white/85">
+              Use code <span className="font-mono font-bold" style={{ color: "#e8a94a" }}>WELCOME10</span> at checkout.
+            </p>
+          </Link>
+        </div>
+      </section>
+      </ScrollReveal>
 
       {/* ===== The ecosystem — services grid ===== */}
       <ScrollReveal>
@@ -174,53 +248,9 @@ export default async function Home() {
       </section>
       </ScrollReveal>
 
-      {/* ===== Offers — real, functioning ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
-        <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/book?service=WALKING" className="card tap-scale">
-            <p className="font-bold text-lg mb-1">Your dog's first walk is free 🎉</p>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Automatically applied — no code needed. Just book your pet's first Adventure Walk.
-            </p>
-          </Link>
-          <Link href="/accessories" className="card tap-scale">
-            <p className="font-bold text-lg mb-1">10% off accessories</p>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Use code <span className="font-mono font-bold" style={{ color: "var(--terracotta)" }}>WELCOME10</span> at checkout.
-            </p>
-          </Link>
-        </div>
-      </section>
-      </ScrollReveal>
+      
 
-      {/* ===== Shop accessories preview ===== */}
-      {products.length > 0 && (
-        <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-6 mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>The Curated Shelf</p>
-              <h2 className="text-2xl md:text-3xl font-bold">Shop accessories.</h2>
-            </div>
-            <Link href="/accessories" className="text-sm font-medium tap-scale" style={{ color: "var(--terracotta)" }}>
-              See all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {products.map((p) => (
-              <Link href="/accessories" key={p.id} className="card tap-scale">
-                <p className="font-semibold text-sm mb-1">{p.name}</p>
-                <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>{p.category}</p>
-                <p className="font-bold text-sm">₹{(p.price / 100).toFixed(0)}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </ScrollReveal>
-      )}
+      
 
       {/* ===== Trust — real verified providers ===== */}
       {providers.length > 0 && (
