@@ -8,7 +8,6 @@ import NeedsGrid from "@/components/NeedsGrid";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
-import OffersBanner from "@/components/OffersBanner";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion,
@@ -51,7 +50,6 @@ export default async function Home() {
 
   return (
     <main style={{ background: "var(--cream)", paddingBottom: 90 }}>
-      <OffersBanner />
       <EmergencyButton />
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
@@ -102,6 +100,36 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ===== Offers — real, functioning, gradient cards (moved right after hero) ===== */}
+      <ScrollReveal>
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
+        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
+        <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            href="/book?service=WALKING"
+            className="tap-scale rounded-2xl p-6"
+            style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
+          >
+            <p className="font-bold text-xl mb-1 text-white">Your dog's first walk is free 🎉</p>
+            <p className="text-sm text-white/85">
+              Automatically applied — no code needed. Just book your pet's first Adventure Walk.
+            </p>
+          </Link>
+          <Link
+            href="/accessories"
+            className="tap-scale rounded-2xl p-6"
+            style={{ background: "linear-gradient(135deg, #16281f 0%, #3a5c46 100%)" }}
+          >
+            <p className="font-bold text-xl mb-1 text-white">10% off accessories</p>
+            <p className="text-sm text-white/85">
+              Use code <span className="font-mono font-bold" style={{ color: "#e8a94a" }}>WELCOME10</span> at checkout.
+            </p>
+          </Link>
+        </div>
+      </section>
+      </ScrollReveal>
+
       {/* ===== My pet needs... tap grid ===== */}
       <NeedsGrid />
 
@@ -151,36 +179,6 @@ export default async function Home() {
         </section>
       </ScrollReveal>
       )}
-
-{/* ===== Offers — real, functioning, gradient cards ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
-        <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href="/book?service=WALKING"
-            className="tap-scale rounded-2xl p-6"
-            style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
-          >
-            <p className="font-bold text-xl mb-1 text-white">Your dog's first walk is free 🎉</p>
-            <p className="text-sm text-white/85">
-              Automatically applied — no code needed. Just book your pet's first Adventure Walk.
-            </p>
-          </Link>
-          <Link
-            href="/accessories"
-            className="tap-scale rounded-2xl p-6"
-            style={{ background: "linear-gradient(135deg, #16281f 0%, #3a5c46 100%)" }}
-          >
-            <p className="font-bold text-xl mb-1 text-white">10% off accessories</p>
-            <p className="text-sm text-white/85">
-              Use code <span className="font-mono font-bold" style={{ color: "#e8a94a" }}>WELCOME10</span> at checkout.
-            </p>
-          </Link>
-        </div>
-      </section>
-      </ScrollReveal>
 
       {/* ===== The ecosystem — services grid ===== */}
       <ScrollReveal>
