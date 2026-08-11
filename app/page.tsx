@@ -142,7 +142,7 @@ export default async function Home() {
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
           <div
             className="rounded-3xl p-6 md:p-10"
-            style={{ background: "linear-gradient(180deg, var(--card) 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
+            style={{ background: "linear-gradient(180deg, var(--shelf-bg-start) 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
           >
             <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
               <div>

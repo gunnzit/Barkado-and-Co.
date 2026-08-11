@@ -14,6 +14,10 @@
   --card: #ffffff;
   --border: #e6e2d6;
 
+  /* Background for the "Shop accessories" panel — deliberately different from
+     --card so product cards visually stand out against it instead of blending in. */
+  --shelf-bg-start: #fdf3ea;
+
   /* Fixed dark panel color — always dark forest green in BOTH light and dark mode.
      Use this (not --forest) for sections styled as a dark accent panel with white
      text, e.g. Paw Passport, Final CTA. --forest itself flips to a light color in
@@ -212,6 +216,9 @@ h1, h2, h3 {
   --muted: #9aa39c;
   --card: #1c2b23;
   --border: #2c3b32;
+  /* Distinct mid-tone — sits between --card and --cream so the panel and the
+     product cards on top of it remain visually distinguishable in dark mode. */
+  --shelf-bg-start: #223129;
   /* --panel-dark is intentionally NOT overridden here — it stays the same
      dark forest green in both modes, since it's paired with hardcoded white text. */
 }
