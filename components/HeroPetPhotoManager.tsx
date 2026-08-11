@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { Camera, X, Trash2, Sparkles } from "lucide-react";
+import { Camera, X, Trash2 } from "lucide-react";
 
 type Photo = { id: string; url: string };
 
 export default function HeroPetPhotoManager({
   onPhotosChange,
-  topOffset = 20,
+  variant = "overlay",
 }: {
   onPhotosChange: (urls: string[]) => void;
-  /** px from the top, so callers can avoid colliding with other top-left badges (e.g. a streak chip). */
-  topOffset?: number;
+  /** "overlay" = absolutely positioned bottom-left over the photo (homepage).
+   *  "inline" = a normal flex item, meant to sit next to another button (dashboard). */
+  variant?: "overlay" | "inline";
 }) {
   const { isSignedIn } = useUser();
   const { openSignIn } = useClerk();
@@ -81,16 +82,15 @@ export default function HeroPetPhotoManager({
   };
 
   const showAttentionBadge = !isSignedIn || photos.length === 0;
+  const label = photos.length > 0 ? `Your dog's photos (${photos.length}/3)` : "Add your dog photos here";
 
   return (
     <>
       <button
         onClick={handleClick}
-        className="hero-photo-cta absolute flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full tap-scale"
+        className={`hero-photo-cta flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full tap-scale ${variant === "overlay" ? "absolute bottom-4 left-4" : ""}`}
         style={{
-          top: topOffset,
-          left: 16,
-          zIndex: 6,
+          zIndex: variant === "overlay" ? 6 : undefined,
           background: "linear-gradient(135deg, var(--terracotta) 0%, var(--gold) 100%)",
           boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
         }}
@@ -98,9 +98,7 @@ export default function HeroPetPhotoManager({
         <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.25)" }}>
           <Camera size={13} color="white" />
         </span>
-        <span className="text-white text-sm font-bold whitespace-nowrap">
-          {photos.length > 0 ? `Your dog's photos (${photos.length}/3)` : "✨ Add YOUR dog here"}
-        </span>
+        <span className="text-white text-sm font-bold whitespace-nowrap">{label}</span>
         {showAttentionBadge && (
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "white" }} />
@@ -117,9 +115,7 @@ export default function HeroPetPhotoManager({
         >
           <div className="card w-full max-w-sm" style={{ background: "var(--card)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold flex items-center gap-1.5">
-                <Sparkles size={16} color="var(--gold)" /> Your dog's photos
-              </h3>
+              <h3 className="font-bold">Your dog's photos</h3>
               <button onClick={() => setOpen(false)} className="tap-scale">
                 <X size={18} />
               </button>

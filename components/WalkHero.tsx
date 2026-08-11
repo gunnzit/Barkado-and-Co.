@@ -128,14 +128,17 @@ export default function WalkHero({
           </div>
         </div>
 
-        <button
-          onClick={() => setShowWalkAnim(true)}
-          className="tap-scale walkhero-pulse flex items-center gap-2 px-4 py-2.5 rounded-full w-fit mt-2"
-          style={{ background: "var(--terracotta, #c97a56)", color: "white" }}
-        >
-          <PawPrint size={14} />
-          <span className="text-sm font-bold">Book {petName ?? "a"} walk</span>
-        </button>
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          <button
+            onClick={() => setShowWalkAnim(true)}
+            className="tap-scale walkhero-pulse flex items-center gap-2 px-4 py-2.5 rounded-full w-fit"
+            style={{ background: "var(--terracotta, #c97a56)", color: "white" }}
+          >
+            <PawPrint size={14} />
+            <span className="text-sm font-bold">Book {petName ?? "a"} walk</span>
+          </button>
+          <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="inline" />
+        </div>
       </div>
 
       {/* Story-style progress dots — vertical, on the side */}
@@ -163,8 +166,6 @@ export default function WalkHero({
           </div>
         ))}
       </div>
-
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} topOffset={walksThisWeek > 0 ? 64 : 20} />
 
       <style jsx>{`
         @keyframes walkheroPulse {

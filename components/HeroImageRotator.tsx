@@ -100,7 +100,7 @@ export default function HeroImageRotator() {
         ))}
       </div>
 
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} topOffset={20} />
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="overlay" />
     </div>
   );
 }
