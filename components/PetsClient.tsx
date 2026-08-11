@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, ChevronDown, ArrowLeft, Camera } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import PetSwitcher from "@/components/PetSwitcher";
+import ProfileMenu from "@/components/ProfileMenu";
+import { useActiveBreedTheme } from "@/hooks/useActiveBreedTheme";
 
 type Pet = {
   id: string;
@@ -92,9 +95,14 @@ export default function PetsClient() {
 
   const inputClass = "w-full border rounded-lg px-3 py-2 text-sm";
   const inputStyle = { borderColor: "var(--border)" };
+  const themeClass = useActiveBreedTheme();
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-10 pb-28">
+    <main className={`max-w-2xl mx-auto px-6 py-10 pb-28 ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div className="flex items-center justify-between mb-4">
+        <PetSwitcher />
+        <ProfileMenu />
+      </div>
       <Link href="/" className="flex items-center gap-2 tap-scale mb-4" style={{ color: "var(--muted)" }}>
         <ArrowLeft size={18} />
         <span className="text-sm font-medium">Back to home</span>

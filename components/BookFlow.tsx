@@ -7,6 +7,9 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, PawPrint, Home as HomeIcon, ShieldCheck, Star, Check } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import WalkTransition from "@/components/WalkTransition";
+import PetSwitcher from "@/components/PetSwitcher";
+import ProfileMenu from "@/components/ProfileMenu";
+import { useActiveBreedTheme } from "@/hooks/useActiveBreedTheme";
 
 type Provider = {
   id: string;
@@ -30,6 +33,7 @@ const STEPS = ["Service", "Pet", "Time", "Match"];
 export default function BookFlow() {
   const searchParams = useSearchParams();
   const preselected = searchParams.get("service") as "WALKING" | "SITTING" | null;
+  const themeClass = useActiveBreedTheme();
 
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [service, setService] = useState<"WALKING" | "SITTING" | null>(preselected);
@@ -126,7 +130,12 @@ export default function BookFlow() {
   }
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-8 pb-28" style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className={`max-w-lg mx-auto px-6 py-8 pb-28 ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div className="flex items-center justify-between mb-4">
+        <PetSwitcher />
+        <ProfileMenu />
+      </div>
+
       <div className="flex items-center gap-3 mb-6">
         {step > (preselected ? 1 : 0) ? (
           <button onClick={goBack} className="tap-scale">

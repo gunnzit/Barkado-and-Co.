@@ -176,6 +176,9 @@ model Product {
   icon        String? // fallback icon key when no photo yet
   stock       Int      @default(100)
   active      Boolean  @default(true)
+  // Pet sizes this product suits (e.g. a small harness vs a large one).
+  // Empty array = suitable for any size — sorts as "universal", never excluded.
+  suitableSizes PetSize[] @default([])
   createdAt   DateTime @default(now())
 
   cartItems  CartItem[]
