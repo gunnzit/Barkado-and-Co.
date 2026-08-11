@@ -252,58 +252,108 @@ h1, h2, h3 {
   background: rgba(20, 32, 26, 0.9);
 }
 
-/* ===== Breed themes — accent colors only (--terracotta / --terracotta-dark / --gold).
-   Base cream/forest/muted/border stay the same regardless of breed. ===== */
+/* ===== Breed themes — full palette (background, text, cards, borders, accents)
+   swapped to match each breed's coloring, in both light and dark mode. ===== */
 .theme-dalmatian {
-  --terracotta: #2b2b2b;
-  --terracotta-dark: #1a1a1a;
+  --cream: #ffffff;
+  --forest: #1a1a1a;
+  --card: #f5f5f5;
+  --border: #d4d4d4;
+  --muted: #6e6e6e;
+  --terracotta: #1a1a1a;
+  --terracotta-dark: #000000;
   --gold: #e63946;
 }
 .dark .theme-dalmatian {
-  --terracotta: #4a4a4a;
-  --terracotta-dark: #5c5c5c;
+  --cream: #141414;
+  --forest: #f0f0f0;
+  --card: #232323;
+  --border: #3a3a3a;
+  --muted: #9a9a9a;
+  --terracotta: #3a3a3a;
+  --terracotta-dark: #4a4a4a;
   --gold: #ef6b76;
 }
 
 .theme-beagle {
+  --cream: #faf3e7;
+  --forest: #2b2018;
+  --card: #ffffff;
+  --border: #e8dcc8;
+  --muted: #8a7a63;
   --terracotta: #a0522d;
   --terracotta-dark: #7a3d1f;
-  --gold: #f4c430;
+  --gold: #d4a24c;
 }
 .dark .theme-beagle {
-  --terracotta: #c97a4f;
+  --cream: #1f1811;
+  --forest: #f5ead9;
+  --card: #2b2118;
+  --border: #3d2f21;
+  --muted: #b0a08a;
+  --terracotta: #c98a52;
   --terracotta-dark: #dd9166;
-  --gold: #ffd966;
+  --gold: #e6c26a;
 }
 
 .theme-golden-retriever {
+  --cream: #fffaf0;
+  --forest: #4a3c1a;
+  --card: #ffffff;
+  --border: #f0dfa8;
+  --muted: #a08a4a;
   --terracotta: #d4972e;
   --terracotta-dark: #b87d1f;
   --gold: #f6d76b;
 }
 .dark .theme-golden-retriever {
+  --cream: #241d0a;
+  --forest: #fdf0c8;
+  --card: #332a12;
+  --border: #4a3c1a;
+  --muted: #c9b06a;
   --terracotta: #f0b64f;
   --terracotta-dark: #f5c66e;
   --gold: #ffe38c;
 }
 
 .theme-german-shepherd {
+  --cream: #efe9e0;
+  --forest: #241a10;
+  --card: #ffffff;
+  --border: #ddd0bd;
+  --muted: #7a6a58;
   --terracotta: #7a4a24;
   --terracotta-dark: #5c3719;
-  --gold: #d1a054;
+  --gold: #3d2c1c;
 }
 .dark .theme-german-shepherd {
+  --cream: #16110b;
+  --forest: #ede4d8;
+  --card: #241c14;
+  --border: #392c1e;
+  --muted: #a8977f;
   --terracotta: #a06b3f;
   --terracotta-dark: #b8814f;
-  --gold: #e6ba75;
+  --gold: #c9a26a;
 }
 
 .theme-labrador {
+  --cream: #f5ecd9;
+  --forest: #4a3826;
+  --card: #fffaf2;
+  --border: #e3d3b8;
+  --muted: #8f7a5f;
   --terracotta: #c9a66b;
   --terracotta-dark: #a8824a;
   --gold: #8f5f37;
 }
 .dark .theme-labrador {
+  --cream: #1f180f;
+  --forest: #f0e2c8;
+  --card: #2b2116;
+  --border: #3d3020;
+  --muted: #b8a488;
   --terracotta: #ddbf8c;
   --terracotta-dark: #e6cc9f;
   --gold: #ab7c50;
