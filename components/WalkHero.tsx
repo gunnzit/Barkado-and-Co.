@@ -6,9 +6,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Pencil, Flame, PawPrint } from "lucide-react";
 import WalkTransition from "@/components/WalkTransition";
+import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
 
-// Same photo set as the homepage hero rotator — edit to taste.
-const HERO_PHOTOS = [
+// Fallback stock photos, always shown. The signed-in user's own uploaded
+// photos (if any) are prepended to this list, for that user only.
+const STOCK_PHOTOS = [
   "/images/banner-instant-walk.jpg",
   "/images/hero-dog-black-lab.jpg",
   "/images/hero-dog-german-shepherd.jpg",
@@ -28,15 +30,21 @@ export default function WalkHero({
   walksThisWeek: number;
 }) {
   const [showWalkAnim, setShowWalkAnim] = useState(false);
+  const [userPhotos, setUserPhotos] = useState<string[]>([]);
+  const photos = userPhotos.length > 0 ? [...userPhotos, ...STOCK_PHOTOS] : STOCK_PHOTOS;
   const [index, setIndex] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
+    setIndex(0);
+  }, [photos.length]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % HERO_PHOTOS.length);
+      setIndex((prev) => (prev + 1) % photos.length);
     }, INTERVAL_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [photos.length]);
 
   if (showWalkAnim) {
     return <WalkTransition onDone={() => router.push("/book?service=WALKING")} />;
@@ -44,8 +52,8 @@ export default function WalkHero({
 
   return (
     <div className="relative w-full animate-fade-up overflow-hidden" style={{ height: 280 }}>
-      {HERO_PHOTOS.map((src, i) => {
-        const diff = (i - index + HERO_PHOTOS.length) % HERO_PHOTOS.length;
+      {photos.map((src, i) => {
+        const diff = (i - index + photos.length) % photos.length;
         let transform = "translateY(0) scale(1)";
         let opacity = 0;
         let zIndex = 0;
@@ -132,7 +140,7 @@ export default function WalkHero({
 
       {/* Story-style progress dots — vertical, on the side */}
       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 5 }}>
-        {HERO_PHOTOS.map((_, i) => (
+        {photos.map((_, i) => (
           <div
             key={i}
             className="rounded-full bg-white/40 overflow-hidden"
@@ -155,6 +163,8 @@ export default function WalkHero({
           </div>
         ))}
       </div>
+
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} />
 
       <style jsx>{`
         @keyframes walkheroPulse {

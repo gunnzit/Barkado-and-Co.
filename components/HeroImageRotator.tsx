@@ -2,36 +2,39 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
 
-// Add more image paths here as you get more photos.
-// Drop the actual files into /public/images/ with matching filenames.
-const HERO_IMAGES = [
+// Fallback stock photos, always shown. A signed-in user's own uploaded
+// photos (if any) are prepended to this list, for that user only.
+const STOCK_IMAGES = [
   "/images/banner-instant-walk.jpg",
   "/images/hero-dog-black-lab.jpg",
   "/images/hero-dog-german-shepherd.jpg",
   "/images/hero-dog-beagle.jpg",
 ];
 
-const INTERVAL_MS = 4000; // how long each photo stays up
+const INTERVAL_MS = 4000;
 
 export default function HeroImageRotator() {
+  const [userPhotos, setUserPhotos] = useState<string[]>([]);
+  const images = userPhotos.length > 0 ? [...userPhotos, ...STOCK_IMAGES] : STOCK_IMAGES;
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    setIndex(0); // photo set changed size (e.g. user just uploaded) — restart at the first slide
+  }, [images.length]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+      setIndex((prev) => (prev + 1) % images.length);
     }, INTERVAL_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [images.length]);
 
   return (
     <div className="img-frame relative shadow-sm animate-fade-up overflow-hidden" style={{ minHeight: 340 }}>
-      {HERO_IMAGES.map((src, i) => {
-        // Position each photo relative to the active one: current photo sits in
-        // place, the one about to appear waits just below, everything already
-        // shown is parked just above (out of view) so it "pops" in from the
-        // bottom like an Apple Photos / Stories transition, not a cross-fade.
-        const diff = (i - index + HERO_IMAGES.length) % HERO_IMAGES.length;
+      {images.map((src, i) => {
+        const diff = (i - index + images.length) % images.length;
         let transform = "translateY(0) scale(1)";
         let opacity = 0;
         let zIndex = 0;
@@ -72,8 +75,8 @@ export default function HeroImageRotator() {
       })}
 
       {/* Story-style progress dots — vertical, on the side */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 z-10">
-        {HERO_IMAGES.map((_, i) => (
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 5 }}>
+        {images.map((_, i) => (
           <div
             key={i}
             className="rounded-full bg-white/40 overflow-hidden"
@@ -96,6 +99,8 @@ export default function HeroImageRotator() {
           </div>
         ))}
       </div>
+
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} />
     </div>
   );
 }

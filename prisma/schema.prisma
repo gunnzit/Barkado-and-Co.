@@ -54,6 +54,7 @@ model User {
   bookings Booking[] @relation("OwnerBookings")
   cartItems CartItem[]
   orders    Order[]
+  heroPhotos HeroPhoto[]
 }
 
 model Pet {
@@ -78,6 +79,17 @@ model Pet {
 
   vaccinations Vaccination[]
   bookings     Booking[]
+}
+
+// Up to 3 personal photos a pet owner can upload to appear in their own
+// rotating hero banner (homepage + walking dashboard). Scoped to the
+// uploading user only — never shown to other visitors.
+model HeroPhoto {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  url       String
+  createdAt DateTime @default(now())
 }
 
 model Vaccination {
