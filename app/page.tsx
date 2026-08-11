@@ -8,6 +8,7 @@ import NeedsGrid from "@/components/NeedsGrid";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
+import OffersBanner from "@/components/OffersBanner";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion,
@@ -50,6 +51,7 @@ export default async function Home() {
 
   return (
     <main style={{ background: "var(--cream)", paddingBottom: 90 }}>
+      <OffersBanner />
       <EmergencyButton />
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
