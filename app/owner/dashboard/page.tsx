@@ -3,9 +3,11 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import WalkHero from "@/components/WalkHero";
+import PetSwitcher from "@/components/PetSwitcher";
 import { breedThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
@@ -71,17 +73,23 @@ export default async function OwnerDashboard() {
     leash: "🦮", collar: "🔵", bowl: "🥣", toy: "🦴", bed: "🛏️", carrier: "🧳",
   };
 
-  // The dashboard's "active" pet is whichever one is shown in the hero — currently pets[0].
-  const themeClass = breedThemeClass(pets[0]?.breed);
+  // The dashboard's "active" pet is whichever the person last picked in the
+  // pet switcher (a cookie), falling back to their first/most-recent pet.
+  const activePetCookie = (await cookies()).get("active_pet_id")?.value;
+  const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
+  const themeClass = breedThemeClass(activePet?.breed);
 
   return (
     <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`}>
       <EmergencyButton />
+      <div className="px-6 pt-4">
+        <PetSwitcher />
+      </div>
       {/* ===== Hero photo moment — tap to book a walk ===== */}
       <WalkHero
         firstName={firstName}
-        petName={pets[0]?.name ?? null}
-        petPhoto={pets[0]?.photoUrl ?? null}
+        petName={activePet?.name ?? null}
+        petPhoto={activePet?.photoUrl ?? null}
         walksThisWeek={walksThisWeek}
       />
 

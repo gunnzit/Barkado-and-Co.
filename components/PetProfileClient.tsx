@@ -18,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import PetSwitcher from "@/components/PetSwitcher";
 import { breedThemeClass } from "@/lib/breedTheme";
 
 type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
@@ -123,6 +124,9 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
   return (
     <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div className="px-6 pt-4">
+        <PetSwitcher />
+      </div>
       {/* ===== Header with clear back link ===== */}
       <div className="flex items-center justify-between px-6 py-5">
         <Link href="/owner/pets" className="flex items-center gap-2 tap-scale">
