@@ -103,7 +103,7 @@ export default function WalkHero({
         </div>
       )}
 
-      <div className="absolute inset-0 flex flex-col justify-end px-4 sm:px-6 pb-5 sm:pb-8" style={{ zIndex: 4 }}>
+      <div className="absolute inset-0 flex flex-col justify-end px-4 sm:px-6 pb-8 sm:pb-10" style={{ zIndex: 4 }}>
         <div className="flex items-center gap-2.5 sm:gap-3 mb-1.5 sm:mb-2">
           {petPhoto && (
             <div
