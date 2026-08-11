@@ -24,7 +24,7 @@ export default function NeedsGrid() {
 
   return (
     <section className="max-w-6xl mx-auto px-6 mb-16">
-      <div className="card" style={{ background: "white" }}>
+      <div className="card" style={{ background: "var(--card)" }}>
         <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--muted)" }}>My pet needs...</p>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {NEEDS.map((need) => {
