@@ -1,12 +1,18 @@
-import { Suspense } from "react";
-import BookFlow from "@/components/BookFlow";
+import { getOrCreateUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { breedThemeClass } from "@/lib/breedTheme";
+import PetsClient from "@/components/PetsClient";
 
-export const dynamic = "force-dynamic";
+export default async function PetsPage() {
+  const user = await getOrCreateUser();
+  if (!user) redirect("/sign-in");
 
-export default function BookPage() {
-  return (
-    <Suspense fallback={null}>
-      <BookFlow />
-    </Suspense>
-  );
+  const pets = await prisma.pet.findMany({ where: { ownerId: user.id } });
+  const activePetCookie = (await cookies()).get("active_pet_id")?.value;
+  const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
+  const initialThemeClass = breedThemeClass(activePet?.breed);
+
+  return <PetsClient initialThemeClass={initialThemeClass} />;
 }

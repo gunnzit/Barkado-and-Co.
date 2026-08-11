@@ -6,7 +6,6 @@ import { ChevronRight, ChevronDown, ArrowLeft, Camera } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
-import { useActiveBreedTheme } from "@/hooks/useActiveBreedTheme";
 
 type Pet = {
   id: string;
@@ -33,7 +32,7 @@ const EMPTY_FORM = {
   insurancePolicy: "",
 };
 
-export default function PetsClient() {
+export default function PetsClient({ initialThemeClass = "" }: { initialThemeClass?: string }) {
   const [pets, setPets] = useState<Pet[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [showMore, setShowMore] = useState(false);
@@ -95,7 +94,7 @@ export default function PetsClient() {
 
   const inputClass = "w-full border rounded-lg px-3 py-2 text-sm";
   const inputStyle = { borderColor: "var(--border)" };
-  const themeClass = useActiveBreedTheme();
+  const themeClass = initialThemeClass;
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>

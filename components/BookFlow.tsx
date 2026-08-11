@@ -9,7 +9,6 @@ import BottomNav from "@/components/BottomNav";
 import WalkTransition from "@/components/WalkTransition";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
-import { useActiveBreedTheme } from "@/hooks/useActiveBreedTheme";
 
 type Provider = {
   id: string;
@@ -30,10 +29,10 @@ const SERVICES = [
 
 const STEPS = ["Service", "Pet", "Time", "Match"];
 
-export default function BookFlow() {
+export default function BookFlow({ initialThemeClass = "" }: { initialThemeClass?: string }) {
   const searchParams = useSearchParams();
   const preselected = searchParams.get("service") as "WALKING" | "SITTING" | null;
-  const themeClass = useActiveBreedTheme();
+  const themeClass = initialThemeClass;
 
   const [step, setStep] = useState(preselected ? 1 : 0);
   const [service, setService] = useState<"WALKING" | "SITTING" | null>(preselected);
