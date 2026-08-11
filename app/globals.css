@@ -251,3 +251,60 @@ h1, h2, h3 {
 .dark .bottom-nav {
   background: rgba(20, 32, 26, 0.9);
 }
+
+/* ===== Breed themes — accent colors only (--terracotta / --terracotta-dark / --gold).
+   Base cream/forest/muted/border stay the same regardless of breed. ===== */
+.theme-dalmatian {
+  --terracotta: #2b2b2b;
+  --terracotta-dark: #1a1a1a;
+  --gold: #e63946;
+}
+.dark .theme-dalmatian {
+  --terracotta: #4a4a4a;
+  --terracotta-dark: #5c5c5c;
+  --gold: #ef6b76;
+}
+
+.theme-beagle {
+  --terracotta: #a0522d;
+  --terracotta-dark: #7a3d1f;
+  --gold: #f4c430;
+}
+.dark .theme-beagle {
+  --terracotta: #c97a4f;
+  --terracotta-dark: #dd9166;
+  --gold: #ffd966;
+}
+
+.theme-golden-retriever {
+  --terracotta: #d4972e;
+  --terracotta-dark: #b87d1f;
+  --gold: #f6d76b;
+}
+.dark .theme-golden-retriever {
+  --terracotta: #f0b64f;
+  --terracotta-dark: #f5c66e;
+  --gold: #ffe38c;
+}
+
+.theme-german-shepherd {
+  --terracotta: #7a4a24;
+  --terracotta-dark: #5c3719;
+  --gold: #d1a054;
+}
+.dark .theme-german-shepherd {
+  --terracotta: #a06b3f;
+  --terracotta-dark: #b8814f;
+  --gold: #e6ba75;
+}
+
+.theme-labrador {
+  --terracotta: #c9a66b;
+  --terracotta-dark: #a8824a;
+  --gold: #8f5f37;
+}
+.dark .theme-labrador {
+  --terracotta: #ddbf8c;
+  --terracotta-dark: #e6cc9f;
+  --gold: #ab7c50;
+}

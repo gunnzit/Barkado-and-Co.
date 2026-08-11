@@ -1,0 +1,31 @@
+export type BreedTheme =
+  | "default"
+  | "dalmatian"
+  | "beagle"
+  | "golden-retriever"
+  | "german-shepherd"
+  | "labrador";
+
+/**
+ * Matches free-text breed input to a known theme. Case-insensitive,
+ * substring match (so "Golden Retriever mix" still matches "golden-retriever").
+ * Falls back to "default" for anything unrecognized or empty.
+ */
+export function getBreedTheme(breed?: string | null): BreedTheme {
+  if (!breed) return "default";
+  const b = breed.toLowerCase();
+
+  if (b.includes("dalmatian")) return "dalmatian";
+  if (b.includes("beagle")) return "beagle";
+  if (b.includes("golden")) return "golden-retriever";
+  if (b.includes("german shepherd") || b.includes("gsd") || b.includes("alsatian")) return "german-shepherd";
+  if (b.includes("labrador") || b.includes(" lab") || b === "lab") return "labrador";
+
+  return "default";
+}
+
+/** className helper — apply to a wrapping element to theme everything inside it. */
+export function breedThemeClass(breed?: string | null): string {
+  const theme = getBreedTheme(breed);
+  return theme === "default" ? "" : `theme-${theme}`;
+}

@@ -18,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import { breedThemeClass } from "@/lib/breedTheme";
 
 type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
 type Booking = { id: string; type: string; status: string; startTime: string; provider: { user: { name: string } } };
@@ -118,9 +119,10 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   };
 
   const age = ageFromBirthday(pet.birthday);
+  const themeClass = breedThemeClass(pet.breed);
 
   return (
-    <main className="pb-28 max-w-2xl mx-auto" style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
       {/* ===== Header with clear back link ===== */}
       <div className="flex items-center justify-between px-6 py-5">
         <Link href="/owner/pets" className="flex items-center gap-2 tap-scale">

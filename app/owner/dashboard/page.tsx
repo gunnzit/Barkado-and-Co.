@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import WalkHero from "@/components/WalkHero";
+import { breedThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
 export default async function OwnerDashboard() {
@@ -70,8 +71,11 @@ export default async function OwnerDashboard() {
     leash: "🦮", collar: "🔵", bowl: "🥣", toy: "🦴", bed: "🛏️", carrier: "🧳",
   };
 
+  // The dashboard's "active" pet is whichever one is shown in the hero — currently pets[0].
+  const themeClass = breedThemeClass(pets[0]?.breed);
+
   return (
-    <main className="pb-28 max-w-2xl mx-auto">
+    <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`}>
       <EmergencyButton />
       {/* ===== Hero photo moment — tap to book a walk ===== */}
       <WalkHero
