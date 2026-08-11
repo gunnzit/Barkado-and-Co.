@@ -176,8 +176,8 @@ h1, h2, h3 {
 }
 
 @keyframes heroDotFill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
 }
 
 .bottom-nav {

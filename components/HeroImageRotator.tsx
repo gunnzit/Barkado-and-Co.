@@ -71,16 +71,16 @@ export default function HeroImageRotator() {
         );
       })}
 
-      {/* Story-style progress dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+      {/* Story-style progress dots — vertical, on the side */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 z-10">
         {HERO_IMAGES.map((_, i) => (
           <div
             key={i}
             className="rounded-full bg-white/40 overflow-hidden"
             style={{
-              height: 6,
-              width: i === index ? 28 : 6,
-              transition: "width 0.4s ease",
+              width: 6,
+              height: i === index ? 28 : 6,
+              transition: "height 0.4s ease",
             }}
           >
             {i === index && (
@@ -88,7 +88,7 @@ export default function HeroImageRotator() {
                 key={`${i}-${index}`}
                 className="h-full w-full bg-white rounded-full"
                 style={{
-                  transformOrigin: "left",
+                  transformOrigin: "top",
                   animation: `heroDotFill ${INTERVAL_MS}ms linear forwards`,
                 }}
               />
