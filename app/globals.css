@@ -14,6 +14,13 @@
   --card: #ffffff;
   --border: #e6e2d6;
 
+  /* Fixed dark panel color — always dark forest green in BOTH light and dark mode.
+     Use this (not --forest) for sections styled as a dark accent panel with white
+     text, e.g. Paw Passport, Final CTA. --forest itself flips to a light color in
+     dark mode (it's used as body/heading text color), so using it as a background
+     for a white-text panel breaks in dark mode. */
+  --panel-dark: #16281f;
+
   /* Back-compat aliases so existing components using old token names still work */
   --espresso: var(--forest);
   --tan: var(--terracotta);
@@ -205,6 +212,8 @@ h1, h2, h3 {
   --muted: #9aa39c;
   --card: #1c2b23;
   --border: #2c3b32;
+  /* --panel-dark is intentionally NOT overridden here — it stays the same
+     dark forest green in both modes, since it's paired with hardcoded white text. */
 }
 .dark body {
   background: var(--cream);
