@@ -17,6 +17,7 @@ const petSchema = z.object({
   microchipId: z.string().optional(),
   insuranceProvider: z.string().optional(),
   insurancePolicy: z.string().optional(),
+  photoUrl: z.string().url().optional(),
 });
 
 export async function GET() {
