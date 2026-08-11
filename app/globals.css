@@ -175,6 +175,11 @@ h1, h2, h3 {
   animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes heroDotFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 .bottom-nav {
   position: fixed;
   bottom: 0;
