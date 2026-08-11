@@ -83,31 +83,31 @@ export default function WalkHero({
 
       <Link
         href="/owner/profile"
-        className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-2 rounded-full tap-scale"
+        className="absolute top-3 right-3 sm:top-5 sm:right-5 flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full tap-scale"
         style={{ background: "rgba(0,0,0,0.35)", zIndex: 4 }}
         aria-label="Edit profile"
       >
-        <Pencil size={13} color="white" />
-        <span className="text-white text-xs font-semibold">Edit profile</span>
+        <Pencil size={12} color="white" />
+        <span className="text-white text-xs font-semibold hidden sm:inline">Edit profile</span>
       </Link>
 
       {walksThisWeek > 0 && (
         <div
-          className="absolute top-5 left-5 flex items-center gap-1.5 px-3 py-2 rounded-full"
+          className="absolute top-3 left-3 sm:top-5 sm:left-5 flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full"
           style={{ background: "rgba(232,169,74,0.9)", zIndex: 4 }}
         >
-          <Flame size={13} color="#16281f" />
-          <span className="text-xs font-bold" style={{ color: "#16281f" }}>
+          <Flame size={12} color="#16281f" />
+          <span className="text-[11px] sm:text-xs font-bold" style={{ color: "#16281f" }}>
             {walksThisWeek} walk{walksThisWeek > 1 ? "s" : ""} this week
           </span>
         </div>
       )}
 
-      <div className="absolute inset-0 flex flex-col justify-end px-6 pb-8" style={{ zIndex: 4 }}>
-        <div className="flex items-center gap-3 mb-2">
+      <div className="absolute inset-0 flex flex-col justify-end px-4 sm:px-6 pb-5 sm:pb-8" style={{ zIndex: 4 }}>
+        <div className="flex items-center gap-2.5 sm:gap-3 mb-1.5 sm:mb-2">
           {petPhoto && (
             <div
-              className="w-11 h-11 rounded-full overflow-hidden shrink-0"
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0"
               style={{ border: "2px solid white" }}
             >
               <img src={petPhoto} alt={petName ?? "Pet"} className="w-full h-full object-cover" />
@@ -116,40 +116,40 @@ export default function WalkHero({
           <div>
             {petName ? (
               <>
-                <p className="text-white/80 text-sm font-medium">Hi {firstName || "there"},</p>
-                <h1 className="text-white text-3xl font-bold leading-tight">Is {petName} ready to walk?</h1>
+                <p className="text-white/80 text-xs sm:text-sm font-medium">Hi {firstName || "there"},</p>
+                <h1 className="text-white text-xl sm:text-3xl font-bold leading-tight">Is {petName} ready to walk?</h1>
               </>
             ) : (
               <>
-                <p className="text-white/80 text-sm font-medium">Good to see you,</p>
-                <h1 className="text-white text-3xl font-bold leading-tight">{firstName || "pet parent"}</h1>
+                <p className="text-white/80 text-xs sm:text-sm font-medium">Good to see you,</p>
+                <h1 className="text-white text-xl sm:text-3xl font-bold leading-tight">{firstName || "pet parent"}</h1>
               </>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap">
           <button
             onClick={() => setShowWalkAnim(true)}
-            className="tap-scale walkhero-pulse flex items-center gap-2 px-4 py-2.5 rounded-full w-fit"
+            className="tap-scale walkhero-pulse flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full w-fit text-xs sm:text-sm"
             style={{ background: "var(--terracotta, #c97a56)", color: "white" }}
           >
-            <PawPrint size={14} />
-            <span className="text-sm font-bold">Book {petName ?? "a"} walk</span>
+            <PawPrint size={13} />
+            <span className="font-bold">Book {petName ?? "a"} walk</span>
           </button>
           <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="inline" />
         </div>
       </div>
 
       {/* Story-style progress dots — vertical, on the side */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 5 }}>
+      <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 5 }}>
         {photos.map((_, i) => (
           <div
             key={i}
             className="rounded-full bg-white/40 overflow-hidden"
             style={{
-              width: 6,
-              height: i === index ? 28 : 6,
+              width: 5,
+              height: i === index ? 22 : 5,
               transition: "height 0.4s ease",
             }}
           >

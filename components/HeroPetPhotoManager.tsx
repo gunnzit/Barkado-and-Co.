@@ -82,27 +82,38 @@ export default function HeroPetPhotoManager({
   };
 
   const showAttentionBadge = !isSignedIn || photos.length === 0;
-  const label = photos.length > 0 ? `Your dog's photos (${photos.length}/3)` : "Add your dog photos here";
 
   return (
     <>
       <button
         onClick={handleClick}
-        className={`hero-photo-cta flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full tap-scale ${variant === "overlay" ? "absolute bottom-4 left-4" : ""}`}
+        className={`hero-photo-cta flex items-center gap-1.5 sm:gap-2 pl-2.5 pr-3 sm:pl-3 sm:pr-4 py-2 sm:py-2.5 rounded-full tap-scale text-xs sm:text-sm ${variant === "overlay" ? "absolute bottom-4 left-4" : ""}`}
         style={{
           zIndex: variant === "overlay" ? 6 : undefined,
           background: "linear-gradient(135deg, var(--terracotta) 0%, var(--gold) 100%)",
           boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
         }}
       >
-        <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.25)" }}>
-          <Camera size={13} color="white" />
+        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.25)" }}>
+          <Camera size={12} color="white" />
         </span>
-        <span className="text-white text-sm font-bold whitespace-nowrap">{label}</span>
+        <span className="text-white font-bold whitespace-nowrap">
+          {photos.length > 0 ? (
+            <>
+              <span className="sm:hidden">{photos.length}/3</span>
+              <span className="hidden sm:inline">Your dog's photos ({photos.length}/3)</span>
+            </>
+          ) : (
+            <>
+              <span className="sm:hidden">Add photos</span>
+              <span className="hidden sm:inline">Add your dog photos here</span>
+            </>
+          )}
+        </span>
         {showAttentionBadge && (
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "white" }} />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: "white" }} />
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5" style={{ background: "white" }} />
           </span>
         )}
       </button>
