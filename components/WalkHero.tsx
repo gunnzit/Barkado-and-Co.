@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Pencil, Flame, PawPrint } from "lucide-react";
 import WalkTransition from "@/components/WalkTransition";
+
+// Same photo set as the homepage hero rotator — edit to taste.
+const HERO_PHOTOS = [
+  "/images/banner-instant-walk.jpg",
+  "/images/hero-dog-black-lab.jpg",
+  "/images/hero-dog-german-shepherd.jpg",
+  "/images/hero-dog-beagle.jpg",
+];
+const INTERVAL_MS = 4000;
 
 export default function WalkHero({
   firstName,
@@ -19,7 +28,15 @@ export default function WalkHero({
   walksThisWeek: number;
 }) {
   const [showWalkAnim, setShowWalkAnim] = useState(false);
+  const [index, setIndex] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % HERO_PHOTOS.length);
+    }, INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   if (showWalkAnim) {
     return <WalkTransition onDone={() => router.push("/book?service=WALKING")} />;
@@ -27,15 +44,39 @@ export default function WalkHero({
 
   return (
     <div className="relative w-full animate-fade-up overflow-hidden" style={{ height: 280 }}>
-      <div className="absolute inset-0 walkhero-zoom">
-        <Image src="/images/banner-instant-walk.jpg" alt="" fill sizes="700px" className="object-cover" priority />
-      </div>
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(43,29,20,0.15) 0%, rgba(43,29,20,0.6) 100%)" }} />
+      {HERO_PHOTOS.map((src, i) => {
+        const diff = (i - index + HERO_PHOTOS.length) % HERO_PHOTOS.length;
+        let transform = "translateY(0) scale(1)";
+        let opacity = 0;
+        let zIndex = 0;
+
+        if (diff === 0) {
+          transform = "translateY(0) scale(1)";
+          opacity = 1;
+          zIndex = 2;
+        } else if (diff === 1) {
+          transform = "translateY(100%) scale(0.96)";
+          opacity = 0;
+          zIndex = 1;
+        } else {
+          transform = "translateY(-100%) scale(0.96)";
+          opacity = 0;
+          zIndex = 0;
+        }
+
+        return (
+          <div key={src} className="absolute inset-0" style={{ transform, opacity, zIndex, transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.45s ease" }}>
+            <Image src={src} alt="" fill sizes="700px" className="object-cover" priority={i === 0} />
+          </div>
+        );
+      })}
+
+      <div className="absolute inset-0" style={{ zIndex: 3, background: "linear-gradient(180deg, rgba(43,29,20,0.15) 0%, rgba(43,29,20,0.6) 100%)" }} />
 
       <Link
         href="/owner/profile"
         className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-2 rounded-full tap-scale"
-        style={{ background: "rgba(0,0,0,0.35)" }}
+        style={{ background: "rgba(0,0,0,0.35)", zIndex: 4 }}
         aria-label="Edit profile"
       >
         <Pencil size={13} color="white" />
@@ -45,7 +86,7 @@ export default function WalkHero({
       {walksThisWeek > 0 && (
         <div
           className="absolute top-5 left-5 flex items-center gap-1.5 px-3 py-2 rounded-full"
-          style={{ background: "rgba(232,169,74,0.9)" }}
+          style={{ background: "rgba(232,169,74,0.9)", zIndex: 4 }}
         >
           <Flame size={13} color="#16281f" />
           <span className="text-xs font-bold" style={{ color: "#16281f" }}>
@@ -54,7 +95,7 @@ export default function WalkHero({
         </div>
       )}
 
-      <div className="absolute inset-0 flex flex-col justify-end px-6 pb-8">
+      <div className="absolute inset-0 flex flex-col justify-end px-6 pb-8" style={{ zIndex: 4 }}>
         <div className="flex items-center gap-3 mb-2">
           {petPhoto && (
             <div
@@ -89,14 +130,33 @@ export default function WalkHero({
         </button>
       </div>
 
+      {/* Story-style progress dots — vertical, on the side */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 5 }}>
+        {HERO_PHOTOS.map((_, i) => (
+          <div
+            key={i}
+            className="rounded-full bg-white/40 overflow-hidden"
+            style={{
+              width: 6,
+              height: i === index ? 28 : 6,
+              transition: "height 0.4s ease",
+            }}
+          >
+            {i === index && (
+              <div
+                key={`${i}-${index}`}
+                className="h-full w-full bg-white rounded-full"
+                style={{
+                  transformOrigin: "top",
+                  animation: `heroDotFill ${INTERVAL_MS}ms linear forwards`,
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
       <style jsx>{`
-        @keyframes walkheroZoom {
-          from { transform: scale(1); }
-          to { transform: scale(1.12); }
-        }
-        .walkhero-zoom {
-          animation: walkheroZoom 14s ease-out forwards;
-        }
         @keyframes walkheroPulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(201, 122, 86, 0.5); }
           50% { box-shadow: 0 0 0 8px rgba(201, 122, 86, 0); }

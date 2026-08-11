@@ -180,6 +180,16 @@ h1, h2, h3 {
   to { transform: scaleY(1); }
 }
 
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 22s linear infinite;
+}
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 .bottom-nav {
   position: fixed;
   bottom: 0;
