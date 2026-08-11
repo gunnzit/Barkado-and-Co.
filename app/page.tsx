@@ -142,7 +142,7 @@ export default async function Home() {
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
           <div
             className="rounded-3xl p-6 md:p-10"
-            style={{ background: "linear-gradient(180deg, #fdf3ea 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
+            style={{ background: "linear-gradient(180deg, var(--card) 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
           >
             <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
               <div>
@@ -160,7 +160,7 @@ export default async function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {products.map((p, i) => (
-                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative" style={{ background: "white", border: "1px solid var(--border)" }}>
+                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   {i === 0 && (
                     <span
                       className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-1 rounded-full"
@@ -223,7 +223,7 @@ export default async function Home() {
       {/* ===== Paw Passport ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <div className="card grid md:grid-cols-2 gap-8 items-center" style={{ background: "var(--forest)", color: "white", border: "none" }}>
+        <div className="card grid md:grid-cols-2 gap-8 items-center" style={{ background: "var(--panel-dark)", color: "white", border: "none" }}>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--gold)" }}>Paw Passport</p>
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Apple Health, for your dog.</h2>
@@ -281,7 +281,7 @@ export default async function Home() {
       {/* ===== Final CTA ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--forest)" }}>
+        <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--panel-dark)" }}>
           <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--gold)" }}>One ecosystem</p>
           <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 max-w-xl mx-auto">
             Give your dog the whole ecosystem.
