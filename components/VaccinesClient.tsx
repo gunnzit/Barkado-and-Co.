@@ -110,6 +110,7 @@ export default function VaccinesClient({
 
   const monthLabel = viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const selectedEntries = selectedDate ? entriesByDate[selectedDate] ?? [] : [];
+  const todayKey = fmtDateKey(new Date());
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
@@ -139,11 +140,11 @@ export default function VaccinesClient({
       <div className="px-6 mb-8">
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={() => setViewDate(new Date(year, month - 1, 1))} className="tap-scale">
+            <button onClick={() => setViewDate(new Date(year, month - 1, 1))} className="tap-scale" style={{ transition: "opacity 0.2s ease" }}>
               <ChevronLeft size={18} />
             </button>
-            <p className="font-bold text-sm">{monthLabel}</p>
-            <button onClick={() => setViewDate(new Date(year, month + 1, 1))} className="tap-scale">
+            <p className="font-bold text-sm animate-fade-up" key={`label-${monthLabel}`}>{monthLabel}</p>
+            <button onClick={() => setViewDate(new Date(year, month + 1, 1))} className="tap-scale" style={{ transition: "opacity 0.2s ease" }}>
               <ChevronRight size={18} />
             </button>
           </div>
@@ -154,7 +155,7 @@ export default function VaccinesClient({
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 animate-fade-up" key={monthLabel}>
             {Array.from({ length: startDay }).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({ length: totalDays }).map((_, i) => {
               const day = i + 1;
@@ -162,6 +163,7 @@ export default function VaccinesClient({
               const dateKey = fmtDateKey(dateObj);
               const hasEntries = !!entriesByDate[dateKey]?.length;
               const isSelected = selectedDate === dateKey;
+              const isToday = dateKey === todayKey;
               return (
                 <button
                   key={day}
@@ -170,13 +172,15 @@ export default function VaccinesClient({
                   style={{
                     background: isSelected ? "var(--terracotta)" : "transparent",
                     color: isSelected ? "white" : "inherit",
+                    boxShadow: isToday && !isSelected ? "inset 0 0 0 1.5px var(--terracotta)" : "none",
+                    transition: "background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease",
                   }}
                 >
                   <span className="text-xs font-medium">{day}</span>
                   {hasEntries && (
                     <span
                       className="w-1.5 h-1.5 rounded-full mt-0.5"
-                      style={{ background: isSelected ? "white" : "var(--gold)" }}
+                      style={{ background: isSelected ? "white" : "var(--gold)", transition: "background 0.25s ease" }}
                     />
                   )}
                 </button>
@@ -188,7 +192,7 @@ export default function VaccinesClient({
 
       {/* ===== Selected day entries ===== */}
       {selectedDate && (
-        <div className="px-6 mb-8">
+        <div className="px-6 mb-8 animate-fade-up" key={selectedDate}>
           <div className="flex items-center justify-between mb-3">
             <p className="font-bold text-sm">
               {new Date(selectedDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
@@ -258,8 +262,12 @@ export default function VaccinesClient({
 
       {/* ===== Log entry modal ===== */}
       {showLogForm && (
-        <div className="fixed inset-0 flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.6)", zIndex: 100 }} onClick={() => setShowLogForm(false)}>
-          <div className="card w-full max-w-sm" style={{ background: "var(--card)" }} onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 flex items-center justify-center p-6 vaccine-modal-backdrop"
+          style={{ background: "rgba(0,0,0,0.6)", zIndex: 100 }}
+          onClick={() => setShowLogForm(false)}
+        >
+          <div className="card w-full max-w-sm vaccine-modal-pop" style={{ background: "var(--card)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold">Log an entry</h3>
               <button onClick={() => setShowLogForm(false)} className="tap-scale"><X size={18} /></button>
