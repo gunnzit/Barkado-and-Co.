@@ -164,7 +164,7 @@ export default function WalkHero({
         ))}
       </div>
 
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} />
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} topOffset={walksThisWeek > 0 ? 64 : 20} />
 
       <style jsx>{`
         @keyframes walkheroPulse {

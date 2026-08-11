@@ -100,7 +100,7 @@ export default function HeroImageRotator() {
         ))}
       </div>
 
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} />
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} topOffset={20} />
     </div>
   );
 }
