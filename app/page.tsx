@@ -9,6 +9,7 @@ import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
 import HeroImageRotator from "@/components/HeroImageRotator";
+import ProfileMenu from "@/components/ProfileMenu";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion,
@@ -65,6 +66,7 @@ export default async function Home() {
           </Show>
           <Show when="signed-in">
             <Link href="/owner/dashboard" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Dashboard</Link>
+            <ProfileMenu />
           </Show>
         </div>
       </nav>

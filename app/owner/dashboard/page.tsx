@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
+import ProfileMenu from "@/components/ProfileMenu";
 import { breedThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
@@ -82,8 +83,9 @@ export default async function OwnerDashboard() {
   return (
     <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`}>
       <EmergencyButton />
-      <div className="px-6 pt-4">
+      <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
+        <ProfileMenu />
       </div>
       {/* ===== Hero photo moment — tap to book a walk ===== */}
       <WalkHero
