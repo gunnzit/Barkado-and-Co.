@@ -8,6 +8,7 @@ import NeedsGrid from "@/components/NeedsGrid";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
+import HeroImageRotator from "@/components/HeroImageRotator";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion,
@@ -95,9 +96,7 @@ export default async function Home() {
             </p>
           )}
         </div>
-        <div className="img-frame relative shadow-sm animate-fade-up" style={{ minHeight: 340 }}>
-          <Image src="/images/banner-instant-walk.jpg" alt="Dog on a walk" fill sizes="500px" className="object-cover" priority />
-        </div>
+        <HeroImageRotator />
       </section>
 
       {/* ===== Offers — real, functioning, gradient cards (moved right after hero) ===== */}
