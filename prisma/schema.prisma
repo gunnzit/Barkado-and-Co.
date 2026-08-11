@@ -97,8 +97,9 @@ model Vaccination {
   petId        String
   pet          Pet      @relation(fields: [petId], references: [id])
   vaccineName  String
+  type         String   @default("VACCINE") // "VACCINE" or "MEDICINE"
   dateGiven    DateTime
-  nextDueDate  DateTime
+  nextDueDate  DateTime?
   reminderSent Boolean  @default(false)
   createdAt    DateTime @default(now())
 }

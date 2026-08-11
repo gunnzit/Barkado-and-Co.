@@ -1,50 +1,43 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
-
-const vaccineSchema = z.object({
-  petId: z.string(),
-  vaccineName: z.string().min(1),
-  dateGiven: z.string(), // ISO date
-  nextDueDate: z.string(), // ISO date
-});
 
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const vaccinations = await prisma.vaccination.findMany({
+  const entries = await prisma.vaccination.findMany({
     where: { pet: { ownerId: user.id } },
-    include: { pet: true },
-    orderBy: { nextDueDate: "asc" },
+    include: { pet: { select: { id: true, name: true } } },
+    orderBy: { dateGiven: "desc" },
   });
-  return NextResponse.json(vaccinations);
+  return NextResponse.json(entries);
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const parsed = vaccineSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  const { petId, vaccineName, type, dateGiven, nextDueDate } = body;
+
+  if (!petId || !vaccineName || !dateGiven) {
+    return NextResponse.json({ error: "petId, vaccineName, and dateGiven are required" }, { status: 400 });
   }
 
-  // Confirm the pet belongs to this owner
-  const pet = await prisma.pet.findFirst({
-    where: { id: parsed.data.petId, ownerId: user.id },
-  });
+  // Confirm the pet actually belongs to this user before logging anything against it.
+  const pet = await prisma.pet.findFirst({ where: { id: petId, ownerId: user.id } });
   if (!pet) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-  const vaccination = await prisma.vaccination.create({
+  const entry = await prisma.vaccination.create({
     data: {
-      petId: parsed.data.petId,
-      vaccineName: parsed.data.vaccineName,
-      dateGiven: new Date(parsed.data.dateGiven),
-      nextDueDate: new Date(parsed.data.nextDueDate),
+      petId,
+      vaccineName,
+      type: type === "MEDICINE" ? "MEDICINE" : "VACCINE",
+      dateGiven: new Date(dateGiven),
+      nextDueDate: nextDueDate ? new Date(nextDueDate) : null,
     },
   });
-  return NextResponse.json(vaccination, { status: 201 });
+
+  return NextResponse.json(entry, { status: 201 });
 }

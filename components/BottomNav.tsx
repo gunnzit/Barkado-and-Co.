@@ -37,10 +37,10 @@ export default function BottomNav() {
       active: isBook && currentService === "SITTING",
     },
     {
-      href: "/owner/pets",
+      href: "/owner/vaccines",
       label: "Vaccines",
       icon: Syringe,
-      active: pathname === "/owner/pets",
+      active: pathname === "/owner/vaccines",
     },
     {
       href: "/accessories",
