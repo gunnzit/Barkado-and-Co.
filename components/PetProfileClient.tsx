@@ -124,7 +124,8 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const themeClass = breedThemeClass(pet.breed);
 
   return (
-    <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className="pb-28 max-w-2xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
         <ProfileMenu />
@@ -314,5 +315,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
       <BottomNav />
     </main>
+    </div>
   );
 }

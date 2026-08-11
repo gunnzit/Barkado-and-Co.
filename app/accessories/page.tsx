@@ -39,7 +39,8 @@ export default async function AccessoriesPage() {
   };
 
   return (
-    <main className={`pb-28 max-w-5xl mx-auto ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className="pb-28 max-w-5xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
         <ProfileMenu />
@@ -94,5 +95,6 @@ export default async function AccessoriesPage() {
 
       <BottomNav />
     </main>
+    </div>
   );
 }

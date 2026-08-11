@@ -81,7 +81,8 @@ export default async function OwnerDashboard() {
   const themeClass = breedThemeClass(activePet?.breed);
 
   return (
-    <main className={`pb-28 max-w-2xl mx-auto ${themeClass}`}>
+    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className="pb-28 max-w-2xl mx-auto">
       <EmergencyButton />
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
@@ -305,5 +306,6 @@ export default async function OwnerDashboard() {
 
       <BottomNav />
     </main>
+    </div>
   );
 }

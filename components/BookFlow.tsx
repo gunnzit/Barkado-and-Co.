@@ -130,7 +130,8 @@ export default function BookFlow() {
   }
 
   return (
-    <main className={`max-w-lg mx-auto px-6 py-8 pb-28 ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <main className="max-w-lg mx-auto px-6 py-8 pb-28">
       <div className="flex items-center justify-between mb-4">
         <PetSwitcher />
         <ProfileMenu />
@@ -365,5 +366,6 @@ export default function BookFlow() {
 
       <BottomNav />
     </main>
+    </div>
   );
 }
