@@ -23,8 +23,6 @@ export function useSwipeRotator(itemCount: number, intervalMs: number) {
     };
   }, [resetTimer]);
 
-  // If the photo set itself changes size (e.g. someone just uploaded one),
-  // snap back to the first slide so the index stays valid.
   useEffect(() => {
     setIndexRaw(0);
   }, [itemCount]);
@@ -32,7 +30,7 @@ export function useSwipeRotator(itemCount: number, intervalMs: number) {
   const goTo = (i: number) => {
     if (itemCount === 0) return;
     setIndexRaw(((i % itemCount) + itemCount) % itemCount);
-    resetTimer(); // manual interaction restarts the auto-play countdown
+    resetTimer();
   };
   const next = () => goTo(index + 1);
   const prev = () => goTo(index - 1);
