@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
+import { useSwipeRotator } from "@/hooks/useSwipeRotator";
 
 // Fallback stock photos, always shown. A signed-in user's own uploaded
 // photos (if any) are prepended to this list, for that user only.
@@ -18,21 +19,10 @@ const INTERVAL_MS = 4000;
 export default function HeroImageRotator() {
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
   const images = userPhotos.length > 0 ? [...userPhotos, ...STOCK_IMAGES] : STOCK_IMAGES;
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    setIndex(0); // photo set changed size (e.g. user just uploaded) — restart at the first slide
-  }, [images.length]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % images.length);
-    }, INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [images.length]);
+  const { index, handlers } = useSwipeRotator(images.length, INTERVAL_MS);
 
   return (
-    <div className="img-frame relative shadow-sm animate-fade-up overflow-hidden" style={{ minHeight: 340 }}>
+    <div className="img-frame relative shadow-sm animate-fade-up overflow-hidden" style={{ minHeight: 340, touchAction: "pan-y", cursor: "grab" }} {...handlers}>
       {images.map((src, i) => {
         const diff = (i - index + images.length) % images.length;
         let transform = "translateY(0) scale(1)";

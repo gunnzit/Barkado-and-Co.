@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Pencil, Flame, PawPrint } from "lucide-react";
 import WalkTransition from "@/components/WalkTransition";
 import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
+import { useSwipeRotator } from "@/hooks/useSwipeRotator";
 
 // Fallback stock photos, always shown. The signed-in user's own uploaded
 // photos (if any) are prepended to this list, for that user only.
@@ -32,26 +33,15 @@ export default function WalkHero({
   const [showWalkAnim, setShowWalkAnim] = useState(false);
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
   const photos = userPhotos.length > 0 ? [...userPhotos, ...STOCK_PHOTOS] : STOCK_PHOTOS;
-  const [index, setIndex] = useState(0);
+  const { index, handlers } = useSwipeRotator(photos.length, INTERVAL_MS);
   const router = useRouter();
-
-  useEffect(() => {
-    setIndex(0);
-  }, [photos.length]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % photos.length);
-    }, INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [photos.length]);
 
   if (showWalkAnim) {
     return <WalkTransition onDone={() => router.push("/walk-booking")} />;
   }
 
   return (
-    <div className="relative w-full animate-fade-up overflow-hidden" style={{ height: 280 }}>
+    <div className="relative w-full animate-fade-up overflow-hidden" style={{ height: 280, touchAction: "pan-y", cursor: "grab" }} {...handlers}>
       {photos.map((src, i) => {
         const diff = (i - index + photos.length) % photos.length;
         let transform = "translateY(0) scale(1)";
