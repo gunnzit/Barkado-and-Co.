@@ -47,7 +47,7 @@ export default function WalkHero({
   }, [photos.length]);
 
   if (showWalkAnim) {
-    return <WalkTransition onDone={() => router.push("/book?service=WALKING")} />;
+    return <WalkTransition onDone={() => router.push("/walk-booking")} />;
   }
 
   return (

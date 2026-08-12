@@ -28,13 +28,13 @@ export default function BottomNav() {
       href: "/owner/dashboard",
       label: "Walks",
       icon: PawPrint,
-      active: pathname === "/owner/dashboard" || (isBook && currentService === "WALKING"),
+      active: pathname === "/owner/dashboard" || pathname === "/walk-booking",
     },
     {
-      href: "/book?service=SITTING",
+      href: "/sitting",
       label: "Sitting",
       icon: BedDouble,
-      active: isBook && currentService === "SITTING",
+      active: pathname === "/sitting",
     },
     {
       href: "/owner/vaccines",
