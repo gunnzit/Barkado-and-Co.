@@ -18,6 +18,8 @@ export default async function WalkBookingPage() {
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = breedThemeClass(activePet?.breed);
+  const pastWalkCount = await prisma.booking.count({ where: { ownerId: user.id, type: "WALKING" } });
+  const isFirstWalk = pastWalkCount === 0;
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
@@ -39,6 +41,7 @@ export default async function WalkBookingPage() {
           activePetName={activePet?.name ?? null}
           hasPets={pets.length > 0}
           showStartButton={true}
+          isFirstWalk={isFirstWalk}
         />
 
         <BottomNav />

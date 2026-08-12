@@ -19,12 +19,14 @@ export default function ServiceBookingFlow({
   activePetName,
   hasPets,
   showStartButton,
+  isFirstWalk = false,
 }: {
   serviceType: "WALKING" | "SITTING";
   activePetId: string | null;
   activePetName: string | null;
   hasPets: boolean;
   showStartButton: boolean;
+  isFirstWalk?: boolean;
 }) {
   const [phase, setPhase] = useState<"intro" | "details" | "providers" | "done">(
     showStartButton ? "intro" : "details"
@@ -99,14 +101,29 @@ export default function ServiceBookingFlow({
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cream)" }}>
             <PawPrint size={28} color="var(--terracotta)" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Ready for {activePetName ?? "a"}'s walk?</h1>
-          <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>Pick a time and we'll find a walker nearby.</p>
+          {isFirstWalk ? (
+            <>
+              <span
+                className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
+                style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+              >
+                Your first walk is free
+              </span>
+              <h1 className="text-2xl font-bold mb-2">Let's get {activePetName ?? "your pet"} moving 🎉</h1>
+              <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>Pick a time and we'll find a walker nearby — on us.</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold mb-2">Ready for another walk?</h1>
+              <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>Pick a time and we'll find a walker nearby.</p>
+            </>
+          )}
           <button
             onClick={() => setPhase("details")}
             className="tap-scale walk-start-pulse px-8 py-4 rounded-full font-bold text-white"
             style={{ background: "var(--terracotta)" }}
           >
-            Start walking
+            {isFirstWalk ? "Start your free walk" : "Book walk again"}
           </button>
         </div>
       )}
