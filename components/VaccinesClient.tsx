@@ -39,7 +39,12 @@ function startWeekday(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 function fmtDateKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+  // Use local date parts, not toISOString() (which converts to UTC and can
+  // shift the date by a day for timezones ahead of UTC, e.g. India).
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export default function VaccinesClient({
