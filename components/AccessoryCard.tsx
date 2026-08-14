@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Check, Plus } from "lucide-react";
+import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Minus, Plus } from "lucide-react";
+import { useCart } from "@/components/CartProvider";
 
 export type Accessory = {
   id: string;
@@ -23,28 +22,9 @@ const ICONS = {
 };
 
 export function AccessoryCard({ item }: { item: Accessory }) {
-  const [status, setStatus] = useState<"idle" | "adding" | "added">("idle");
-  const router = useRouter();
+  const { quantities, setQuantity } = useCart();
+  const qty = quantities[item.id] ?? 0;
   const Icon = ICONS[item.icon];
-
-  const addToCart = async () => {
-    setStatus("adding");
-    const res = await fetch("/api/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: item.id, quantity: 1 }),
-    });
-    if (res.status === 401) {
-      router.push("/sign-in");
-      return;
-    }
-    if (res.ok) {
-      setStatus("added");
-      setTimeout(() => setStatus("idle"), 1500);
-    } else {
-      setStatus("idle");
-    }
-  };
 
   return (
     <div className="card flex flex-col gap-3">
@@ -60,15 +40,36 @@ export function AccessoryCard({ item }: { item: Accessory }) {
       </div>
       <div className="flex items-center justify-between mt-1">
         <span className="font-bold text-sm">₹{item.price}</span>
-        <button
-          onClick={addToCart}
-          disabled={status === "adding"}
-          className="tap-scale w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: status === "added" ? "var(--chestnut)" : "var(--espresso)" }}
-          aria-label={status === "added" ? "Added" : "Add to cart"}
-        >
-          {status === "added" ? <Check size={14} color="white" /> : <Plus size={14} color="white" />}
-        </button>
+        {qty === 0 ? (
+          <button
+            onClick={() => setQuantity(item.id, 1)}
+            className="tap-scale w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: "var(--espresso)" }}
+            aria-label="Add to cart"
+          >
+            <Plus size={14} color="white" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setQuantity(item.id, qty - 1)}
+              className="tap-scale w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: "var(--cream)", border: "1px solid var(--border)" }}
+              aria-label="Decrease quantity"
+            >
+              <Minus size={12} />
+            </button>
+            <span className="text-sm font-semibold w-4 text-center">{qty}</span>
+            <button
+              onClick={() => setQuantity(item.id, qty + 1)}
+              className="tap-scale w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: "var(--espresso)" }}
+              aria-label="Increase quantity"
+            >
+              <Plus size={12} color="white" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

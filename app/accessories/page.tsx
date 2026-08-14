@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { AccessoryCard } from "@/components/AccessoryCard";
+import { CartProvider } from "@/components/CartProvider";
+import { CartLink } from "@/components/CartLink";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -19,6 +21,10 @@ export default async function AccessoriesPage() {
     }),
     user ? prisma.pet.findMany({ where: { ownerId: user.id } }) : Promise.resolve([]),
   ]);
+
+  const cartItems = user ? await prisma.cartItem.findMany({ where: { userId: user.id } }) : [];
+  const initialQuantities = Object.fromEntries(cartItems.map((c) => [c.productId, c.quantity]));
+  const initialTotal = cartItems.reduce((sum, c) => sum + c.quantity, 0);
 
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
@@ -40,6 +46,7 @@ export default async function AccessoriesPage() {
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <CartProvider initialQuantities={initialQuantities} initialTotal={initialTotal}>
     <main className="pb-28 max-w-5xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
@@ -55,9 +62,7 @@ export default async function AccessoriesPage() {
             <ShoppingBag size={20} color="var(--tan)" /> Accessories
           </h1>
         </div>
-        <Link href="/cart" className="btn-secondary text-sm tap-scale">
-          View cart
-        </Link>
+        <CartLink />
       </div>
 
       <p className="px-6 text-sm mb-8" style={{ color: "var(--muted)" }}>
@@ -95,6 +100,7 @@ export default async function AccessoriesPage() {
 
       <BottomNav />
     </main>
+    </CartProvider>
     </div>
   );
 }
