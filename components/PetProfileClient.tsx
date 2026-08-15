@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   PawPrint,
@@ -64,7 +65,11 @@ const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: strin
 export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const [pet, setPet] = useState(initialPet);
   const [editing, setEditing] = useState(false);
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
+    name: pet.name,
+    breed: pet.breed ?? "",
     weightKg: pet.weightKg?.toString() ?? "",
     birthday: pet.birthday ? pet.birthday.slice(0, 10) : "",
     allergies: pet.allergies ?? "",
@@ -119,6 +124,17 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       setEditing(false);
     }
     setSaving(false);
+  };
+
+  const removePet = async () => {
+    if (!confirm(`Remove ${pet.name}? This can't be undone.`)) return;
+    setDeleting(true);
+    const res = await fetch(`/api/pets/${pet.id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/owner/pets");
+    } else {
+      setDeleting(false);
+    }
   };
 
   const age = ageFromBirthday(pet.birthday);
@@ -178,7 +194,16 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tan)" }}>
             Paw Passport
           </p>
-          <h1 className="text-3xl font-bold">{pet.name}</h1>
+          {editing ? (
+            <input
+              className="text-2xl font-bold border rounded-lg px-2 py-1 mt-0.5"
+              style={{ borderColor: "var(--border)" }}
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          ) : (
+            <h1 className="text-3xl font-bold">{pet.name}</h1>
+          )}
           {uploadingPhoto && <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>Uploading photo…</p>}
         </div>
       </div>
@@ -219,7 +244,17 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
         <div className="card flex flex-col items-center gap-1 py-4">
           <PawPrint size={18} color="var(--tan)" />
-          <p className="text-sm font-semibold">{pet.breed ?? pet.size}</p>
+          {editing ? (
+            <input
+              className="text-xs text-center border rounded px-1 w-full"
+              style={{ borderColor: "var(--border)" }}
+              value={form.breed}
+              onChange={(e) => setForm({ ...form, breed: e.target.value })}
+              placeholder="Breed"
+            />
+          ) : (
+            <p className="text-sm font-semibold">{pet.breed ?? pet.size}</p>
+          )}
           <p className="text-[10px]" style={{ color: "var(--muted)" }}>Breed</p>
         </div>
       </div>
@@ -315,6 +350,18 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ===== Remove pet ===== */}
+      <div className="px-6 mt-10 mb-4">
+        <button
+          onClick={removePet}
+          disabled={deleting}
+          className="text-sm font-medium tap-scale"
+          style={{ color: "var(--terracotta)" }}
+        >
+          {deleting ? "Removing…" : `Remove ${pet.name} from PawConnect`}
+        </button>
       </div>
 
       <BottomNav />

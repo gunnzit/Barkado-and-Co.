@@ -159,6 +159,18 @@ h1, h2, h3 {
   transform: scale(0.97);
 }
 
+/* Form fields default to plain white regardless of theme unless styled —
+   this makes every input/textarea/select follow the current theme's colors,
+   so they don't stay glaring white in dark mode. */
+input, textarea, select {
+  background: var(--card);
+  color: var(--forest);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

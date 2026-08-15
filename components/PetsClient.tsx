@@ -40,10 +40,6 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", breed: "" });
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadPets = async () => {
     const res = await fetch("/api/pets");
@@ -95,37 +91,6 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
       setPhotoPreview(null);
       loadPets();
     }
-  };
-
-  const startEdit = (p: Pet) => {
-    setEditingId(p.id);
-    setEditForm({ name: p.name, breed: p.breed ?? "" });
-  };
-
-  const saveEdit = async (petId: string) => {
-    if (!editForm.name.trim()) return;
-    setSavingEdit(true);
-    const res = await fetch(`/api/pets/${petId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editForm.name, breed: editForm.breed || undefined }),
-    });
-    if (res.ok) {
-      setEditingId(null);
-      loadPets();
-    }
-    setSavingEdit(false);
-  };
-
-  const removePet = async (petId: string) => {
-    if (!confirm("Remove this pet? This can't be undone.")) return;
-    setDeletingId(petId);
-    const res = await fetch(`/api/pets/${petId}`, { method: "DELETE" });
-    if (res.ok) {
-      setEditingId(null);
-      loadPets();
-    }
-    setDeletingId(null);
   };
 
   const inputClass = "w-full border rounded-lg px-3 py-2 text-sm";
@@ -253,68 +218,24 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
 
       <div className="space-y-3">
         {pets.map((p) => (
-          <div key={p.id} className="card">
-            {editingId === p.id ? (
-              <div className="space-y-3">
-                <input
-                  className={inputClass}
-                  style={inputStyle}
-                  placeholder="Name"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                />
-                <input
-                  className={inputClass}
-                  style={inputStyle}
-                  placeholder="Breed"
-                  value={editForm.breed}
-                  onChange={(e) => setEditForm({ ...editForm, breed: e.target.value })}
-                />
-                <div className="flex items-center gap-2">
-                  <button onClick={() => saveEdit(p.id)} disabled={savingEdit} className="btn-primary text-sm tap-scale flex items-center gap-1.5">
-                    <Check size={14} /> {savingEdit ? "Saving…" : "Save"}
-                  </button>
-                  <button onClick={() => setEditingId(null)} className="btn-secondary text-sm tap-scale flex items-center gap-1.5">
-                    <X size={14} /> Cancel
-                  </button>
+          <Link href={`/owner/pets/${p.id}`} key={p.id} className="card flex items-center justify-between tap-scale">
+            <div className="flex items-center gap-3">
+              {p.photoUrl && (
+                <div className="w-11 h-11 rounded-full overflow-hidden shrink-0" style={{ border: "1px solid var(--border)" }}>
+                  <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
                 </div>
-                <button
-                  onClick={() => removePet(p.id)}
-                  disabled={deletingId === p.id}
-                  className="text-xs font-medium tap-scale block"
-                  style={{ color: "var(--terracotta)" }}
-                >
-                  {deletingId === p.id ? "Removing…" : "Remove pet"}
-                </button>
+              )}
+              <div>
+                <p className="font-bold">{p.name} <span className="text-sm font-normal" style={{ color: "var(--muted)" }}>{p.breed}</span></p>
+                {p.vaccinations.length > 0 && (
+                  <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                    💉 {p.vaccinations.length} vaccine{p.vaccinations.length > 1 ? "s" : ""} on record
+                  </p>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <Link href={`/owner/pets/${p.id}`} className="flex items-center gap-3 flex-1 tap-scale">
-                  {p.photoUrl && (
-                    <div className="w-11 h-11 rounded-full overflow-hidden shrink-0" style={{ border: "1px solid var(--border)" }}>
-                      <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-bold">{p.name} <span className="text-sm font-normal" style={{ color: "var(--muted)" }}>{p.breed}</span></p>
-                    {p.vaccinations.length > 0 && (
-                      <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                        💉 {p.vaccinations.length} vaccine{p.vaccinations.length > 1 ? "s" : ""} on record
-                      </p>
-                    )}
-                  </div>
-                </Link>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => startEdit(p)} className="tap-scale w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--cream)" }} aria-label="Edit pet">
-                    <Pencil size={13} color="var(--muted)" />
-                  </button>
-                  <Link href={`/owner/pets/${p.id}`}>
-                    <ChevronRight size={18} color="var(--muted)" />
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+            <ChevronRight size={18} color="var(--muted)" />
+          </Link>
         ))}
       </div>
 
