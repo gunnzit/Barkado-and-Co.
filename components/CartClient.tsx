@@ -62,7 +62,7 @@ export default function CartClient() {
       key: data.keyId,
       amount: data.amount,
       currency: "INR",
-      name: "PawConnect",
+      name: "Barkado & Co.",
       description: "Accessories order",
       order_id: data.orderId,
       handler: function () {

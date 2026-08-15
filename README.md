@@ -1,4 +1,4 @@
-# PawConnect
+# Barkado & Co.
 
 A marketplace connecting pet walkers & sitters with owners, plus vaccine due-date tracking.
 

@@ -56,7 +56,7 @@ export default async function Home() {
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
         <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <PawPrint size={20} color="var(--forest)" /> PawConnect
+          <PawPrint size={20} color="var(--forest)" /> Barkado & Co..
         </span>
         <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
@@ -302,7 +302,7 @@ export default async function Home() {
       <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-10" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-2">
           <PawPrint size={18} color="var(--terracotta)" />
-          <span className="font-bold">PawConnect</span>
+          <span className="font-bold">Barkado & Co..</span>
         </div>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
           Everything your dog needs. One passport.

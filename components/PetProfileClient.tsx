@@ -360,7 +360,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           className="text-sm font-medium tap-scale"
           style={{ color: "var(--terracotta)" }}
         >
-          {deleting ? "Removing…" : `Remove ${pet.name} from PawConnect`}
+          {deleting ? "Removing…" : `Remove ${pet.name} from Barkado & Co..`}
         </button>
       </div>
 

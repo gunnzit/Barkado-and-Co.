@@ -8,7 +8,7 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("pawconnect-theme");
+    const stored = localStorage.getItem("Barkado & Co.-theme");
     const isDark = stored === "dark";
     setDark(isDark);
     document.documentElement.classList.toggle("dark", isDark);
@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("pawconnect-theme", next ? "dark" : "light");
+    localStorage.setItem("Barkado & Co.-theme", next ? "dark" : "light");
   };
 
   if (!mounted) return null;

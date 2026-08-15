@@ -132,7 +132,7 @@ export default function HeroPetPhotoManager({
               </button>
             </div>
             <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-              Upload up to 3 photos — they'll show across PawConnect's hero banners, just for you.
+              Upload up to 3 photos — they'll show across Barkado & Co..'s hero banners, just for you.
             </p>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {photos.map((p) => (

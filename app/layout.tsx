@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PawConnect — Walkers & Sitters You Can Trust",
+  title: "Barkado & Co. — Walkers & Sitters You Can Trust",
   description: "Book verified pet walkers and sitters near you, and stay on top of vaccinations.",
 };
 

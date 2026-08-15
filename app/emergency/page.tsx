@@ -66,7 +66,7 @@ export default function EmergencyPage() {
 
       <div className="px-6 mt-6">
         <p className="text-xs" style={{ color: "var(--muted)" }}>
-          PawConnect doesn't provide emergency medical care directly — these are contact numbers for
+          Barkado & Co. doesn't provide emergency medical care directly — these are contact numbers for
           local providers. In a life-threatening situation, contact a vet or animal hospital immediately.
         </p>
       </div>
