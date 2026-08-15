@@ -4,7 +4,7 @@ import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { breedThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass } from "@/lib/breedTheme";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -18,7 +18,7 @@ export default async function WalkBookingPage() {
   const pets = await prisma.pet.findMany({ where: { ownerId: user.id } });
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
-  const themeClass = breedThemeClass(activePet?.breed);
+  const themeClass = resolveThemeClass(activePet);
   const pastWalkCount = await prisma.booking.count({ where: { ownerId: user.id, type: "WALKING" } });
   const isFirstWalk = pastWalkCount === 0;
 

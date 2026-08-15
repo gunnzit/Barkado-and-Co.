@@ -10,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import { breedThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass } from "@/lib/breedTheme";
 
 export default async function AccessoriesPage() {
   const user = await getOrCreateUser();
@@ -29,7 +29,7 @@ export default async function AccessoriesPage() {
 
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
-  const themeClass = breedThemeClass(activePet?.breed);
+  const themeClass = resolveThemeClass(activePet);
 
   const categories = Array.from(new Set(products.map((p) => p.category)));
 

@@ -18,6 +18,7 @@ const updateSchema = z.object({
   insuranceProvider: z.string().optional(),
   insurancePolicy: z.string().optional(),
   photoUrl: z.string().optional(),
+  themeOverride: z.string().nullable().optional(),
 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {

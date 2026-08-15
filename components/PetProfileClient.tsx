@@ -22,7 +22,7 @@ import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import { breedThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass } from "@/lib/breedTheme";
 
 type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
 type Booking = { id: string; type: string; status: string; startTime: string; provider: { user: { name: string } } };
@@ -43,6 +43,7 @@ type Pet = {
   insuranceProvider: string | null;
   insurancePolicy: string | null;
   photoUrl: string | null;
+  themeOverride: string | null;
   vaccinations: Vaccination[];
   bookings: Booking[];
 };
@@ -60,6 +61,15 @@ const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: strin
   { key: "microchipId", label: "Microchip ID", icon: Cpu, placeholder: "Chip number" },
   { key: "insuranceProvider", label: "Insurance provider", icon: ShieldCheck, placeholder: "e.g. PetSecure" },
   { key: "insurancePolicy", label: "Insurance policy #", icon: ShieldCheck, placeholder: "Policy number" },
+];
+
+const THEME_OPTIONS: { key: string; label: string; swatch: string }[] = [
+  { key: "auto", label: "Auto (match breed)", swatch: "linear-gradient(135deg, var(--terracotta) 50%, var(--gold) 50%)" },
+  { key: "dalmatian", label: "Dalmatian", swatch: "linear-gradient(135deg, #1a1a1a 50%, #e63946 50%)" },
+  { key: "beagle", label: "Beagle", swatch: "linear-gradient(135deg, #a0522d 50%, #d4a24c 50%)" },
+  { key: "golden-retriever", label: "Golden Retriever", swatch: "linear-gradient(135deg, #d4972e 50%, #f6d76b 50%)" },
+  { key: "german-shepherd", label: "German Shepherd", swatch: "linear-gradient(135deg, #7a4a24 50%, #3d2c1c 50%)" },
+  { key: "labrador", label: "Labrador", swatch: "linear-gradient(135deg, #c9a66b 50%, #8f5f37 50%)" },
 ];
 
 export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
@@ -126,6 +136,19 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     setSaving(false);
   };
 
+  const setPetTheme = async (themeKey: string) => {
+    const value = themeKey === "auto" ? null : themeKey;
+    setPet((prev) => ({ ...prev, themeOverride: value })); // optimistic
+    const res = await fetch(`/api/pets/${pet.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ themeOverride: value }),
+    });
+    if (!res.ok) {
+      setPet((prev) => ({ ...prev, themeOverride: initialPet.themeOverride })); // revert on failure
+    }
+  };
+
   const removePet = async () => {
     if (!confirm(`Remove ${pet.name}? This can't be undone.`)) return;
     setDeleting(true);
@@ -138,7 +161,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   };
 
   const age = ageFromBirthday(pet.birthday);
-  const themeClass = breedThemeClass(pet.breed);
+  const themeClass = resolveThemeClass(pet);
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
@@ -259,6 +282,35 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
+      {/* ===== App theme for this pet ===== */}
+      <div className="px-6 mb-8">
+        <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>App theme for {pet.name}</p>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+          {THEME_OPTIONS.map((opt) => {
+            const isActive = (pet.themeOverride ?? "auto") === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setPetTheme(opt.key)}
+                className="tap-scale flex flex-col items-center gap-1.5 shrink-0"
+                style={{ width: 64 }}
+              >
+                <span
+                  className="w-10 h-10 rounded-full block"
+                  style={{
+                    background: opt.swatch,
+                    boxShadow: isActive ? "0 0 0 2.5px var(--card), 0 0 0 4.5px var(--terracotta)" : "none",
+                  }}
+                />
+                <span className="text-[10px] text-center leading-tight" style={{ color: isActive ? "var(--terracotta)" : "var(--muted)", fontWeight: isActive ? 700 : 500 }}>
+                  {opt.label === "Auto (match breed)" ? "Auto" : opt.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ===== Integrated passport card — one grouped list, not scattered boxes ===== */}
       <div className="px-6 mb-8">
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -360,7 +412,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           className="text-sm font-medium tap-scale"
           style={{ color: "var(--terracotta)" }}
         >
-          {deleting ? "Removing…" : `Remove ${pet.name} from Barkado & Co..`}
+          {deleting ? "Removing…" : `Remove ${pet.name} from Barkado & Co.`}
         </button>
       </div>
 

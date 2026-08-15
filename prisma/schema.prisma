@@ -75,6 +75,9 @@ model Pet {
   insuranceProvider String?
   insurancePolicy   String?
   photoUrl          String?
+  // Manual theme choice, overriding breed-based auto-matching. One of the 5
+  // theme keys (e.g. "dalmatian"), or null/absent to auto-match by breed.
+  themeOverride     String?
   createdAt   DateTime @default(now())
 
   vaccinations Vaccination[]

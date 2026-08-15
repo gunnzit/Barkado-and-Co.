@@ -10,7 +10,7 @@ import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import { breedThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
 export default async function OwnerDashboard() {
@@ -79,7 +79,7 @@ export default async function OwnerDashboard() {
   // pet switcher (a cookie), falling back to their first/most-recent pet.
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
-  const themeClass = breedThemeClass(activePet?.breed);
+  const themeClass = resolveThemeClass(activePet);
 
   return (
     <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>

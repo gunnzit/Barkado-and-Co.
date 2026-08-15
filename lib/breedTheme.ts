@@ -29,3 +29,20 @@ export function breedThemeClass(breed?: string | null): string {
   const theme = getBreedTheme(breed);
   return theme === "default" ? "" : `theme-${theme}`;
 }
+
+const ALL_THEMES: BreedTheme[] = ["dalmatian", "beagle", "golden-retriever", "german-shepherd", "labrador"];
+
+/**
+ * Resolves the theme for a pet: a manual themeOverride wins if set to a real
+ * theme key; otherwise falls back to auto-matching the breed text, same as
+ * breedThemeClass. themeOverride of null/"auto"/anything unrecognized means
+ * "use auto matching".
+ */
+export function resolveThemeClass(pet?: { breed?: string | null; themeOverride?: string | null } | null): string {
+  if (!pet) return "";
+  const override = pet.themeOverride;
+  if (override && (ALL_THEMES as string[]).includes(override)) {
+    return `theme-${override}`;
+  }
+  return breedThemeClass(pet.breed);
+}

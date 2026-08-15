@@ -2,7 +2,7 @@ import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { breedThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass } from "@/lib/breedTheme";
 import VaccinesClient from "@/components/VaccinesClient";
 
 export default async function VaccinesPage() {
@@ -20,7 +20,7 @@ export default async function VaccinesPage() {
 
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
-  const initialThemeClass = breedThemeClass(activePet?.breed);
+  const initialThemeClass = resolveThemeClass(activePet);
 
   return (
     <VaccinesClient
