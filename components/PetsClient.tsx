@@ -98,7 +98,7 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
   const themeClass = initialThemeClass;
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "180px", minHeight: "100vh" }}>
     <main className="max-w-2xl mx-auto px-6 py-10 pb-28">
       <div className="flex items-center justify-between mb-4">
         <PetSwitcher />

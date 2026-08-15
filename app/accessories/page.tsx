@@ -46,7 +46,7 @@ export default async function AccessoriesPage() {
   };
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "180px", minHeight: "100vh" }}>
     <CartProvider initialQuantities={initialQuantities} initialTotal={initialTotal}>
     <main className="pb-28 max-w-5xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">

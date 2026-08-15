@@ -21,7 +21,7 @@ export default async function SittingPage() {
   const themeClass = resolveThemeClass(activePet);
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "180px", minHeight: "100vh" }}>
       <main className="pb-28 max-w-lg mx-auto">
         <div className="px-6 pt-4 flex items-center justify-between">
           <PetSwitcher />

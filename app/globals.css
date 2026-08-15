@@ -25,6 +25,9 @@
      for a white-text panel breaks in dark mode. */
   --panel-dark: #16281f;
 
+  /* Optional decorative page background image, per theme. "none" by default. */
+  --page-bg-image: none;
+
   /* Back-compat aliases so existing components using old token names still work */
   --espresso: var(--forest);
   --tan: var(--terracotta);
@@ -291,6 +294,7 @@ input::placeholder, textarea::placeholder {
   --terracotta: #1a1a1a;
   --terracotta-dark: #000000;
   --gold: #e63946;
+  --page-bg-image: url('/images/dalmatian-pattern.jpg');
 }
 .dark .theme-dalmatian {
   --cream: #141414;
@@ -301,6 +305,7 @@ input::placeholder, textarea::placeholder {
   --terracotta: #3a3a3a;
   --terracotta-dark: #4a4a4a;
   --gold: #ef6b76;
+  --page-bg-image: url('/images/dalmatian-pattern.jpg');
 }
 
 .theme-beagle {

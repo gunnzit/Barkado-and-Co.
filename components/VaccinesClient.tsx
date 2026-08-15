@@ -119,7 +119,7 @@ export default function VaccinesClient({
   const todayKey = fmtDateKey(new Date());
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ background: "var(--cream)", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "180px", minHeight: "100vh" }}>
     <main className="pb-28 max-w-2xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
