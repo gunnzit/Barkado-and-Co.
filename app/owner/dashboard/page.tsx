@@ -10,7 +10,6 @@ import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import OffersCarousel from "@/components/OffersCarousel";
 import { breedThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
