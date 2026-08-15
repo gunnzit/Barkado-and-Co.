@@ -294,7 +294,7 @@ input::placeholder, textarea::placeholder {
   --terracotta: #1a1a1a;
   --terracotta-dark: #000000;
   --gold: #e63946;
-  --page-bg-image: url('/images/dalmatian-pattern.jpg');
+  --page-bg-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('/images/dalmatian-pattern.jpg');
 }
 .dark .theme-dalmatian {
   --cream: #141414;
@@ -305,7 +305,7 @@ input::placeholder, textarea::placeholder {
   --terracotta: #3a3a3a;
   --terracotta-dark: #4a4a4a;
   --gold: #ef6b76;
-  --page-bg-image: url('/images/dalmatian-pattern.jpg');
+  --page-bg-image: linear-gradient(rgba(20,20,20,0.85), rgba(20,20,20,0.85)), url('/images/dalmatian-pattern.jpg');
 }
 
 .theme-beagle {
