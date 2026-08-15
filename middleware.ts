@@ -9,7 +9,10 @@ const isProtectedRoute = createRouteMatcher([
   "/api/bookings(.*)",
   "/api/vaccinations(.*)",
   "/api/providers/me(.*)",
-  "/api/cart(.*)",
+  // "/api/cart(.*)" removed — the cart routes already check auth themselves
+  // and return a proper JSON 401. Leaving it here made Clerk's middleware
+  // intercept the request first and return a bare 404 instead, which broke
+  // the "open sign-in modal" flow on the client (it only recognized 401).
   "/api/orders(.*)",
 ]);
 
