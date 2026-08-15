@@ -44,7 +44,7 @@ export function AccessoryCard({ item }: { item: Accessory }) {
           <button
             onClick={() => setQuantity(item.id, 1)}
             className="tap-scale w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: "var(--espresso)" }}
+            style={{ background: "var(--panel-dark)" }}
             aria-label="Add to cart"
           >
             <Plus size={14} color="white" />
@@ -63,7 +63,7 @@ export function AccessoryCard({ item }: { item: Accessory }) {
             <button
               onClick={() => setQuantity(item.id, qty + 1)}
               className="tap-scale w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ background: "var(--espresso)" }}
+              style={{ background: "var(--panel-dark)" }}
               aria-label="Increase quantity"
             >
               <Plus size={12} color="white" />

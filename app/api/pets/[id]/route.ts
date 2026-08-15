@@ -66,3 +66,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   return NextResponse.json(pet);
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const user = await getOrCreateUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const existing = await prisma.pet.findFirst({ where: { id: resolvedParams.id, ownerId: user.id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.pet.delete({ where: { id: resolvedParams.id } });
+  return NextResponse.json({ success: true });
+}
