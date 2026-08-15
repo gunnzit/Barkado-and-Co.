@@ -6,6 +6,7 @@ import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type Pet = { id: string; name: string };
 type Entry = {
@@ -122,7 +123,10 @@ export default function VaccinesClient({
     <main className="pb-28 max-w-2xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
-        <ProfileMenu />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ProfileMenu />
+        </div>
       </div>
 
       <div className="flex items-center gap-3 px-6 py-5">

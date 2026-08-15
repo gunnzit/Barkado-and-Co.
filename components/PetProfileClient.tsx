@@ -20,6 +20,7 @@ import {
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import ThemeToggle from "@/components/ThemeToggle";
 import { breedThemeClass } from "@/lib/breedTheme";
 
 type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
@@ -128,7 +129,10 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     <main className="pb-28 max-w-2xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
-        <ProfileMenu />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ProfileMenu />
+        </div>
       </div>
       {/* ===== Header with clear back link ===== */}
       <div className="flex items-center justify-between px-6 py-5">

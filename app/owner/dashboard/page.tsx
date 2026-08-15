@@ -9,6 +9,8 @@ import EmergencyButton from "@/components/EmergencyButton";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import ThemeToggle from "@/components/ThemeToggle";
+import OffersCarousel from "@/components/OffersCarousel";
 import { breedThemeClass } from "@/lib/breedTheme";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
@@ -86,7 +88,10 @@ export default async function OwnerDashboard() {
       <EmergencyButton />
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
-        <ProfileMenu />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ProfileMenu />
+        </div>
       </div>
       {/* ===== Hero photo moment — tap to book a walk ===== */}
       <WalkHero

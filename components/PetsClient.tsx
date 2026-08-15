@@ -6,6 +6,7 @@ import { ChevronRight, ChevronDown, ArrowLeft, Camera } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type Pet = {
   id: string;
@@ -101,7 +102,10 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
     <main className="max-w-2xl mx-auto px-6 py-10 pb-28">
       <div className="flex items-center justify-between mb-4">
         <PetSwitcher />
-        <ProfileMenu />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ProfileMenu />
+        </div>
       </div>
       <Link href="/" className="flex items-center gap-2 tap-scale mb-4" style={{ color: "var(--muted)" }}>
         <ArrowLeft size={18} />
