@@ -11,6 +11,7 @@ import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 import { resolveThemeClass } from "@/lib/breedTheme";
+import { getMascotPath } from "@/lib/mascotImage";
 import { Search, Syringe, Home as HomeIcon, PawPrint, ChevronRight, Star, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
 
 export default async function OwnerDashboard() {
@@ -97,6 +98,7 @@ export default async function OwnerDashboard() {
         firstName={firstName}
         petName={activePet?.name ?? null}
         petPhoto={activePet?.photoUrl ?? null}
+        petBreed={activePet?.breed ?? null}
         walksThisWeek={walksThisWeek}
       />
 
@@ -228,7 +230,10 @@ export default async function OwnerDashboard() {
           </Link>
         </div>
         {providers.length === 0 ? (
-          <p className="text-sm px-6" style={{ color: "var(--muted)" }}>No verified providers yet.</p>
+          <div className="px-6 text-center py-4">
+            <img src={getMascotPath(activePet?.breed, "headshot")} alt="" className="w-16 h-16 mx-auto mb-2 rounded-full" />
+            <p className="text-sm" style={{ color: "var(--muted)" }}>No verified providers yet.</p>
+          </div>
         ) : (
           <div className="flex gap-4 overflow-x-auto no-scrollbar px-6">
             {providers.map((p, i) => (
@@ -290,7 +295,10 @@ export default async function OwnerDashboard() {
       <div className="px-6 animate-fade-up" style={{ animationDelay: "280ms" }}>
         <h2 className="text-lg font-bold mb-4">Recent bookings</h2>
         {bookings.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing booked yet.</p>
+          <div className="text-center py-6">
+            <img src={getMascotPath(activePet?.breed, "sitting")} alt="" className="w-20 h-20 mx-auto mb-2" />
+            <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing booked yet.</p>
+          </div>
         ) : (
           <div>
             {bookings.map((b, i) => (

@@ -8,6 +8,7 @@ import { Pencil, Flame, PawPrint } from "lucide-react";
 import WalkTransition from "@/components/WalkTransition";
 import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
 import { useSwipeRotator } from "@/hooks/useSwipeRotator";
+import { getMascotPath } from "@/lib/mascotImage";
 
 // Fallback stock photos, always shown. The signed-in user's own uploaded
 // photos (if any) are prepended to this list, for that user only.
@@ -23,16 +24,19 @@ export default function WalkHero({
   firstName,
   petName,
   petPhoto,
+  petBreed,
   walksThisWeek,
 }: {
   firstName: string;
   petName: string | null;
   petPhoto: string | null;
+  petBreed?: string | null;
   walksThisWeek: number;
 }) {
   const [showWalkAnim, setShowWalkAnim] = useState(false);
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
-  const photos = userPhotos.length > 0 ? [...userPhotos, ...STOCK_PHOTOS] : STOCK_PHOTOS;
+  const mascot = getMascotPath(petBreed, "active");
+  const photos = userPhotos.length > 0 ? [...userPhotos, mascot, ...STOCK_PHOTOS] : [mascot, ...STOCK_PHOTOS];
   const { index, handlers } = useSwipeRotator(photos.length, INTERVAL_MS);
   const router = useRouter();
 
@@ -62,8 +66,18 @@ export default function WalkHero({
           zIndex = 0;
         }
 
+        const wrapperStyle: React.CSSProperties = { transform, opacity, zIndex, transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.45s ease" };
+
+        if (src.endsWith(".svg")) {
+          return (
+            <div key={src} className="absolute inset-0" style={{ ...wrapperStyle, background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src={src} alt="" style={{ width: "60%", height: "60%", objectFit: "contain" }} />
+            </div>
+          );
+        }
+
         return (
-          <div key={src} className="absolute inset-0" style={{ transform, opacity, zIndex, transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.45s ease" }}>
+          <div key={src} className="absolute inset-0" style={wrapperStyle}>
             <Image src={src} alt="" fill sizes="700px" className="object-cover" priority={i === 0} />
           </div>
         );

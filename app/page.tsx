@@ -1,7 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Show } from "@clerk/nextjs";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateUser } from "@/lib/auth";
+import { resolveThemeClass } from "@/lib/breedTheme";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import NeedsGrid from "@/components/NeedsGrid";
@@ -50,13 +53,22 @@ export default async function Home() {
 
   const avgRating = ratingAgg._avg.ratingAvg;
 
+  // Signed-in visitors see the homepage themed to their active pet, same as
+  // every other page. Signed-out visitors get the default look.
+  const user = await getOrCreateUser().catch(() => null);
+  const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id } }) : [];
+  const activePetCookie = (await cookies()).get("active_pet_id")?.value;
+  const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
+  const themeClass = resolveThemeClass(activePet);
+
   return (
-    <main style={{ background: "var(--cream)", paddingBottom: 90 }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
+    <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
         <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <PawPrint size={20} color="var(--forest)" /> Barkado & Co..
+          <PawPrint size={20} color="var(--forest)" /> Barkado & Co.
         </span>
         <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
@@ -98,7 +110,8 @@ export default async function Home() {
             </p>
           )}
         </div>
-        <HeroImageRotator />
+        {/* ===== Hero photo moment ===== */}
+      <HeroImageRotator activeBreed={activePet?.breed} />
       </section>
 
       {/* ===== Offers — real, functioning, gradient cards (moved right after hero) ===== */}
@@ -302,7 +315,7 @@ export default async function Home() {
       <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-10" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2 mb-2">
           <PawPrint size={18} color="var(--terracotta)" />
-          <span className="font-bold">Barkado & Co..</span>
+          <span className="font-bold">Barkado & Co.</span>
         </div>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
           Everything your dog needs. One passport.
@@ -310,5 +323,6 @@ export default async function Home() {
       </footer>
       <BottomNav />
     </main>
+    </div>
   );
 }

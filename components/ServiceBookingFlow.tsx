@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PawPrint, Star, ShieldCheck, Check, MapPin } from "lucide-react";
+import { getMascotPath } from "@/lib/mascotImage";
 
 type Provider = {
   id: string;
@@ -84,7 +85,8 @@ export default function ServiceBookingFlow({
 
   if (!hasPets) {
     return (
-      <div className="card mx-6 mt-4">
+      <div className="card mx-6 mt-4 text-center">
+        <img src={getMascotPath(null, "sitting")} alt="" className="w-24 h-24 mx-auto mb-3" />
         <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
           Add a pet first so we know who this is for.
         </p>
@@ -207,7 +209,10 @@ export default function ServiceBookingFlow({
           {loadingProviders ? (
             <p className="text-sm" style={{ color: "var(--muted)" }}>Loading…</p>
           ) : providers.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--muted)" }}>No verified providers yet for this service.</p>
+            <div className="text-center py-6">
+              <img src={getMascotPath(null, "headshot")} alt="" className="w-16 h-16 mx-auto mb-2 rounded-full" />
+              <p className="text-sm" style={{ color: "var(--muted)" }}>No verified providers yet for this service.</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {providers.map((p) => (

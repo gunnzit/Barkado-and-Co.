@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import HeroPetPhotoManager from "@/components/HeroPetPhotoManager";
 import { useSwipeRotator } from "@/hooks/useSwipeRotator";
+import { getMascotPath } from "@/lib/mascotImage";
 
 // Fallback stock photos, always shown. A signed-in user's own uploaded
 // photos (if any) are prepended to this list, for that user only.
@@ -16,9 +17,10 @@ const STOCK_IMAGES = [
 
 const INTERVAL_MS = 4000;
 
-export default function HeroImageRotator() {
+export default function HeroImageRotator({ activeBreed }: { activeBreed?: string | null } = {}) {
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
-  const images = userPhotos.length > 0 ? [...userPhotos, ...STOCK_IMAGES] : STOCK_IMAGES;
+  const mascot = getMascotPath(activeBreed, "active");
+  const images = userPhotos.length > 0 ? [...userPhotos, mascot, ...STOCK_IMAGES] : [mascot, ...STOCK_IMAGES];
   const { index, handlers } = useSwipeRotator(images.length, INTERVAL_MS);
 
   return (
@@ -43,6 +45,23 @@ export default function HeroImageRotator() {
           zIndex = 0;
         }
 
+        const commonStyle: React.CSSProperties = {
+          position: "absolute",
+          inset: 0,
+          transform,
+          opacity,
+          zIndex,
+          transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.45s ease",
+        };
+
+        if (src.endsWith(".svg")) {
+          return (
+            <div key={src} style={{ ...commonStyle, background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src={src} alt="Your dog" style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+            </div>
+          );
+        }
+
         return (
           <Image
             key={src}
@@ -52,14 +71,7 @@ export default function HeroImageRotator() {
             sizes="500px"
             className="object-cover"
             priority={i === 0}
-            style={{
-              position: "absolute",
-              inset: 0,
-              transform,
-              opacity,
-              zIndex,
-              transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.45s ease",
-            }}
+            style={commonStyle}
           />
         );
       })}

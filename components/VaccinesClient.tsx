@@ -6,6 +6,7 @@ import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import { getMascotPath } from "@/lib/mascotImage";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type Pet = { id: string; name: string };
@@ -139,7 +140,8 @@ export default function VaccinesClient({
       </div>
 
       {pets.length === 0 && (
-        <div className="mx-6 mb-6 card">
+        <div className="mx-6 mb-6 card text-center">
+          <img src={getMascotPath(null, "sitting")} alt="" className="w-24 h-24 mx-auto mb-3" />
           <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>Add a pet first to start logging.</p>
           <Link href="/owner/pets" className="btn-primary inline-block">Add a pet</Link>
         </div>

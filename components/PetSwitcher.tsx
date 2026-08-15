@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ChevronDown, PawPrint, Check } from "lucide-react";
+import { getMascotPath } from "@/lib/mascotImage";
 
 type Pet = { id: string; name: string; breed?: string | null; photoUrl?: string | null };
 
@@ -65,11 +66,7 @@ export default function PetSwitcher() {
         style={{ background: "var(--card)", border: "1px solid var(--border)" }}
       >
         <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-          {activePet.photoUrl ? (
-            <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" />
-          ) : (
-            <PawPrint size={12} color="var(--terracotta)" />
-          )}
+          <img src={activePet.photoUrl ?? getMascotPath(activePet.breed, "headshot")} alt={activePet.name} className="w-full h-full object-cover" />
         </div>
         <span className="text-xs font-semibold whitespace-nowrap">Viewing {activePet.name}</span>
         {pets.length > 1 && <ChevronDown size={13} color="var(--muted)" />}
@@ -90,11 +87,7 @@ export default function PetSwitcher() {
                 style={{ background: p.id === activePet.id ? "var(--cream)" : "transparent" }}
               >
                 <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                  {p.photoUrl ? (
-                    <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <PawPrint size={13} color="var(--terracotta)" />
-                  )}
+                  <img src={p.photoUrl ?? getMascotPath(p.breed, "headshot")} alt={p.name} className="w-full h-full object-cover" />
                 </div>
                 <span className="text-sm font-medium flex-1">{p.name}</span>
                 {p.id === activePet.id && <Check size={14} color="var(--terracotta)" />}
