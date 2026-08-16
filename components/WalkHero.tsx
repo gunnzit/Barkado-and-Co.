@@ -48,20 +48,20 @@ export default function WalkHero({
     <div className="relative w-full animate-fade-up overflow-hidden" style={{ height: 280, touchAction: "pan-y", cursor: "grab" }} {...handlers}>
       {photos.map((src, i) => {
         const diff = (i - index + photos.length) % photos.length;
-        let transform = "translateY(0) scale(1)";
+        let transform = "translateX(0) scale(1)";
         let opacity = 0;
         let zIndex = 0;
 
         if (diff === 0) {
-          transform = "translateY(0) scale(1)";
+          transform = "translateX(0) scale(1)";
           opacity = 1;
           zIndex = 2;
         } else if (diff === 1) {
-          transform = "translateY(100%) scale(0.96)";
+          transform = "translateX(100%) scale(0.96)";
           opacity = 0;
           zIndex = 1;
         } else {
-          transform = "translateY(-100%) scale(0.96)";
+          transform = "translateX(-100%) scale(0.96)";
           opacity = 0;
           zIndex = 0;
         }
@@ -94,6 +94,8 @@ export default function WalkHero({
         <Pencil size={12} color="white" />
         <span className="text-white text-xs font-semibold hidden sm:inline">Edit profile</span>
       </Link>
+
+      <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="overlay" topOffset={44} />
 
       {walksThisWeek > 0 && (
         <div
@@ -141,7 +143,6 @@ export default function WalkHero({
             <PawPrint size={13} />
             <span className="font-bold">Book {petName ?? "a"} walk</span>
           </button>
-          <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="inline" />
         </div>
       </div>
 

@@ -9,11 +9,14 @@ type Photo = { id: string; url: string };
 export default function HeroPetPhotoManager({
   onPhotosChange,
   variant = "overlay",
+  topOffset = 12,
 }: {
   onPhotosChange: (urls: string[]) => void;
-  /** "overlay" = absolutely positioned bottom-left over the photo (homepage).
-   *  "inline" = a normal flex item, meant to sit next to another button (dashboard). */
+  /** "overlay" = absolutely positioned top-right over the photo.
+   *  "inline" = a normal flex item, meant to sit next to another button. */
   variant?: "overlay" | "inline";
+  /** px from the top, for stacking below another top-right badge (e.g. Edit profile). */
+  topOffset?: number;
 }) {
   const { isSignedIn } = useUser();
   const { openSignIn } = useClerk();
@@ -38,8 +41,6 @@ export default function HeroPetPhotoManager({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
 
-  // If someone tapped the button while signed out, we sent them to sign in.
-  // Once they come back signed in, pick up right where they left off.
   useEffect(() => {
     if (isSignedIn && pendingOpenAfterAuth) {
       setPendingOpenAfterAuth(false);
@@ -87,8 +88,9 @@ export default function HeroPetPhotoManager({
     <>
       <button
         onClick={handleClick}
-        className={`hero-photo-cta flex items-center gap-1.5 sm:gap-2 pl-2.5 pr-3 sm:pl-3 sm:pr-4 py-2 sm:py-2.5 rounded-full tap-scale text-xs sm:text-sm ${variant === "overlay" ? "absolute bottom-4 left-4" : ""}`}
+        className={`hero-photo-cta flex items-center gap-1.5 sm:gap-2 pl-2.5 pr-3 sm:pl-3 sm:pr-4 py-2 sm:py-2.5 rounded-full tap-scale text-xs sm:text-sm ${variant === "overlay" ? "absolute right-3 sm:right-5" : ""}`}
         style={{
+          top: variant === "overlay" ? topOffset : undefined,
           zIndex: variant === "overlay" ? 6 : undefined,
           background: "linear-gradient(135deg, var(--terracotta) 0%, var(--gold) 100%)",
           boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
@@ -120,11 +122,11 @@ export default function HeroPetPhotoManager({
 
       {open && (
         <div
-          className="fixed inset-0 flex items-center justify-center p-6"
+          className="fixed inset-0 flex items-center justify-center p-6 vaccine-modal-backdrop"
           style={{ background: "rgba(0,0,0,0.6)", zIndex: 100 }}
           onClick={() => setOpen(false)}
         >
-          <div className="card w-full max-w-sm" style={{ background: "var(--card)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="card w-full max-w-sm vaccine-modal-pop" style={{ background: "var(--card)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold">Your dog's photos</h3>
               <button onClick={() => setOpen(false)} className="tap-scale">
@@ -132,7 +134,7 @@ export default function HeroPetPhotoManager({
               </button>
             </div>
             <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-              Upload up to 3 photos — they'll show across Barkado & Co..'s hero banners, just for you.
+              Upload up to 3 photos — they'll show across Barkado & Co.'s hero banners, just for you.
             </p>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {photos.map((p) => (

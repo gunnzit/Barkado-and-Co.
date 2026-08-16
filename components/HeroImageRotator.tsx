@@ -27,20 +27,20 @@ export default function HeroImageRotator({ activeBreed }: { activeBreed?: string
     <div className="img-frame relative shadow-sm animate-fade-up overflow-hidden" style={{ minHeight: 340, touchAction: "pan-y", cursor: "grab" }} {...handlers}>
       {images.map((src, i) => {
         const diff = (i - index + images.length) % images.length;
-        let transform = "translateY(0) scale(1)";
+        let transform = "translateX(0) scale(1)";
         let opacity = 0;
         let zIndex = 0;
 
         if (diff === 0) {
-          transform = "translateY(0) scale(1)";
+          transform = "translateX(0) scale(1)";
           opacity = 1;
           zIndex = 2;
         } else if (diff === 1) {
-          transform = "translateY(100%) scale(0.96)";
+          transform = "translateX(100%) scale(0.96)";
           opacity = 0;
           zIndex = 1;
         } else {
-          transform = "translateY(-100%) scale(0.96)";
+          transform = "translateX(-100%) scale(0.96)";
           opacity = 0;
           zIndex = 0;
         }
