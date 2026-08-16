@@ -12,7 +12,7 @@ export async function GET() {
       where: { userId: user.id },
       orderBy: { createdAt: "asc" },
     });
-    return NextResponse.json(photos);
+    return NextResponse.json({ photos, showStockPhotos: user.showStockPhotos });
   } catch (err: any) {
     console.error("GET /api/hero-photos failed:", err);
     return NextResponse.json({ error: err?.message || "Unknown server error" }, { status: 500 });
@@ -47,6 +47,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(photo, { status: 201 });
   } catch (err: any) {
     console.error("POST /api/hero-photos failed:", err);
+    return NextResponse.json({ error: err?.message || "Unknown server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getOrCreateUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { showStockPhotos } = await req.json();
+    if (typeof showStockPhotos !== "boolean") {
+      return NextResponse.json({ error: "showStockPhotos must be a boolean" }, { status: 400 });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { showStockPhotos },
+    });
+
+    return NextResponse.json({ showStockPhotos });
+  } catch (err: any) {
+    console.error("PATCH /api/hero-photos failed:", err);
     return NextResponse.json({ error: err?.message || "Unknown server error" }, { status: 500 });
   }
 }

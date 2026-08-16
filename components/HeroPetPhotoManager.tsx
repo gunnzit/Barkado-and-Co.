@@ -7,11 +7,11 @@ import { Camera, X, Trash2 } from "lucide-react";
 type Photo = { id: string; url: string };
 
 export default function HeroPetPhotoManager({
-  onPhotosChange,
+  onPreferencesChange,
   variant = "overlay",
   topOffset = 12,
 }: {
-  onPhotosChange: (urls: string[]) => void;
+  onPreferencesChange: (urls: string[], showStockPhotos: boolean) => void;
   /** "overlay" = absolutely positioned top-right over the photo.
    *  "inline" = a normal flex item, meant to sit next to another button. */
   variant?: "overlay" | "inline";
@@ -21,6 +21,7 @@ export default function HeroPetPhotoManager({
   const { isSignedIn } = useUser();
   const { openSignIn } = useClerk();
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [showStockPhotos, setShowStockPhotos] = useState(true);
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +31,10 @@ export default function HeroPetPhotoManager({
   const load = async () => {
     const res = await fetch("/api/hero-photos");
     if (res.ok) {
-      const data: Photo[] = await res.json();
-      setPhotos(data);
-      onPhotosChange(data.map((p) => p.url));
+      const data: { photos: Photo[]; showStockPhotos: boolean } = await res.json();
+      setPhotos(data.photos);
+      setShowStockPhotos(data.showStockPhotos);
+      onPreferencesChange(data.photos.map((p) => p.url), data.showStockPhotos);
     }
   };
 
@@ -80,6 +82,22 @@ export default function HeroPetPhotoManager({
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/hero-photos/${id}`, { method: "DELETE" });
     if (res.ok) load();
+  };
+
+  const toggleStockPhotos = async () => {
+    const next = !showStockPhotos;
+    setShowStockPhotos(next); // optimistic
+    onPreferencesChange(photos.map((p) => p.url), next);
+    const res = await fetch("/api/hero-photos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showStockPhotos: next }),
+    });
+    if (!res.ok) {
+      // revert on failure
+      setShowStockPhotos(!next);
+      onPreferencesChange(photos.map((p) => p.url), !next);
+    }
   };
 
   const showAttentionBadge = !isSignedIn || photos.length === 0;
@@ -136,6 +154,27 @@ export default function HeroPetPhotoManager({
             <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
               Upload up to 3 photos — they'll show across Barkado & Co.'s hero banners, just for you.
             </p>
+
+            {/* Stock photos toggle */}
+            <button
+              onClick={toggleStockPhotos}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-4 tap-scale"
+              style={{ background: "var(--cream)" }}
+            >
+              <span className="text-xs font-semibold text-left">
+                Show default photos too
+              </span>
+              <span
+                className="relative shrink-0 rounded-full transition-colors"
+                style={{ width: 36, height: 20, background: showStockPhotos ? "var(--terracotta)" : "var(--border)" }}
+              >
+                <span
+                  className="absolute top-0.5 rounded-full bg-white transition-all"
+                  style={{ width: 16, height: 16, left: showStockPhotos ? 18 : 2 }}
+                />
+              </span>
+            </button>
+
             <div className="grid grid-cols-3 gap-2 mb-3">
               {photos.map((p) => (
                 <div key={p.id} className="relative rounded-lg overflow-hidden" style={{ aspectRatio: "1" }}>

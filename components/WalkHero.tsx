@@ -35,8 +35,10 @@ export default function WalkHero({
 }) {
   const [showWalkAnim, setShowWalkAnim] = useState(false);
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
+  const [showStockPhotos, setShowStockPhotos] = useState(true);
   const mascot = getMascotPath(petBreed, "active");
-  const photos = userPhotos.length > 0 ? [...userPhotos, mascot, ...STOCK_PHOTOS] : [mascot, ...STOCK_PHOTOS];
+  const stock = showStockPhotos ? STOCK_PHOTOS : [];
+  const photos = userPhotos.length > 0 ? [...userPhotos, mascot, ...stock] : [mascot, ...stock];
   const { index, handlers } = useSwipeRotator(photos.length, INTERVAL_MS);
   const router = useRouter();
 
@@ -95,7 +97,14 @@ export default function WalkHero({
         <span className="text-white text-xs font-semibold hidden sm:inline">Edit profile</span>
       </Link>
 
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="overlay" topOffset={44} />
+      <HeroPetPhotoManager
+        onPreferencesChange={(urls, showStock) => {
+          setUserPhotos(urls);
+          setShowStockPhotos(showStock);
+        }}
+        variant="overlay"
+        topOffset={44}
+      />
 
       {walksThisWeek > 0 && (
         <div

@@ -19,8 +19,10 @@ const INTERVAL_MS = 4000;
 
 export default function HeroImageRotator({ activeBreed }: { activeBreed?: string | null } = {}) {
   const [userPhotos, setUserPhotos] = useState<string[]>([]);
+  const [showStockPhotos, setShowStockPhotos] = useState(true);
   const mascot = getMascotPath(activeBreed, "active");
-  const images = userPhotos.length > 0 ? [...userPhotos, mascot, ...STOCK_IMAGES] : [mascot, ...STOCK_IMAGES];
+  const stock = showStockPhotos ? STOCK_IMAGES : [];
+  const images = userPhotos.length > 0 ? [...userPhotos, mascot, ...stock] : [mascot, ...stock];
   const { index, handlers } = useSwipeRotator(images.length, INTERVAL_MS);
 
   return (
@@ -102,7 +104,13 @@ export default function HeroImageRotator({ activeBreed }: { activeBreed?: string
         ))}
       </div>
 
-      <HeroPetPhotoManager onPhotosChange={setUserPhotos} variant="overlay" />
+      <HeroPetPhotoManager
+        onPreferencesChange={(urls, showStock) => {
+          setUserPhotos(urls);
+          setShowStockPhotos(showStock);
+        }}
+        variant="overlay"
+      />
     </div>
   );
 }
