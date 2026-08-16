@@ -32,6 +32,16 @@ export function breedThemeClass(breed?: string | null): string {
 
 const ALL_THEMES: BreedTheme[] = ["dalmatian", "beagle", "golden-retriever", "german-shepherd", "labrador"];
 
+/** Shared list of theme choices for any theme-picker UI (pet profile page, pet switcher, etc.) */
+export const THEME_OPTIONS: { key: string; label: string; swatch: string }[] = [
+  { key: "auto", label: "Auto (match breed)", swatch: "linear-gradient(135deg, var(--terracotta) 50%, var(--gold) 50%)" },
+  { key: "dalmatian", label: "Dalmatian", swatch: "linear-gradient(135deg, #1a1a1a 50%, #e63946 50%)" },
+  { key: "beagle", label: "Beagle", swatch: "linear-gradient(135deg, #a0522d 50%, #d4a24c 50%)" },
+  { key: "golden-retriever", label: "Golden Retriever", swatch: "linear-gradient(135deg, #d4972e 50%, #f6d76b 50%)" },
+  { key: "german-shepherd", label: "German Shepherd", swatch: "linear-gradient(135deg, #7a4a24 50%, #3d2c1c 50%)" },
+  { key: "labrador", label: "Labrador", swatch: "linear-gradient(135deg, #c9a66b 50%, #8f5f37 50%)" },
+];
+
 /**
  * Resolves the theme for a pet: a manual themeOverride wins if set to a real
  * theme key; otherwise falls back to auto-matching the breed text, same as

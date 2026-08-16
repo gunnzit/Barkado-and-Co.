@@ -22,7 +22,7 @@ import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import { resolveThemeClass } from "@/lib/breedTheme";
+import { resolveThemeClass, THEME_OPTIONS } from "@/lib/breedTheme";
 
 type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
 type Booking = { id: string; type: string; status: string; startTime: string; provider: { user: { name: string } } };
@@ -61,15 +61,6 @@ const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: strin
   { key: "microchipId", label: "Microchip ID", icon: Cpu, placeholder: "Chip number" },
   { key: "insuranceProvider", label: "Insurance provider", icon: ShieldCheck, placeholder: "e.g. PetSecure" },
   { key: "insurancePolicy", label: "Insurance policy #", icon: ShieldCheck, placeholder: "Policy number" },
-];
-
-const THEME_OPTIONS: { key: string; label: string; swatch: string }[] = [
-  { key: "auto", label: "Auto (match breed)", swatch: "linear-gradient(135deg, var(--terracotta) 50%, var(--gold) 50%)" },
-  { key: "dalmatian", label: "Dalmatian", swatch: "linear-gradient(135deg, #1a1a1a 50%, #e63946 50%)" },
-  { key: "beagle", label: "Beagle", swatch: "linear-gradient(135deg, #a0522d 50%, #d4a24c 50%)" },
-  { key: "golden-retriever", label: "Golden Retriever", swatch: "linear-gradient(135deg, #d4972e 50%, #f6d76b 50%)" },
-  { key: "german-shepherd", label: "German Shepherd", swatch: "linear-gradient(135deg, #7a4a24 50%, #3d2c1c 50%)" },
-  { key: "labrador", label: "Labrador", swatch: "linear-gradient(135deg, #c9a66b 50%, #8f5f37 50%)" },
 ];
 
 export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
