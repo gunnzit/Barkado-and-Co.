@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, PawPrint, GraduationCap, Syringe, ShoppingBag, User } from "lucide-react";
+import { Home, PawPrint, GraduationCap, Scissors, ShoppingBag, User } from "lucide-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -37,10 +37,10 @@ export default function BottomNav() {
       active: pathname === "/training",
     },
     {
-      href: "/owner/vaccines",
-      label: "Vaccines",
-      icon: Syringe,
-      active: pathname === "/owner/vaccines",
+      href: "/grooming",
+      label: "Groom",
+      icon: Scissors,
+      active: pathname === "/grooming",
     },
     {
       href: "/accessories",

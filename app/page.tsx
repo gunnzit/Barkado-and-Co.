@@ -7,6 +7,7 @@ import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
+import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import NeedsGrid from "@/components/NeedsGrid";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -65,6 +66,7 @@ export default async function Home() {
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
+      <VaccineQuickAccess />
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
         <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
+import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -86,6 +87,7 @@ export default async function OwnerDashboard() {
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
     <main className="pb-28 max-w-2xl mx-auto">
       <EmergencyButton />
+      <VaccineQuickAccess />
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
         <div className="flex items-center gap-2">
