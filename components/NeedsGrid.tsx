@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag } from "lucide-react";
+import { PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag, GraduationCap } from "lucide-react";
 import WalkTransition from "@/components/WalkTransition";
 
 const NEEDS = [
-  { label: "Walk", icon: PawPrint, href: "/book?service=WALKING", soon: false, animated: true },
-  { label: "Groom", icon: Scissors, href: "#", soon: true, animated: false },
+  { label: "Walk", icon: PawPrint, href: "/walk-booking", soon: false, animated: true },
+  { label: "Groom", icon: Scissors, href: "/grooming", soon: false, animated: false },
+  { label: "Train", icon: GraduationCap, href: "/training", soon: false, animated: false },
   { label: "Vet", icon: Stethoscope, href: "/owner/pets", soon: false, animated: false },
-  { label: "Sit", icon: HomeIcon, href: "/book?service=SITTING", soon: false, animated: false },
+  { label: "Sit", icon: HomeIcon, href: "/sitting", soon: false, animated: false },
   { label: "Shop", icon: ShoppingBag, href: "/accessories", soon: false, animated: false },
 ];
 
@@ -19,14 +20,14 @@ export default function NeedsGrid() {
   const router = useRouter();
 
   if (showWalkAnim) {
-    return <WalkTransition onDone={() => router.push("/book?service=WALKING")} />;
+    return <WalkTransition onDone={() => router.push("/walk-booking")} />;
   }
 
   return (
     <section className="max-w-6xl mx-auto px-6 mb-16">
       <div className="card" style={{ background: "var(--card)" }}>
         <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--muted)" }}>My pet needs...</p>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {NEEDS.map((need) => {
             const Icon = need.icon;
             if (need.animated) {
