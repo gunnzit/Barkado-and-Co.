@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PawPrint, Star, ShieldCheck, Check, MapPin } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
+import PhoneVerification from "@/components/PhoneVerification";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 type Provider = {
   id: string;
@@ -185,22 +187,14 @@ export default function ServiceBookingFlow({
           </div>
 
           <div className="card space-y-4 mb-4">
-            <input
-              type="text"
-              placeholder="Address"
-              className="w-full border rounded-xl px-3 py-2 text-sm"
-              style={{ borderColor: "var(--border)" }}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-            <input
-              type="tel"
-              placeholder="Mobile number"
-              className="w-full border rounded-xl px-3 py-2 text-sm"
-              style={{ borderColor: "var(--border)" }}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+            <div>
+              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Address</label>
+              <AddressAutocomplete value={address} onChange={setAddress} placeholder="Address" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Mobile number (verified)</label>
+              <PhoneVerification onVerified={setPhone} />
+            </div>
           </div>
 
           <button
