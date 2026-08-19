@@ -101,7 +101,7 @@ export default async function Home() {
             <Link href="/book" className="btn-primary">Book in a few taps</Link>
             <Link href="/owner/pets" className="btn-secondary">See the Paw Passport</Link>
           </div>
-          {avgRating && (
+          {avgRating !== null && avgRating > 0 && (
             <p className="text-sm flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
               <Star size={14} fill="var(--gold)" color="var(--gold)" />
               {avgRating.toFixed(2)} average
