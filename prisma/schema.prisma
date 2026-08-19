@@ -17,6 +17,8 @@ enum Role {
 enum ServiceType {
   WALKING
   SITTING
+  GROOMING
+  TRAINING
 }
 
 enum BookingStatus {
@@ -118,6 +120,8 @@ model Provider {
   radiusKm        Int      @default(5)
   pricePerWalk    Int? // in paise
   pricePerSitDay  Int? // in paise
+  pricePerGroom   Int? // in paise — grooming booking flow not built yet, price recorded for future use
+  pricePerTrain   Int? // in paise
   verified        Boolean  @default(false)
   ratingAvg       Float    @default(0)
   ratingCount     Int      @default(0)

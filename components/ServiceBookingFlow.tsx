@@ -9,10 +9,27 @@ type Provider = {
   id: string;
   pricePerWalk?: number;
   pricePerSitDay?: number;
+  pricePerGroom?: number;
+  pricePerTrain?: number;
   ratingAvg: number;
   user: { name: string };
   _count: { bookings: number };
 };
+
+const COPY: Record<
+  "WALKING" | "SITTING" | "GROOMING" | "TRAINING",
+  { noun: string; providerNoun: string; findLabel: string; detailsTitle: (pet: string) => string; needsEndDate: boolean }
+> = {
+  WALKING: { noun: "walk", providerNoun: "Walkers", findLabel: "Find a walker", detailsTitle: (pet) => `When should ${pet} walk?`, needsEndDate: false },
+  SITTING: { noun: "stay", providerNoun: "Sitters", findLabel: "Find a sitter", detailsTitle: (pet) => `Plan ${pet}'s stay`, needsEndDate: true },
+  GROOMING: { noun: "grooming session", providerNoun: "Groomers", findLabel: "Find a groomer", detailsTitle: (pet) => `Book ${pet}'s grooming`, needsEndDate: false },
+  TRAINING: { noun: "training session", providerNoun: "Trainers", findLabel: "Find a trainer", detailsTitle: (pet) => `Book ${pet}'s training`, needsEndDate: false },
+};
+
+function priceFor(serviceType: keyof typeof COPY, p: Provider): number {
+  const field = { WALKING: p.pricePerWalk, SITTING: p.pricePerSitDay, GROOMING: p.pricePerGroom, TRAINING: p.pricePerTrain }[serviceType];
+  return (field ?? 0) / 100;
+}
 
 export default function ServiceBookingFlow({
   serviceType,
@@ -22,7 +39,7 @@ export default function ServiceBookingFlow({
   showStartButton,
   isFirstWalk = false,
 }: {
-  serviceType: "WALKING" | "SITTING";
+  serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
   activePetId: string | null;
   activePetName: string | null;
   hasPets: boolean;
@@ -51,8 +68,8 @@ export default function ServiceBookingFlow({
   }, [phase, serviceType]);
 
   const goToProviders = () => {
-    // Walking is a single visit — default a short window from the chosen start time.
-    if (serviceType === "WALKING" && start && !end) {
+    // Single-visit services default a short window from the chosen start time.
+    if (!COPY[serviceType].needsEndDate && start && !end) {
       const startDate = new Date(start);
       setEnd(new Date(startDate.getTime() + 30 * 60000).toISOString().slice(0, 16));
     }
@@ -81,7 +98,7 @@ export default function ServiceBookingFlow({
     setSubmittingId(null);
   };
 
-  const detailsValid = start && (serviceType === "SITTING" ? end : true) && address && phone;
+  const detailsValid = start && (COPY[serviceType].needsEndDate ? end : true) && address && phone;
 
   if (!hasPets) {
     return (
@@ -134,16 +151,16 @@ export default function ServiceBookingFlow({
       {phase === "details" && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-1">
-            {serviceType === "WALKING" ? `When should ${activePetName ?? "your pet"} walk?` : `Plan ${activePetName ?? "your pet"}'s stay`}
+            {COPY[serviceType].detailsTitle(activePetName ?? "your pet")}
           </h1>
           <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-            {serviceType === "WALKING" ? "Pick a time and where to meet." : "Pick dates and where to pick up / drop off."}
+            {COPY[serviceType].needsEndDate ? "Pick dates and where to pick up / drop off." : "Pick a time and where to meet."}
           </p>
 
           <div className="card space-y-4 mb-4">
             <div>
               <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>
-                {serviceType === "WALKING" ? "Walk time" : "Start"}
+                {COPY[serviceType].needsEndDate ? "Start" : "Time"}
               </label>
               <input
                 type="datetime-local"
@@ -153,7 +170,7 @@ export default function ServiceBookingFlow({
                 onChange={(e) => setStart(e.target.value)}
               />
             </div>
-            {serviceType === "SITTING" && (
+            {COPY[serviceType].needsEndDate && (
               <div>
                 <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>End</label>
                 <input
@@ -192,7 +209,7 @@ export default function ServiceBookingFlow({
             className="btn-primary w-full tap-scale"
             style={{ opacity: detailsValid ? 1 : 0.5 }}
           >
-            {serviceType === "WALKING" ? "Find a walker" : "Find a sitter"}
+            {COPY[serviceType].findLabel}
           </button>
         </div>
       )}
@@ -202,7 +219,7 @@ export default function ServiceBookingFlow({
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
             <MapPin size={20} color="var(--terracotta)" />
-            {serviceType === "WALKING" ? "Walkers nearby" : "Sitters nearby"}
+            {COPY[serviceType].providerNoun} nearby
           </h1>
           <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>Verified, ready to help.</p>
 
@@ -228,7 +245,7 @@ export default function ServiceBookingFlow({
                       <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
                       <span>· {p._count.bookings} completed</span>
                       <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
-                        ₹{serviceType === "WALKING" ? ((p.pricePerWalk ?? 0) / 100).toFixed(0) : ((p.pricePerSitDay ?? 0) / 100).toFixed(0)}
+                        ₹{priceFor(serviceType, p).toFixed(0)}
                       </span>
                     </div>
                   </div>
