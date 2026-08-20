@@ -1,8 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useReverification } from "@clerk/nextjs";
+import { isReverificationCancelledError } from "@clerk/nextjs/errors";
 import { ShieldCheck, Loader2 } from "lucide-react";
+
+function describeClerkError(e: any): string {
+  const first = e?.errors?.[0];
+  if (first) {
+    const parts = [first.code, first.message, first.longMessage].filter(Boolean);
+    return parts.join(" — ");
+  }
+  if (e?.message) return e.message;
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return "Unknown error";
+  }
+}
 
 export default function PhoneVerification({ onVerified }: { onVerified: (phone: string) => void }) {
   const { user } = useUser();
@@ -15,7 +30,8 @@ export default function PhoneVerification({ onVerified }: { onVerified: (phone: 
   const [error, setError] = useState("");
   const [pendingResource, setPendingResource] = useState<any>(null);
 
-  // If they already have a verified number on file, use it immediately — no need to re-verify every booking.
+  const createPhoneNumber = useReverification((phoneNumber: string) => user!.createPhoneNumber({ phoneNumber }));
+
   useEffect(() => {
     if (existingVerified) {
       setPhone(existingVerified.phoneNumber);
@@ -30,12 +46,16 @@ export default function PhoneVerification({ onVerified }: { onVerified: (phone: 
     setSending(true);
     setError("");
     try {
-      const resource = await user.createPhoneNumber({ phoneNumber: phone });
+      const resource = await createPhoneNumber(phone);
       await resource.prepareVerification();
       setPendingResource(resource);
       setStep("code");
     } catch (e: any) {
-      setError(e?.errors?.[0]?.message || "Couldn't send a code — check the number and try again.");
+      if (isReverificationCancelledError(e)) {
+        setError("Verification cancelled.");
+      } else {
+        setError(describeClerkError(e));
+      }
     }
     setSending(false);
   };
@@ -53,7 +73,7 @@ export default function PhoneVerification({ onVerified }: { onVerified: (phone: 
         setError("That code didn't match — try again.");
       }
     } catch (e: any) {
-      setError(e?.errors?.[0]?.message || "Verification failed.");
+      setError(describeClerkError(e));
     }
     setSending(false);
   };
@@ -94,7 +114,7 @@ export default function PhoneVerification({ onVerified }: { onVerified: (phone: 
             {sending ? <Loader2 size={14} className="animate-spin" /> : "Verify"}
           </button>
         </div>
-        {error && <p className="text-xs" style={{ color: "var(--terracotta)" }}>{error}</p>}
+        {error && <p className="text-xs break-words" style={{ color: "var(--terracotta)" }}>{error}</p>}
       </div>
     );
   }
@@ -114,7 +134,7 @@ export default function PhoneVerification({ onVerified }: { onVerified: (phone: 
           {sending ? <Loader2 size={14} className="animate-spin" /> : "Send code"}
         </button>
       </div>
-      {error && <p className="text-xs" style={{ color: "var(--terracotta)" }}>{error}</p>}
+      {error && <p className="text-xs break-words" style={{ color: "var(--terracotta)" }}>{error}</p>}
     </div>
   );
 }
