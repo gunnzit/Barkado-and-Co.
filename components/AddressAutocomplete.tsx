@@ -1,29 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { MapPin } from "lucide-react";
 
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
-let scriptLoadingPromise: Promise<void> | null = null;
-function loadGoogleMapsScript(apiKey: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  if (window.google?.maps) return Promise.resolve();
-  if (scriptLoadingPromise) return scriptLoadingPromise;
-
-  scriptLoadingPromise = new Promise((resolve, reject) => {
-    (window as any).__googleMapsReady = () => resolve();
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async&callback=__googleMapsReady`;
-    script.async = true;
-    script.onerror = () => reject(new Error("Failed to load Google Maps"));
-    document.head.appendChild(script);
-  });
-  return scriptLoadingPromise;
-}
+type Suggestion = {
+  place_id: string;
+  display_name: string;
+};
 
 export default function AddressAutocomplete({
   value,
@@ -34,46 +17,101 @@ export default function AddressAutocomplete({
   onChange: (address: string) => void;
   placeholder?: string;
 }) {
+  const apiKey = process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY;
+  const [query, setQuery] = useState(value);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!apiKey || !containerRef.current) return;
-    let cancelled = false;
+    setQuery(value);
+  }, [value]);
 
-    loadGoogleMapsScript(apiKey).then(async () => {
-      if (cancelled || !containerRef.current) return;
-      const { PlaceAutocompleteElement } = await window.google.maps.importLibrary("places");
-      const el = new PlaceAutocompleteElement();
-      containerRef.current.innerHTML = "";
-      containerRef.current.appendChild(el);
-
-      el.addEventListener("gmp-select", async ({ placePrediction }: any) => {
-        const place = placePrediction.toPlace();
-        await place.fetchFields({ fields: ["formattedAddress"] });
-        onChange(place.formattedAddress ?? "");
-      });
-    });
-
-    return () => {
-      cancelled = true;
+  // Close the dropdown on outside click.
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
-  // No API key configured yet — fall back to a plain text field instead of breaking the form.
-  if (!apiKey) {
-    return (
+  const handleInput = (text: string) => {
+    setQuery(text);
+    onChange(text); // keep parent form state in sync even before a suggestion is picked
+
+    if (!apiKey || text.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://api.locationiq.com/v1/autocomplete?key=${apiKey}&q=${encodeURIComponent(text)}&limit=5&dedupe=1&format=json`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(Array.isArray(data) ? data : []);
+          setOpen(true);
+        }
+      } catch {
+        setSuggestions([]);
+      }
+      setLoading(false);
+    }, 350);
+  };
+
+  const selectSuggestion = (s: Suggestion) => {
+    setQuery(s.display_name);
+    onChange(s.display_name);
+    setSuggestions([]);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full">
       <input
         type="text"
         placeholder={placeholder}
         className="w-full border rounded-xl px-3 py-2 text-sm"
         style={{ borderColor: "var(--border)" }}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={query}
+        onChange={(e) => handleInput(e.target.value)}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
       />
-    );
-  }
 
-  return <div ref={containerRef} className="w-full" style={{ minHeight: 40 }} />;
+      {open && suggestions.length > 0 && (
+        <div
+          className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-lg z-50"
+          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        >
+          {suggestions.map((s) => (
+            <button
+              key={s.place_id}
+              onClick={() => selectSuggestion(s)}
+              className="w-full flex items-start gap-2 px-3 py-2.5 text-left tap-scale"
+              style={{ borderBottom: "1px solid var(--border)" }}
+            >
+              <MapPin size={14} color="var(--muted)" className="mt-0.5 shrink-0" />
+              <span className="text-sm">{s.display_name}</span>
+            </button>
+          ))}
+          <p className="text-[10px] px-3 py-1.5" style={{ color: "var(--muted)" }}>
+            Powered by LocationIQ
+          </p>
+        </div>
+      )}
+
+      {loading && (
+        <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>Searching…</p>
+      )}
+    </div>
+  );
 }
