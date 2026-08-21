@@ -8,19 +8,27 @@ const addSchema = z.object({
   quantity: z.number().int().positive().default(1),
 });
 
+// Returns every cart row for the signed-in user — both PRODUCT and SERVICE
+// kinds — with the relations the checkout page needs to render each one
+// (product details, or provider/pet details for a service-in-progress).
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const items = await prisma.cartItem.findMany({
     where: { userId: user.id },
-    include: { product: true },
+    include: {
+      product: true,
+      provider: { include: { user: { select: { name: true } } } },
+      pet: true,
+    },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(items);
 }
 
-// Add to cart, or bump quantity if it's already there
+// Add a product to cart, or bump quantity if it's already there.
+// (Adding a SERVICE item goes through /api/cart/service instead.)
 export async function POST(req: Request) {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -46,7 +54,7 @@ export async function POST(req: Request) {
         data: { quantity: existing.quantity + parsed.data.quantity },
       })
     : await prisma.cartItem.create({
-        data: { userId: user.id, productId: product.id, quantity: parsed.data.quantity },
+        data: { userId: user.id, kind: "PRODUCT", productId: product.id, quantity: parsed.data.quantity },
       });
 
   return NextResponse.json(item, { status: 201 });

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PawPrint, Star, ShieldCheck, Check, MapPin } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
+import { useCart } from "@/components/CartProvider";
 
 type Provider = {
   id: string;
@@ -50,6 +51,7 @@ export default function ServiceBookingFlow({
   defaultAddress?: string | null;
   defaultPhone?: string | null;
 }) {
+  const { addService } = useCart();
   const [phase, setPhase] = useState<"intro" | "details" | "providers" | "done">(
     showStartButton ? "intro" : "details"
   );
@@ -60,7 +62,7 @@ export default function ServiceBookingFlow({
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [bookedWith, setBookedWith] = useState<string | null>(null);
+  const [addError, setAddError] = useState(false);
 
   useEffect(() => {
     if (phase !== "providers") return;
@@ -80,25 +82,24 @@ export default function ServiceBookingFlow({
     setPhase("providers");
   };
 
-  const book = async (providerId: string) => {
+  const addToCart = async (providerId: string) => {
     setSubmittingId(providerId);
-    const res = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        providerId,
-        petId: activePetId,
-        type: serviceType,
-        startTime: start,
-        endTime: end,
-        address,
-        phone,
-      }),
+    setAddError(false);
+    const result = await addService({
+      serviceType,
+      providerId,
+      petId: activePetId!,
+      startTime: start,
+      endTime: end,
+      address,
+      phone,
     });
-    if (res.ok) {
-      setBookedWith(providerId);
+    if (result === "ok") {
       setPhase("done");
+    } else if (result === "error") {
+      setAddError(true);
     }
+    // "unauthorized" opens the sign-in modal via CartProvider; nothing else to do here.
     setSubmittingId(null);
   };
 
@@ -217,6 +218,12 @@ export default function ServiceBookingFlow({
           </h1>
           <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>Verified, ready to help.</p>
 
+          {addError && (
+            <p className="text-xs mb-4" style={{ color: "var(--terracotta)" }}>
+              Couldn't add that to your cart — please try again.
+            </p>
+          )}
+
           {loadingProviders ? (
             <p className="text-sm" style={{ color: "var(--muted)" }}>Loading…</p>
           ) : providers.length === 0 ? (
@@ -243,7 +250,7 @@ export default function ServiceBookingFlow({
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => book(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                  <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
                     {submittingId === p.id ? "…" : "Choose"}
                   </button>
                 </div>
@@ -253,15 +260,20 @@ export default function ServiceBookingFlow({
         </div>
       )}
 
-      {/* ===== Done ===== */}
+      {/* ===== Done — added to cart ===== */}
       {phase === "done" && (
         <div className="card text-center py-10 animate-fade-up">
           <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cream)" }}>
-            <Check size={26} color="var(--terracotta)" />
+            <ShoppingBag size={24} color="var(--terracotta)" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Requested</h2>
-          <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>You'll be notified once they accept.</p>
-          <Link href={serviceType === "WALKING" ? "/owner/dashboard" : "/"} className="btn-primary inline-block">Back to home</Link>
+          <h2 className="text-xl font-bold mb-2">Added to your cart</h2>
+          <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
+            Review it alongside anything else you're getting, then pay when you're ready.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link href="/cart" className="btn-primary inline-block">View cart</Link>
+            <Link href={serviceType === "WALKING" ? "/owner/dashboard" : "/"} className="btn-secondary inline-block">Keep browsing</Link>
+          </div>
         </div>
       )}
 

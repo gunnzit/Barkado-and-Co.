@@ -42,6 +42,11 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum CartItemKind {
+  PRODUCT
+  SERVICE
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -100,6 +105,7 @@ model Pet {
 
   vaccinations Vaccination[]
   bookings     Booking[]
+  cartItems    CartItem[]
 }
 
 // Up to 3 personal photos a pet owner can upload to appear in their own
@@ -142,7 +148,8 @@ model Provider {
   ratingCount     Int      @default(0)
   createdAt       DateTime @default(now())
 
-  bookings Booking[]
+  bookings  Booking[]
+  cartItems CartItem[]
 }
 
 model Booking {
@@ -164,6 +171,10 @@ model Booking {
   longitude    Float?
   razorpayOrderId String?
   paidAt       DateTime?
+  // Links this booking back to the cart checkout / payment that created it,
+  // so a single Order can group accessories and service bookings together.
+  orderId      String?
+  order        Order?        @relation(fields: [orderId], references: [id])
   createdAt    DateTime      @default(now())
 
   report WalkReport?
@@ -209,13 +220,35 @@ model Product {
   orderItems OrderItem[]
 }
 
+// A single cart row is either a PRODUCT (accessory, keyed by productId +
+// quantity) or a SERVICE (a walk/sit/groom/train booking-in-progress,
+// keyed by provider + pet + time window). Both kinds share one cart so
+// checkout can combine accessories and service bookings in one payment.
 model CartItem {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
+  user      User         @relation(fields: [userId], references: [id])
+  kind      CartItemKind @default(PRODUCT)
+
+  // ── PRODUCT fields ──
+  productId String?
+  product   Product?     @relation(fields: [productId], references: [id])
+  quantity  Int          @default(1)
+
+  // ── SERVICE fields ──
+  serviceType ServiceType?
+  providerId  String?
+  provider    Provider?    @relation(fields: [providerId], references: [id])
+  petId       String?
+  pet         Pet?         @relation(fields: [petId], references: [id])
+  startTime   DateTime?
+  endTime     DateTime?
+  address     String?
+  phone       String?
+  // Price snapshot in paise, set at add-to-cart time. For PRODUCT rows the
+  // live product.price is used instead; this is only read for SERVICE rows.
+  priceAmount Int?
+
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
@@ -231,7 +264,8 @@ model Order {
   paidAt          DateTime?
   createdAt       DateTime    @default(now())
 
-  items OrderItem[]
+  items    OrderItem[]
+  bookings Booking[]
 }
 
 model OrderItem {
