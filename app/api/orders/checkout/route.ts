@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 
 // Real, functioning promo code — 10% off, matches the "WELCOME10" offer shown on the homepage.
+// NOTE: this route is not currently called by the cart/checkout page — that uses
+// /api/checkout/create-order and /api/checkout/verify instead, which also support
+// service bookings and only create records after payment is verified. Left here
+// (fixed, not deleted) in case promo-code support gets folded in later.
 const PROMO_CODES: Record<string, number> = {
   WELCOME10: 0.1,
 };
@@ -23,7 +27,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  // Only PRODUCT rows have a product/price — SERVICE rows are skipped here since
+  // this route doesn't create bookings (see note above).
+  const productItems = cartItems.filter(
+    (item): item is typeof item & { product: NonNullable<typeof item.product> } =>
+      item.kind === "PRODUCT" && item.product !== null
+  );
+  if (productItems.length === 0) {
+    return NextResponse.json({ error: "No purchasable items in cart" }, { status: 400 });
+  }
+
+  const subtotal = productItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const discountRate = PROMO_CODES[promoCode] ?? 0;
   const totalAmount = Math.round(subtotal * (1 - discountRate));
 
@@ -32,8 +46,8 @@ export async function POST(req: Request) {
       userId: user.id,
       totalAmount,
       items: {
-        create: cartItems.map((item) => ({
-          productId: item.productId,
+        create: productItems.map((item) => ({
+          productId: item.productId!,
           quantity: item.quantity,
           priceAtPurchase: item.product.price,
         })),
