@@ -1,0 +1,258 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X } from "lucide-react";
+
+const SERVICE_LABEL: Record<string, string> = {
+  WALKING: "Adventure Walk",
+  SITTING: "Home Staycation",
+  GROOMING: "Luxury Spa Session",
+  TRAINING: "Good Manners Programme",
+};
+
+const SERVICE_ICON: Record<string, any> = {
+  WALKING: PawPrint,
+  SITTING: HomeIcon,
+  GROOMING: Scissors,
+  TRAINING: GraduationCap,
+};
+
+export type ProviderBooking = {
+  id: string;
+  type: "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
+  status: string;
+  startTime: string;
+  endTime: string;
+  priceAmount: number;
+  address: string | null;
+  phone: string | null;
+  pet: { name: string };
+  owner: { name: string };
+};
+
+function formatWhen(iso: string) {
+  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+
+function BookingCard({ booking, children }: { booking: ProviderBooking; children?: React.ReactNode }) {
+  const Icon = SERVICE_ICON[booking.type];
+  return (
+    <div className="card">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+          <Icon size={18} color="var(--terracotta)" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm">{SERVICE_LABEL[booking.type]}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>For {booking.pet.name} · owner {booking.owner.name}</p>
+        </div>
+        <span className="font-bold text-sm shrink-0">₹{(booking.priceAmount / 100).toFixed(0)}</span>
+      </div>
+      <div className="space-y-1 mb-3">
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+          <Clock size={12} /> {formatWhen(booking.startTime)}
+        </p>
+        {booking.address && (
+          <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+            <MapPin size={12} /> {booking.address}
+          </p>
+        )}
+        {booking.phone && (
+          <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+            <Phone size={12} /> {booking.phone}
+          </p>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function WalkReportForm({ bookingId, onDone }: { bookingId: string; onDone: () => void }) {
+  const [distanceKm, setDistanceKm] = useState("");
+  const [durationMin, setDurationMin] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    setSubmitting(true);
+    await fetch(`/api/bookings/${bookingId}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        distanceKm: distanceKm ? Number(distanceKm) : undefined,
+        durationMin: durationMin ? Number(durationMin) : undefined,
+        notes: notes || undefined,
+      }),
+    });
+    setSubmitting(false);
+    onDone();
+  };
+
+  return (
+    <div className="space-y-2 pt-3 mt-3" style={{ borderTop: "1px solid var(--border)" }}>
+      <div className="flex gap-2">
+        <input
+          type="number"
+          placeholder="Distance (km)"
+          className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs"
+          style={{ borderColor: "var(--border)" }}
+          value={distanceKm}
+          onChange={(e) => setDistanceKm(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Duration (min)"
+          className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs"
+          style={{ borderColor: "var(--border)" }}
+          value={durationMin}
+          onChange={(e) => setDurationMin(e.target.value)}
+        />
+      </div>
+      <textarea
+        placeholder="Notes for the owner (optional)"
+        className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
+        style={{ borderColor: "var(--border)" }}
+        rows={2}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+      />
+      <button onClick={submit} disabled={submitting} className="btn-primary w-full text-sm tap-scale" style={{ opacity: submitting ? 0.6 : 1 }}>
+        {submitting ? "Submitting…" : "Submit report & complete"}
+      </button>
+    </div>
+  );
+}
+
+export default function ProviderDashboard({
+  requests,
+  schedule,
+  history,
+}: {
+  requests: ProviderBooking[];
+  schedule: ProviderBooking[];
+  history: ProviderBooking[];
+}) {
+  const [tab, setTab] = useState<"requests" | "schedule" | "history">(requests.length > 0 ? "requests" : "schedule");
+  const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const router = useRouter();
+
+  const setStatus = async (id: string, status: string) => {
+    setBusyId(id);
+    await fetch(`/api/bookings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setBusyId(null);
+    router.refresh();
+  };
+
+  const tabs: { key: typeof tab; label: string; count: number }[] = [
+    { key: "requests", label: "Requests", count: requests.length },
+    { key: "schedule", label: "Schedule", count: schedule.length },
+    { key: "history", label: "History", count: history.length },
+  ];
+
+  return (
+    <div>
+      <div className="flex gap-2 px-6 mb-5">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className="tap-scale px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5"
+            style={{
+              background: tab === t.key ? "var(--panel-dark)" : "var(--card)",
+              color: tab === t.key ? "white" : "inherit",
+              border: "1px solid var(--border)",
+            }}
+          >
+            {t.label}
+            {t.count > 0 && <span style={{ opacity: 0.7 }}>· {t.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="px-6 space-y-3">
+        {tab === "requests" && (
+          requests.length === 0 ? (
+            <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>No new requests right now.</p>
+          ) : (
+            requests.map((b) => (
+              <BookingCard key={b.id} booking={b}>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setStatus(b.id, "ACCEPTED")}
+                    disabled={busyId === b.id}
+                    className="btn-primary flex-1 text-sm tap-scale flex items-center justify-center gap-1.5"
+                  >
+                    <Check size={14} /> Accept
+                  </button>
+                  <button
+                    onClick={() => setStatus(b.id, "DECLINED")}
+                    disabled={busyId === b.id}
+                    className="btn-secondary flex-1 text-sm tap-scale flex items-center justify-center gap-1.5"
+                  >
+                    <X size={14} /> Decline
+                  </button>
+                </div>
+              </BookingCard>
+            ))
+          )
+        )}
+
+        {tab === "schedule" && (
+          schedule.length === 0 ? (
+            <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>Nothing on your schedule yet.</p>
+          ) : (
+            schedule.map((b) => (
+              <BookingCard key={b.id} booking={b}>
+                {b.status === "ACCEPTED" && (
+                  <button
+                    onClick={() => setStatus(b.id, "IN_PROGRESS")}
+                    disabled={busyId === b.id}
+                    className="btn-primary w-full text-sm tap-scale"
+                  >
+                    Start
+                  </button>
+                )}
+                {b.status === "IN_PROGRESS" && reportOpenFor !== b.id && (
+                  <button
+                    onClick={() => (b.type === "WALKING" ? setReportOpenFor(b.id) : setStatus(b.id, "COMPLETED"))}
+                    disabled={busyId === b.id}
+                    className="btn-primary w-full text-sm tap-scale"
+                  >
+                    Complete
+                  </button>
+                )}
+                {reportOpenFor === b.id && (
+                  <WalkReportForm bookingId={b.id} onDone={() => { setReportOpenFor(null); router.refresh(); }} />
+                )}
+              </BookingCard>
+            ))
+          )
+        )}
+
+        {tab === "history" && (
+          history.length === 0 ? (
+            <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>No past bookings yet.</p>
+          ) : (
+            history.map((b) => (
+              <BookingCard key={b.id} booking={b}>
+                <span
+                  className="text-xs font-semibold px-2.5 py-1 rounded-full inline-block"
+                  style={{ background: "var(--cream)", color: "var(--chestnut, var(--terracotta))" }}
+                >
+                  {b.status}
+                </span>
+              </BookingCard>
+            ))
+          )
+        )}
+      </div>
+    </div>
+  );
+}
