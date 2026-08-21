@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PawPrint, Star, ShieldCheck, Check, MapPin } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
-import PhoneVerification from "@/components/PhoneVerification";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 type Provider = {
@@ -192,8 +191,15 @@ export default function ServiceBookingFlow({
               <AddressAutocomplete value={address} onChange={setAddress} placeholder="Address" />
             </div>
             <div>
-              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Mobile number (verified)</label>
-              <PhoneVerification onVerified={setPhone} />
+              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Mobile number</label>
+              <input
+                type="tel"
+                placeholder="Mobile number"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+                style={{ borderColor: "var(--border)" }}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
             </div>
           </div>
 
