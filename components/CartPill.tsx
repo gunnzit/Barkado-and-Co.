@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 
 export default function CartPill() {
   const { totalCount, items } = useCart();
+  const pathname = usePathname();
 
   if (totalCount === 0) return null;
+  if (pathname === "/cart" || pathname.startsWith("/cart/")) return null;
 
   const hasService = items.some((i) => i.kind === "SERVICE");
   const hasProduct = items.some((i) => i.kind === "PRODUCT");

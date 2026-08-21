@@ -30,21 +30,35 @@ export default function RazorpayCheckoutButton({
   disabled?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const { user } = useUser();
 
+  const fail = (message: string) => {
+    console.error("[Razorpay checkout]", message);
+    setErrorMessage(message);
+    setStatus("error");
+  };
+
   const payNow = async () => {
     setStatus("loading");
+    setErrorMessage("");
+
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+      fail("Payment isn't configured yet (missing publishable key). Contact support.");
+      return;
+    }
 
     const scriptOk = await loadRazorpayScript();
     if (!scriptOk) {
-      setStatus("error");
+      fail("Couldn't load the payment widget — check your connection and try again.");
       return;
     }
 
     const orderRes = await fetch("/api/checkout/create-order", { method: "POST" });
     if (!orderRes.ok) {
-      setStatus("error");
+      const body = await orderRes.json().catch(() => ({}));
+      fail(body.error || `Couldn't start payment (status ${orderRes.status}).`);
       return;
     }
     const order = await orderRes.json();
@@ -75,7 +89,8 @@ export default function RazorpayCheckoutButton({
         if (verifyRes.ok) {
           router.push("/cart/success");
         } else {
-          setStatus("error");
+          const body = await verifyRes.json().catch(() => ({}));
+          fail(body.error || "Payment succeeded but we couldn't confirm it. Contact support.");
         }
       },
       modal: {
@@ -83,8 +98,11 @@ export default function RazorpayCheckoutButton({
       },
     });
 
-    razorpay.on("payment.failed", () => setStatus("error"));
+    razorpay.on("payment.failed", (resp: any) => {
+      fail(resp?.error?.description || "The payment was declined.");
+    });
     razorpay.open();
+    setStatus("idle");
   };
 
   return (
@@ -105,7 +123,7 @@ export default function RazorpayCheckoutButton({
       </button>
       {status === "error" && (
         <p className="text-xs text-center mt-2" style={{ color: "var(--terracotta)" }}>
-          Payment didn't go through. Please try again.
+          {errorMessage || "Payment didn't go through. Please try again."}
         </p>
       )}
     </div>
