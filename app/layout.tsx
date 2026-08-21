@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <SplashScreen />
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
