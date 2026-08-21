@@ -8,10 +8,10 @@ import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
-import AddressBadge from "@/components/AddressBadge";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
+import LocationHeader from "@/components/LocationHeader";
 import ThemeToggle from "@/components/ThemeToggle";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import { getMascotPath } from "@/lib/mascotImage";
@@ -91,14 +91,18 @@ export default async function OwnerDashboard() {
       <EmergencyButton />
       <VaccineQuickAccess />
       <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
-      {user.address && <AddressBadge address={user.address} />}
-      <div className="px-6 pt-4 flex items-center justify-between">
-        <PetSwitcher />
-        <div className="flex items-center gap-2">
+      <nav className="flex justify-between items-center px-6 pt-4">
+        <LocationHeader
+          headline="Book a walker"
+          currentAddressSnippet={user.address ? user.address.split(",")[0] : null}
+          userPhone={user.phone ?? null}
+        />
+        <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
+          <PetSwitcher avatarOnly />
           <ProfileMenu />
         </div>
-      </div>
+      </nav>
       {/* ===== Hero photo moment — tap to book a walk ===== */}
       <WalkHero
         firstName={firstName}
