@@ -69,7 +69,7 @@ export default async function Home() {
       <EmergencyButton />
       {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
       {/* ===== Nav ===== */}
-      <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
+      <nav className="flex justify-between items-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 max-w-6xl mx-auto">
         <Show when="signed-in">
           <LocationHeader
             currentAddressSnippet={user?.address ? user.address.split(",")[0] : null}
@@ -101,22 +101,24 @@ export default async function Home() {
       <CategoryTabs />
 
       {/* ===== Hero ===== */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 grid md:grid-cols-2 gap-10 items-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-3 grid md:grid-cols-2 gap-4 md:gap-10 items-center">
         <div className="animate-fade-up">
           {verifiedCount > 0 && (
-            <span className="trust-chip mb-5">
+            <span className="trust-chip mb-2">
               <ShieldCheck size={12} /> {verifiedCount} verified provider{verifiedCount === 1 ? "" : "s"}
             </span>
           )}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            Everything your dog needs. <span style={{ color: "var(--terracotta)" }}>One passport.</span>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1.5 leading-tight">
+            Everything your dog needs.
+            <br />
+            <span style={{ color: "var(--terracotta)" }}>One passport.</span>
           </h1>
-          <p className="text-base mb-6 max-w-md" style={{ color: "var(--muted)" }}>
-            Walks, vaccines, staycations and accessories — booked in a few taps, and remembered forever in your dog's Paw Passport.
+          <p className="text-xs sm:text-sm mb-3 max-w-md" style={{ color: "var(--muted)" }}>
+            Walks, vaccines, staycations & more — booked in taps, remembered forever.
           </p>
-          <div className="flex gap-3 mb-6">
-            <Link href="/book" className="btn-primary">Book in a few taps</Link>
-            <Link href="/owner/pets" className="btn-secondary">See the Paw Passport</Link>
+          <div className="flex gap-2.5 mb-3">
+            <Link href="/book" className="btn-primary text-sm whitespace-nowrap">Book in a few taps</Link>
+            <Link href="/owner/pets" className="btn-secondary text-sm whitespace-nowrap">Paw Passport</Link>
           </div>
           {avgRating !== null && avgRating > 0 && (
             <p className="text-sm flex items-center gap-1.5" style={{ color: "var(--muted)" }}>

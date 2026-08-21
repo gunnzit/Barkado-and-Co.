@@ -28,20 +28,17 @@ export default function CategoryTabs() {
   };
 
   return (
-    <div
-      className="sticky top-0 z-30 backdrop-blur"
-      style={{ background: "var(--cream)", borderBottom: "1px solid var(--border)" }}
-    >
-      <div className="flex gap-5 sm:gap-7 px-4 sm:px-6 py-3 overflow-x-auto max-w-6xl mx-auto no-scrollbar">
+    <div className="category-tabs sticky top-0 z-30">
+      <div className="flex gap-4 sm:gap-6 px-4 sm:px-6 py-2 overflow-x-auto max-w-6xl mx-auto no-scrollbar">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const content = (
             <div className="flex flex-col items-center gap-1 shrink-0" style={{ opacity: cat.soon ? 0.5 : 1 }}>
               <span
-                className="w-11 h-11 rounded-full flex items-center justify-center"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
                 style={{ background: "var(--card)", border: "1px solid var(--border)" }}
               >
-                <Icon size={18} color="var(--terracotta)" strokeWidth={1.75} />
+                <Icon size={16} color="var(--terracotta)" strokeWidth={1.75} />
               </span>
               <span className="text-[11px] font-semibold whitespace-nowrap">{cat.label}</span>
             </div>
