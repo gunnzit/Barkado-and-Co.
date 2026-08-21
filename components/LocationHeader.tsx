@@ -19,9 +19,11 @@ const LABEL_ICON: Record<string, any> = { Home: HomeIcon, Work: Briefcase, Hotel
 export default function LocationHeader({
   currentAddressSnippet,
   userPhone,
+  headline = "Book in a few taps",
 }: {
   currentAddressSnippet: string | null;
   userPhone: string | null;
+  headline?: string;
 }) {
   const [view, setView] = useState<"closed" | "select" | "confirm-current" | "add-new">("closed");
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -81,7 +83,7 @@ export default function LocationHeader({
     <>
       <div className="flex flex-col">
         <span className="text-[10px] font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
-        <span className="text-base font-extrabold leading-tight">Book in a few taps</span>
+        <span className="text-base font-extrabold leading-tight">{headline}</span>
         <button onClick={openSelect} className="flex items-center gap-1 mt-0.5 tap-scale w-fit">
           <span className="text-xs font-semibold truncate max-w-[50vw] sm:max-w-xs" style={{ color: "var(--terracotta)" }}>
             {currentAddressSnippet ? `HOME - ${currentAddressSnippet}` : "Add delivery address"}
