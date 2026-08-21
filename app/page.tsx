@@ -7,10 +7,9 @@ import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
-import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
 import LocationHeader from "@/components/LocationHeader";
-import NeedsGrid from "@/components/NeedsGrid";
+import CategoryTabs from "@/components/CategoryTabs";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -68,7 +67,6 @@ export default async function Home() {
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
-      <VaccineQuickAccess />
       {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
@@ -95,6 +93,8 @@ export default async function Home() {
           </Show>
         </div>
       </nav>
+
+      <CategoryTabs />
 
       {/* ===== Hero ===== */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 grid md:grid-cols-2 gap-10 items-center">
@@ -158,7 +158,6 @@ export default async function Home() {
       </ScrollReveal>
 
       {/* ===== My pet needs... tap grid ===== */}
-      <NeedsGrid />
 
       {/* ===== Upcoming events ===== */}
       <UpcomingEvents />
