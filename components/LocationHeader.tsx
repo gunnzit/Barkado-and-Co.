@@ -82,13 +82,13 @@ export default function LocationHeader({
   return (
     <>
       <div className="flex flex-col">
-        <span className="text-[10px] font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
-        <span className="text-base font-extrabold leading-tight">{headline}</span>
-        <button onClick={openSelect} className="flex items-center gap-1 mt-0.5 tap-scale w-fit">
-          <span className="text-xs font-semibold truncate max-w-[50vw] sm:max-w-xs" style={{ color: "var(--terracotta)" }}>
+        <span className="text-xs font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
+        <span className="text-xl sm:text-2xl font-extrabold leading-tight">{headline}</span>
+        <button onClick={openSelect} className="flex items-center gap-1 mt-1 tap-scale w-fit">
+          <span className="text-sm font-bold truncate max-w-[55vw] sm:max-w-xs" style={{ color: "var(--terracotta)" }}>
             {currentAddressSnippet ? `HOME - ${currentAddressSnippet}` : "Add delivery address"}
           </span>
-          <ChevronRight size={12} color="var(--terracotta)" />
+          <ChevronRight size={15} color="var(--terracotta)" />
         </button>
       </div>
 

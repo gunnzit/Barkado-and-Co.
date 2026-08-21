@@ -29,18 +29,21 @@ export default function CategoryTabs() {
 
   return (
     <div className="category-tabs sticky top-0 z-30">
-      <div className="flex gap-4 sm:gap-6 px-4 sm:px-6 py-2 overflow-x-auto max-w-6xl mx-auto no-scrollbar">
-        {CATEGORIES.map((cat) => {
+      <div className="flex gap-5 sm:gap-7 px-4 sm:px-6 py-3 overflow-x-auto max-w-6xl mx-auto no-scrollbar">
+        {CATEGORIES.map((cat, i) => {
           const Icon = cat.icon;
           const content = (
-            <div className="flex flex-col items-center gap-1 shrink-0" style={{ opacity: cat.soon ? 0.5 : 1 }}>
+            <div
+              className="category-tab-in flex flex-col items-center gap-1.5 shrink-0"
+              style={{ opacity: cat.soon ? 0.5 : 1, animationDelay: `${i * 55}ms` }}
+            >
               <span
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
                 style={{ background: "var(--card)", border: "1px solid var(--border)" }}
               >
-                <Icon size={16} color="var(--terracotta)" strokeWidth={1.75} />
+                <Icon size={22} color="var(--terracotta)" strokeWidth={1.75} />
               </span>
-              <span className="text-[11px] font-semibold whitespace-nowrap">{cat.label}</span>
+              <span className="text-xs font-semibold whitespace-nowrap">{cat.label}</span>
             </div>
           );
 
@@ -64,6 +67,16 @@ export default function CategoryTabs() {
           {toast}
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes categoryTabIn {
+          from { opacity: 0; transform: translateX(-24px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .category-tab-in {
+          animation: categoryTabIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+      `}</style>
     </div>
   );
 }
