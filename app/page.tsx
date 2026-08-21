@@ -10,6 +10,7 @@ import EmergencyButton from "@/components/EmergencyButton";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
 import LocationHeader from "@/components/LocationHeader";
 import CategoryTabs from "@/components/CategoryTabs";
+import CuratedSearchBar from "@/components/CuratedSearchBar";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -97,6 +98,10 @@ export default async function Home() {
           </Show>
         </div>
       </nav>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-3">
+        <CuratedSearchBar />
+      </div>
 
       <CategoryTabs />
 
