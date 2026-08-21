@@ -46,6 +46,8 @@ export default async function SittingPage() {
           activePetName={activePet?.name ?? null}
           hasPets={pets.length > 0}
           showStartButton={false}
+          defaultAddress={user.address}
+          defaultPhone={user.phone}
         />
 
         <BottomNav />

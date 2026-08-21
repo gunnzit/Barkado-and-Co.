@@ -46,6 +46,8 @@ export default async function WalkBookingPage() {
           hasPets={pets.length > 0}
           showStartButton={true}
           isFirstWalk={isFirstWalk}
+          defaultAddress={user.address}
+          defaultPhone={user.phone}
         />
 
         <BottomNav />

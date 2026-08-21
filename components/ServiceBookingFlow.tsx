@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PawPrint, Star, ShieldCheck, Check, MapPin } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 type Provider = {
   id: string;
@@ -39,6 +38,8 @@ export default function ServiceBookingFlow({
   hasPets,
   showStartButton,
   isFirstWalk = false,
+  defaultAddress,
+  defaultPhone,
 }: {
   serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
   activePetId: string | null;
@@ -46,14 +47,16 @@ export default function ServiceBookingFlow({
   hasPets: boolean;
   showStartButton: boolean;
   isFirstWalk?: boolean;
+  defaultAddress?: string | null;
+  defaultPhone?: string | null;
 }) {
   const [phase, setPhase] = useState<"intro" | "details" | "providers" | "done">(
     showStartButton ? "intro" : "details"
   );
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const address = defaultAddress ?? "";
+  const phone = defaultPhone ?? "";
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
@@ -185,22 +188,13 @@ export default function ServiceBookingFlow({
             )}
           </div>
 
-          <div className="card space-y-4 mb-4">
-            <div>
-              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Address</label>
-              <AddressAutocomplete value={address} onChange={setAddress} placeholder="Address" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold block mb-1" style={{ color: "var(--muted)" }}>Mobile number</label>
-              <input
-                type="tel"
-                placeholder="Mobile number"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                style={{ borderColor: "var(--border)" }}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
+          <div className="card mb-4">
+            <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Meeting at</p>
+            <p className="text-sm mb-1">{address || "No address on file"}</p>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>{phone || "No phone on file"}</p>
+            <Link href="/owner/profile" className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
+              Edit in profile
+            </Link>
           </div>
 
           <button

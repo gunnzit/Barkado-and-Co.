@@ -7,6 +7,8 @@ import { cookies } from "next/headers";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import VaccineQuickAccess from "@/components/VaccineQuickAccess";
+import OnboardingPrompt from "@/components/OnboardingPrompt";
+import AddressBadge from "@/components/AddressBadge";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -88,6 +90,8 @@ export default async function OwnerDashboard() {
     <main className="pb-28 max-w-2xl mx-auto">
       <EmergencyButton />
       <VaccineQuickAccess />
+      <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
+      {user.address && <AddressBadge address={user.address} />}
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
         <div className="flex items-center gap-2">
