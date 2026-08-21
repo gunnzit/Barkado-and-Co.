@@ -9,7 +9,7 @@ import { THEME_OPTIONS } from "@/lib/breedTheme";
 
 type Pet = { id: string; name: string; breed?: string | null; photoUrl?: string | null; themeOverride?: string | null };
 
-export default function PetSwitcher() {
+export default function PetSwitcher({ avatarOnly = false }: { avatarOnly?: boolean }) {
   const { isSignedIn } = useUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -83,14 +83,40 @@ export default function PetSwitcher() {
       <div className="relative inline-block">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full tap-scale"
-          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+          className={avatarOnly ? "relative tap-scale block" : "flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full tap-scale"}
+          style={avatarOnly ? {} : { background: "var(--card)", border: "1px solid var(--border)" }}
+          aria-label={`Viewing ${activePet.name}`}
         >
-          <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+          <div
+            className={
+              avatarOnly
+                ? "w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+                : "w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+            }
+            style={{
+              background: "var(--cream)",
+              border: avatarOnly ? "2px solid var(--card)" : "none",
+              boxShadow: avatarOnly ? "0 0 0 1px var(--border)" : "none",
+            }}
+          >
             <img src={activePet.photoUrl ?? getMascotPath(activePet.breed, "headshot")} alt={activePet.name} className="w-full h-full object-cover" />
           </div>
-          <span className="text-xs font-semibold whitespace-nowrap">Viewing {activePet.name}</span>
-          {pets.length > 1 && <ChevronDown size={13} color="var(--muted)" />}
+
+          {avatarOnly && pets.length > 1 && (
+            <span
+              className="absolute -bottom-0.5 -right-0.5 rounded-full flex items-center justify-center"
+              style={{ width: 16, height: 16, background: "var(--card)", border: "1px solid var(--border)" }}
+            >
+              <ChevronDown size={10} color="var(--muted)" />
+            </span>
+          )}
+
+          {!avatarOnly && (
+            <>
+              <span className="text-xs font-semibold whitespace-nowrap">Viewing {activePet.name}</span>
+              {pets.length > 1 && <ChevronDown size={13} color="var(--muted)" />}
+            </>
+          )}
         </button>
 
         {open && pets.length > 1 && (
