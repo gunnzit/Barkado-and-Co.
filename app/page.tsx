@@ -77,18 +77,22 @@ export default async function Home() {
           />
         </Show>
         <Show when="signed-out">
-          <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <PawPrint size={20} color="var(--forest)" /> Barkado & Co.
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
+            <span className="text-base font-extrabold leading-tight">Book in a few taps</span>
+            <Link href="/sign-in" className="flex items-center gap-1 mt-0.5 tap-scale w-fit">
+              <span className="text-xs font-semibold" style={{ color: "var(--terracotta)" }}>Add address</span>
+              <ChevronRight size={12} color="var(--terracotta)" />
+            </Link>
+          </div>
         </Show>
         <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
           <Show when="signed-out">
-            <Link href="/sign-in" className="hidden sm:inline text-sm font-medium whitespace-nowrap">Sign in</Link>
-            <Link href="/sign-up" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Book now</Link>
+            <Link href="/sign-in" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Sign in</Link>
           </Show>
           <Show when="signed-in">
-            <Link href="/owner/dashboard" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Dashboard</Link>
+            <Link href="/owner/dashboard" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Book now</Link>
             <ProfileMenu />
           </Show>
         </div>

@@ -81,7 +81,7 @@ export default function LocationHeader({
     <>
       <div className="flex flex-col">
         <span className="text-[10px] font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
-        <span className="text-lg font-extrabold leading-tight">Book in a few taps</span>
+        <span className="text-base font-extrabold leading-tight">Book in a few taps</span>
         <button onClick={openSelect} className="flex items-center gap-1 mt-0.5 tap-scale w-fit">
           <span className="text-xs font-semibold truncate max-w-[50vw] sm:max-w-xs" style={{ color: "var(--terracotta)" }}>
             {currentAddressSnippet ? `HOME - ${currentAddressSnippet}` : "Add delivery address"}
