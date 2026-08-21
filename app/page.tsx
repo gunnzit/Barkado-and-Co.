@@ -9,7 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
-import AddressBadge from "@/components/AddressBadge";
+import LocationHeader from "@/components/LocationHeader";
 import NeedsGrid from "@/components/NeedsGrid";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -70,12 +70,19 @@ export default async function Home() {
       <EmergencyButton />
       <VaccineQuickAccess />
       {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
-      {user?.address && <AddressBadge address={user.address} />}
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 max-w-6xl mx-auto">
-        <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <PawPrint size={20} color="var(--forest)" /> Barkado & Co.
-        </span>
+        <Show when="signed-in">
+          <LocationHeader
+            currentAddressSnippet={user?.address ? user.address.split(",")[0] : null}
+            userPhone={user?.phone ?? null}
+          />
+        </Show>
+        <Show when="signed-out">
+          <span className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <PawPrint size={20} color="var(--forest)" /> Barkado & Co.
+          </span>
+        </Show>
         <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
           <Show when="signed-out">

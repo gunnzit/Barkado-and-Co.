@@ -59,6 +59,20 @@ model User {
   heroPhotos HeroPhoto[]
   showStockPhotos Boolean @default(true)
   address         String?
+  addresses       Address[]
+}
+
+model Address {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  label          String   @default("Home") // Home | Work | Hotel | Other
+  fullAddress    String
+  googleMapsLink String?
+  receiverName   String
+  receiverPhone  String
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
 }
 
 model Pet {
