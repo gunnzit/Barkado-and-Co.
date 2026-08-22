@@ -340,9 +340,12 @@ export default async function Home() {
           <PawPrint size={18} color="var(--terracotta)" />
           <span className="font-bold">Barkado & Co.</span>
         </div>
-        <p className="text-xs" style={{ color: "var(--muted)" }}>
+        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
           Everything your dog needs. One passport.
         </p>
+        <Link href="/provider" className="text-xs font-semibold tap-scale inline-block" style={{ color: "var(--terracotta)" }}>
+          Become a provider →
+        </Link>
       </footer>
       <BottomNav />
     </main>
