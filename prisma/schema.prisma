@@ -136,6 +136,7 @@ model Provider {
   userId        String   @unique
   user          User     @relation(fields: [userId], references: [id])
   bio           String?
+  photoUrl      String?
   servicesOffered ServiceType[]
   serviceAreaPin  String?
   radiusKm        Int      @default(5)

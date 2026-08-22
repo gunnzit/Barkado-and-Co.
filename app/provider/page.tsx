@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, PawPrint, ShieldCheck, Wallet, Clock, Mail } from "lucide-react";
+import { ArrowLeft, PawPrint, ShieldCheck, Wallet, Clock, Mail, User } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import ProviderDashboard from "@/components/ProviderDashboard";
@@ -15,8 +15,6 @@ const BENEFITS = [
 export default async function ProviderPage() {
   const user = await getOrCreateUser();
 
-  // Signed-out visitors get a real explanation of what this is, not an
-  // immediate bounce to sign-in with zero context.
   if (!user) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
@@ -67,7 +65,6 @@ export default async function ProviderPage() {
 
   const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
 
-  // No provider record yet -> the multi-step join flow.
   if (!provider) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
@@ -84,8 +81,6 @@ export default async function ProviderPage() {
     );
   }
 
-  // Provider record exists but not yet approved -> pending screen, not the
-  // dashboard and not the join form again.
   if (!provider.verified) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
@@ -138,16 +133,35 @@ export default async function ProviderPage() {
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
       <main className="pb-16 max-w-lg mx-auto">
-        <div className="flex items-center justify-between px-6 pt-4 pb-5">
-          <div>
-            <p className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Provider dashboard</p>
-            <h1 className="text-xl font-bold">{user.name}</h1>
-          </div>
+        <div className="flex items-center justify-between px-6 pt-4 pb-3">
+          <Link href="/" className="tap-scale">
+            <ArrowLeft size={18} />
+          </Link>
           <div className="flex items-center gap-3">
             <ProviderOnlineToggle />
             <Link href="/" className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
               Switch to owner view
             </Link>
+          </div>
+        </div>
+
+        {/* ===== Instagram-style profile header ===== */}
+        <div className="px-6 pb-5 flex items-center gap-4">
+          <div
+            className="w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+            style={{ background: "var(--cream)", border: "1px solid var(--border)" }}
+          >
+            {provider.photoUrl ? (
+              <img src={provider.photoUrl} alt={user.name} className="w-full h-full object-cover" />
+            ) : (
+              <User size={26} color="var(--muted)" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold truncate">{user.name}</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+              {provider.bio || "No bio yet — add one in Services"}
+            </p>
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X, Navigation } from "lucide-react";
+import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X, Navigation, IndianRupee, ChevronRight } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
 import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
@@ -144,7 +144,7 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification">(requests.length > 0 ? "requests" : "schedule");
+  const [tab, setTab] = useState<"home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification">("home");
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -161,6 +161,7 @@ export default function ProviderDashboard({
   };
 
   const tabs: { key: typeof tab; label: string; count: number }[] = [
+    { key: "home", label: "Home", count: 0 },
     { key: "requests", label: "Requests", count: requests.length },
     { key: "schedule", label: "Schedule", count: schedule.length },
     { key: "history", label: "History", count: history.length },
@@ -191,6 +192,76 @@ export default function ProviderDashboard({
       </div>
 
       <div className="px-6 space-y-3">
+        {tab === "home" && (() => {
+          const todayStr = new Date().toDateString();
+          const todaysCompleted = history.filter((b) => b.status === "COMPLETED" && new Date(b.startTime).toDateString() === todayStr);
+          const todaysEarningsPaise = todaysCompleted.reduce((sum, b) => sum + b.priceAmount, 0);
+          const todaysSchedule = schedule.filter((b) => new Date(b.startTime).toDateString() === todayStr);
+          const offeredServices = Array.from(new Set([...requests, ...schedule, ...history].map((b) => b.type)));
+
+          return (
+            <div className="space-y-3 animate-fade-up">
+              {requests.length > 0 && (
+                <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdece0" }}>
+                      <Clock size={16} color="#a5652a" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{requests.length} new request{requests.length === 1 ? "" : "s"}</p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>Waiting for your response</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="var(--muted)" />
+                </button>
+              )}
+
+              <button onClick={() => setTab("earnings")} className="card w-full tap-scale flex items-center justify-between text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+                    <IndianRupee size={16} color="var(--terracotta)" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">₹{(todaysEarningsPaise / 100).toFixed(0)} earned today</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>{todaysCompleted.length} completed · view full earnings</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} color="var(--muted)" />
+              </button>
+
+              <button onClick={() => setTab("schedule")} className="card w-full tap-scale flex items-center justify-between text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+                    <Clock size={16} color="var(--terracotta)" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {todaysSchedule.length > 0 ? `${todaysSchedule.length} booking${todaysSchedule.length === 1 ? "" : "s"} today` : "Nothing scheduled today"}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>
+                      {todaysSchedule.length > 0 ? `Next: ${formatWhen(todaysSchedule[0].startTime)}` : "View your full schedule"}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={16} color="var(--muted)" />
+              </button>
+
+              {offeredServices.length > 0 && (
+                <div className="card">
+                  <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>You offer</p>
+                  <div className="flex flex-wrap gap-2">
+                    {offeredServices.map((s) => (
+                      <span key={s} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                        {SERVICE_LABEL[s]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {tab === "requests" && (
           requests.length === 0 ? (
             <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>No new requests right now.</p>

@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Upload, FileText, Check } from "lucide-react";
+import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Upload, FileText, Check, User } from "lucide-react";
+import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 
 const SERVICE_OPTIONS: { type: "WALKING" | "SITTING" | "GROOMING" | "TRAINING"; label: string; icon: any }[] = [
   { type: "WALKING", label: "Walking", icon: PawPrint },
@@ -11,7 +12,8 @@ const SERVICE_OPTIONS: { type: "WALKING" | "SITTING" | "GROOMING" | "TRAINING"; 
   { type: "TRAINING", label: "Training", icon: GraduationCap },
 ];
 
-type Phase = "services" | "details" | "submitted";
+type Phase = "services" | "details" | "hours" | "submitted";
+const PHASE_INDEX: Record<Phase, number> = { services: 0, details: 1, hours: 2, submitted: 3 };
 
 export default function ProviderJoinForm({
   userEmail,
@@ -24,11 +26,14 @@ export default function ProviderJoinForm({
   const [phase, setPhase] = useState<Phase>("services");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [phone, setPhone] = useState(userPhone ?? "");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [aadhaarUrl, setAadhaarUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingAadhaar, setUploadingAadhaar] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const aadhaarInputRef = useRef<HTMLInputElement>(null);
 
   const toggleService = (type: string) => {
     setSelected((prev) => {
@@ -59,13 +64,29 @@ export default function ProviderJoinForm({
     }
   };
 
+  const uploadPhoto = async (file: File) => {
+    setUploadingPhoto(true);
+    setError("");
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/provider/photo", { method: "POST", body: formData });
+    setUploadingPhoto(false);
+    if (res.ok) {
+      const data = await res.json();
+      setPhotoUrl(data.photoUrl);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Photo upload failed — please try again.");
+    }
+  };
+
   const uploadAadhaar = async (file: File) => {
-    setUploading(true);
+    setUploadingAadhaar(true);
     setError("");
     const formData = new FormData();
     formData.append("file", file);
     const res = await fetch("/api/provider/verification/upload", { method: "POST", body: formData });
-    setUploading(false);
+    setUploadingAadhaar(false);
     if (res.ok) {
       const data = await res.json();
       setAadhaarUrl(data.url);
@@ -75,9 +96,13 @@ export default function ProviderJoinForm({
     }
   };
 
-  const submitForReview = async () => {
+  const continueToHours = async () => {
     if (!phone.trim()) {
       setError("Add a phone number so owners and admins can reach you.");
+      return;
+    }
+    if (!photoUrl) {
+      setError("Add a profile photo to continue.");
       return;
     }
     if (!aadhaarUrl) {
@@ -94,7 +119,7 @@ export default function ProviderJoinForm({
       });
     }
     setSubmitting(false);
-    setPhase("submitted");
+    setPhase("hours");
   };
 
   if (phase === "submitted") {
@@ -116,8 +141,13 @@ export default function ProviderJoinForm({
     <div className="px-6">
       {/* Progress indicator, Uber-style segmented bar */}
       <div className="flex gap-1.5 mb-6">
-        <div className="h-1.5 flex-1 rounded-full" style={{ background: "var(--terracotta)" }} />
-        <div className="h-1.5 flex-1 rounded-full" style={{ background: phase === "details" ? "var(--terracotta)" : "var(--border)" }} />
+        {(["services", "details", "hours"] as Phase[]).map((p) => (
+          <div
+            key={p}
+            className="h-1.5 flex-1 rounded-full"
+            style={{ background: PHASE_INDEX[phase] >= PHASE_INDEX[p] ? "var(--terracotta)" : "var(--border)" }}
+          />
+        ))}
       </div>
 
       {phase === "services" && (
@@ -160,7 +190,39 @@ export default function ProviderJoinForm({
       {phase === "details" && (
         <div className="animate-fade-up">
           <h2 className="text-lg font-bold mb-1">Verify your details</h2>
-          <p className="text-xs mb-5" style={{ color: "var(--muted)" }}>We need these to confirm who you are.</p>
+          <p className="text-xs mb-5" style={{ color: "var(--muted)" }}>All of these are required before we can review you.</p>
+
+          <div className="card mb-3 flex items-center gap-4">
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="user"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadPhoto(file);
+              }}
+            />
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="tap-scale w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+              style={{ background: "var(--cream)", border: `2px solid ${photoUrl ? "#2f7a44" : "var(--border)"}` }}
+            >
+              {photoUrl ? (
+                <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={22} color="var(--muted)" />
+              )}
+            </button>
+            <div>
+              <p className="text-sm font-semibold">Profile photo</p>
+              <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+                {uploadingPhoto ? "Uploading…" : photoUrl ? "Change photo" : "Add photo"}
+              </button>
+            </div>
+          </div>
 
           <div className="card mb-3">
             <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Email</label>
@@ -183,7 +245,7 @@ export default function ProviderJoinForm({
             <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Aadhaar card</label>
             <p className="text-xs mt-1 mb-3" style={{ color: "var(--muted)" }}>A clear photo of the front of your Aadhaar card.</p>
             <input
-              ref={fileInputRef}
+              ref={aadhaarInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               capture="environment"
@@ -195,24 +257,39 @@ export default function ProviderJoinForm({
             />
             {aadhaarUrl ? (
               <div className="flex items-center gap-2 text-xs" style={{ color: "#2f7a44" }}>
-                <FileText size={14} /> Uploaded — <button onClick={() => fileInputRef.current?.click()} className="underline tap-scale">replace</button>
+                <FileText size={14} /> Uploaded — <button onClick={() => aadhaarInputRef.current?.click()} className="underline tap-scale">replace</button>
               </div>
             ) : (
               <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
+                onClick={() => aadhaarInputRef.current?.click()}
+                disabled={uploadingAadhaar}
                 className="btn-secondary w-full tap-scale flex items-center justify-center gap-2 text-sm"
-                style={{ opacity: uploading ? 0.6 : 1 }}
+                style={{ opacity: uploadingAadhaar ? 0.6 : 1 }}
               >
-                <Upload size={14} /> {uploading ? "Uploading…" : "Take or choose photo"}
+                <Upload size={14} /> {uploadingAadhaar ? "Uploading…" : "Take or choose photo"}
               </button>
             )}
           </div>
 
           {error && <p className="text-xs mb-3" style={{ color: "var(--terracotta)" }}>{error}</p>}
 
-          <button onClick={submitForReview} disabled={submitting} className="btn-primary w-full tap-scale" style={{ opacity: submitting ? 0.6 : 1 }}>
-            {submitting ? "Submitting…" : "Submit for review"}
+          <button onClick={continueToHours} disabled={submitting} className="btn-primary w-full tap-scale" style={{ opacity: submitting ? 0.6 : 1 }}>
+            {submitting ? "Saving…" : "Continue"}
+          </button>
+        </div>
+      )}
+
+      {phase === "hours" && (
+        <div className="animate-fade-up">
+          <h2 className="text-lg font-bold mb-1">Set your hours</h2>
+          <p className="text-xs mb-5" style={{ color: "var(--muted)" }}>Optional — you can always set or change this later.</p>
+
+          <div className="mb-5">
+            <ProviderAvailabilityEditor />
+          </div>
+
+          <button onClick={() => setPhase("submitted")} className="btn-secondary w-full tap-scale">
+            Skip / Continue
           </button>
         </div>
       )}
