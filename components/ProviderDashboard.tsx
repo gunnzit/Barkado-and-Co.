@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
+import ProviderServicesEditor from "@/components/ProviderServicesEditor";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -135,7 +136,7 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "hours">(requests.length > 0 ? "requests" : "schedule");
+  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "services" | "hours">(requests.length > 0 ? "requests" : "schedule");
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -155,6 +156,7 @@ export default function ProviderDashboard({
     { key: "requests", label: "Requests", count: requests.length },
     { key: "schedule", label: "Schedule", count: schedule.length },
     { key: "history", label: "History", count: history.length },
+    { key: "services", label: "Services", count: 0 },
     { key: "hours", label: "Hours", count: 0 },
   ];
 
@@ -254,6 +256,8 @@ export default function ProviderDashboard({
             ))
           )
         )}
+
+        {tab === "services" && <ProviderServicesEditor />}
 
         {tab === "hours" && <ProviderAvailabilityEditor />}
       </div>
