@@ -15,22 +15,50 @@ const providerSchema = z.object({
 // Public: browse providers (owners searching)
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const service = searchParams.get("service"); // WALKING | SITTING
+  const service = searchParams.get("service"); // WALKING | SITTING | GROOMING | TRAINING
   const pin = searchParams.get("pin");
+  const startTime = searchParams.get("startTime"); // ISO datetime-local value, optional
 
   const providers = await prisma.provider.findMany({
     where: {
       verified: true,
-      ...(service ? { servicesOffered: { has: service as "WALKING" | "SITTING" } } : {}),
+      ...(service ? { servicesOffered: { has: service as any } } : {}),
       ...(pin ? { serviceAreaPin: pin } : {}),
     },
     include: {
       user: { select: { name: true } },
       _count: { select: { bookings: { where: { status: "COMPLETED" } } } },
+      availability: true,
     },
     orderBy: { ratingAvg: "desc" },
   });
-  return NextResponse.json(providers);
+
+  // Flag (not filter, per product decision) providers whose set hours don't
+  // cover the requested time. A provider with no hours rows at all is
+  // treated as always available — most providers haven't set hours yet, and
+  // defaulting them to "unavailable" everywhere would be wrong.
+  const requested = startTime ? new Date(startTime) : null;
+  const result = providers.map((p) => {
+    const { availability, ...rest } = p;
+    let availableAtRequestedTime: boolean | null = null;
+    if (requested && availability.length > 0) {
+      const dayOfWeek = requested.getDay();
+      const minutes = requested.getHours() * 60 + requested.getMinutes();
+      const dayRow = availability.find((a) => a.dayOfWeek === dayOfWeek);
+      if (!dayRow) {
+        availableAtRequestedTime = false;
+      } else {
+        const [startH, startM] = dayRow.startTime.split(":").map(Number);
+        const [endH, endM] = dayRow.endTime.split(":").map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        availableAtRequestedTime = minutes >= startMinutes && minutes <= endMinutes;
+      }
+    }
+    return { ...rest, availableAtRequestedTime };
+  });
+
+  return NextResponse.json(result);
 }
 
 // Register as a provider (creates Provider row for current user, role stays as-is until admin verifies)
