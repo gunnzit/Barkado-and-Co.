@@ -148,8 +148,27 @@ model Provider {
   ratingCount     Int      @default(0)
   createdAt       DateTime @default(now())
 
-  bookings  Booking[]
-  cartItems CartItem[]
+  bookings     Booking[]
+  cartItems    CartItem[]
+  availability ProviderAvailability[]
+}
+
+// A provider's recurring weekly working hours — providers aren't exclusively
+// working for Barkado, so this lets owners see (not just assume) when
+// they're actually free. One row per day they work; a day with no row means
+// they haven't set hours for it. A provider with no rows at all is treated
+// as always available (backward-compatible with providers who never set
+// hours, rather than making them look unavailable everywhere by default).
+model ProviderAvailability {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+  dayOfWeek  Int      // 0 = Sunday .. 6 = Saturday
+  startTime  String   // "09:00", 24hr
+  endTime    String   // "18:00", 24hr
+  createdAt  DateTime @default(now())
+
+  @@unique([providerId, dayOfWeek])
 }
 
 model Booking {
