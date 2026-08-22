@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X } from "lucide-react";
+import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -134,7 +135,7 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"requests" | "schedule" | "history">(requests.length > 0 ? "requests" : "schedule");
+  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "hours">(requests.length > 0 ? "requests" : "schedule");
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -154,16 +155,17 @@ export default function ProviderDashboard({
     { key: "requests", label: "Requests", count: requests.length },
     { key: "schedule", label: "Schedule", count: schedule.length },
     { key: "history", label: "History", count: history.length },
+    { key: "hours", label: "Hours", count: 0 },
   ];
 
   return (
     <div>
-      <div className="flex gap-2 px-6 mb-5">
+      <div className="flex gap-2 px-6 mb-5 overflow-x-auto no-scrollbar">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="tap-scale px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5"
+            className="tap-scale px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0"
             style={{
               background: tab === t.key ? "var(--panel-dark)" : "var(--card)",
               color: tab === t.key ? "white" : "inherit",
@@ -252,6 +254,8 @@ export default function ProviderDashboard({
             ))
           )
         )}
+
+        {tab === "hours" && <ProviderAvailabilityEditor />}
       </div>
     </div>
   );

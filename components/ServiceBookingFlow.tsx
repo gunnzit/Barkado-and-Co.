@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
 
@@ -15,6 +15,7 @@ type Provider = {
   ratingAvg: number;
   user: { name: string };
   _count: { bookings: number };
+  availableAtRequestedTime: boolean | null;
 };
 
 const COPY: Record<
@@ -67,11 +68,13 @@ export default function ServiceBookingFlow({
   useEffect(() => {
     if (phase !== "providers") return;
     setLoadingProviders(true);
-    fetch(`/api/providers?service=${serviceType}`)
+    const params = new URLSearchParams({ service: serviceType });
+    if (start) params.set("startTime", start);
+    fetch(`/api/providers?${params.toString()}`)
       .then((r) => r.json())
       .then(setProviders)
       .finally(() => setLoadingProviders(false));
-  }, [phase, serviceType]);
+  }, [phase, serviceType, start]);
 
   const goToProviders = () => {
     // Single-visit services default a short window from the chosen start time.
@@ -236,11 +239,16 @@ export default function ServiceBookingFlow({
               {providers.map((p) => (
                 <div key={p.id} className="card flex items-center justify-between">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold text-sm">{p.user.name}</p>
                       <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
                         <ShieldCheck size={10} /> Verified
                       </span>
+                      {p.availableAtRequestedTime === false && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
+                          <Clock size={10} /> Outside their hours
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
                       <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
