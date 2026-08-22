@@ -141,11 +141,18 @@ model Provider {
   radiusKm        Int      @default(5)
   pricePerWalk    Int? // in paise
   pricePerSitDay  Int? // in paise
-  pricePerGroom   Int? // in paise — grooming booking flow not built yet, price recorded for future use
+  pricePerGroom   Int? // in paise
   pricePerTrain   Int? // in paise
   verified        Boolean  @default(false)
   ratingAvg       Float    @default(0)
   ratingCount     Int      @default(0)
+  // Instant "I'm free right now" toggle — separate from, and layered on top
+  // of, the recurring weekly hours in ProviderAvailability.
+  isAvailableNow  Boolean  @default(false)
+  // Real verification: documents a provider submits for approval, and when
+  // they applied. Approval itself is just `verified` flipping to true.
+  verificationDocs        String[] @default([])
+  verificationSubmittedAt DateTime?
   createdAt       DateTime @default(now())
 
   bookings     Booking[]
@@ -194,10 +201,14 @@ model Booking {
   // so a single Order can group accessories and service bookings together.
   orderId      String?
   order        Order?        @relation(fields: [orderId], references: [id])
+  // A REQUESTED booking a provider hasn't responded to by this time can be
+  // treated as expired (auto-declined / needs reassignment).
+  requestExpiresAt DateTime?
   createdAt    DateTime      @default(now())
 
-  report WalkReport?
-  review Review?
+  report      WalkReport?
+  review      Review?      // owner's rating of the provider
+  ownerReview OwnerReview? // provider's rating of the owner
 }
 
 model WalkReport {
@@ -211,7 +222,19 @@ model WalkReport {
   createdAt  DateTime @default(now())
 }
 
+// Owner rates the provider after a booking.
 model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
+// Provider rates the owner after a booking — the reverse direction, kept as
+// its own model rather than overloading Review with a direction flag.
+model OwnerReview {
   id        String   @id @default(cuid())
   bookingId String   @unique
   booking   Booking  @relation(fields: [bookingId], references: [id])

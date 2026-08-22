@@ -30,6 +30,11 @@ export async function POST(req: Request) {
 
   // Prices arrive in rupees from the form — stored in paise, matching every
   // other price field in the schema.
+  //
+  // NOTE: new providers now start unverified (schema default) pending
+  // approval through the verification flow, rather than auto-verified.
+  // Approval happens by an admin reviewing submitted documents and flipping
+  // `verified` to true.
   const provider = await prisma.provider.create({
     data: {
       userId: user.id,
@@ -41,7 +46,6 @@ export async function POST(req: Request) {
       pricePerTrain: data.pricePerTrain != null ? data.pricePerTrain * 100 : null,
       serviceAreaPin: data.serviceAreaPin || null,
       radiusKm: data.radiusKm ?? 5,
-      verified: true,
     },
   });
 

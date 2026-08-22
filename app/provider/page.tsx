@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import ProviderDashboard from "@/components/ProviderDashboard";
 import ProviderJoinForm from "@/components/ProviderJoinForm";
+import ProviderOnlineToggle from "@/components/ProviderOnlineToggle";
 
 const BENEFITS = [
   { icon: Wallet, title: "Set your own prices", desc: "You decide what you charge for each service you offer." },
@@ -120,9 +121,12 @@ export default async function ProviderPage() {
             <p className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Provider dashboard</p>
             <h1 className="text-xl font-bold">{user.name}</h1>
           </div>
-          <Link href="/" className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
-            Switch to owner view
-          </Link>
+          <div className="flex items-center gap-3">
+            <ProviderOnlineToggle />
+            <Link href="/" className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+              Switch to owner view
+            </Link>
+          </div>
         </div>
 
         <ProviderDashboard requests={requests as any} schedule={schedule as any} history={history as any} />

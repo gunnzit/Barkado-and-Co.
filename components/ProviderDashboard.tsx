@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X } from "lucide-react";
+import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X, Navigation } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
+import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -56,9 +57,15 @@ function BookingCard({ booking, children }: { booking: ProviderBooking; children
           <Clock size={12} /> {formatWhen(booking.startTime)}
         </p>
         {booking.address && (
-          <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
-            <MapPin size={12} /> {booking.address}
-          </p>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs flex items-center gap-1.5 tap-scale"
+            style={{ color: "var(--terracotta)" }}
+          >
+            <Navigation size={12} /> {booking.address}
+          </a>
         )}
         {booking.phone && (
           <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
@@ -136,7 +143,7 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "services" | "hours">(requests.length > 0 ? "requests" : "schedule");
+  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "earnings" | "services" | "hours">(requests.length > 0 ? "requests" : "schedule");
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -156,6 +163,7 @@ export default function ProviderDashboard({
     { key: "requests", label: "Requests", count: requests.length },
     { key: "schedule", label: "Schedule", count: schedule.length },
     { key: "history", label: "History", count: history.length },
+    { key: "earnings", label: "Earnings", count: 0 },
     { key: "services", label: "Services", count: 0 },
     { key: "hours", label: "Hours", count: 0 },
   ];
@@ -256,6 +264,8 @@ export default function ProviderDashboard({
             ))
           )
         )}
+
+        {tab === "earnings" && <ProviderEarningsPanel />}
 
         {tab === "services" && <ProviderServicesEditor />}
 
