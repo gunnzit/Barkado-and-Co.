@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, PawPrint, ShieldCheck, Wallet, Clock } from "lucide-react";
+import { ArrowLeft, PawPrint, ShieldCheck, Wallet, Clock, Mail } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import ProviderDashboard from "@/components/ProviderDashboard";
@@ -57,7 +57,7 @@ export default async function ProviderPage() {
               Sign in to get started
             </Link>
             <p className="text-xs text-center mt-3" style={{ color: "var(--muted)" }}>
-              Takes about a minute — pick your services, set your prices, done.
+              Takes about a minute — pick your services, verify your details, done.
             </p>
           </div>
         </main>
@@ -67,11 +67,7 @@ export default async function ProviderPage() {
 
   const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
 
-  // No redirect to a separate /provider/join route on purpose — a redirect
-  // that depends on database state, paired with another redirect going the
-  // other way on that route, can ping-pong if the resolved user/session is
-  // ever inconsistent between requests. Rendering both states on this one
-  // route removes that possibility entirely.
+  // No provider record yet -> the multi-step join flow.
   if (!provider) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
@@ -80,12 +76,38 @@ export default async function ProviderPage() {
             <Link href="/" className="tap-scale">
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-xl font-bold">Become a provider</h1>
+            <h1 className="text-lg font-bold">Become a provider</h1>
           </div>
-          <p className="px-6 text-sm mb-6" style={{ color: "var(--muted)" }}>
-            Set up your provider profile to start receiving booking requests.
-          </p>
-          <ProviderJoinForm />
+          <ProviderJoinForm userEmail={user.email} userPhone={user.phone} />
+        </main>
+      </div>
+    );
+  }
+
+  // Provider record exists but not yet approved -> pending screen, not the
+  // dashboard and not the join form again.
+  if (!provider.verified) {
+    return (
+      <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
+        <main className="pb-16 max-w-lg mx-auto">
+          <div className="flex items-center gap-3 px-6 pt-4 pb-5">
+            <Link href="/" className="tap-scale">
+              <ArrowLeft size={20} />
+            </Link>
+          </div>
+          <div className="px-6 text-center py-14">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#fdece0" }}>
+              <Clock size={28} color="#a5652a" />
+            </div>
+            <h1 className="text-xl font-bold mb-2">Your request is being reviewed</h1>
+            <p className="text-sm mb-2 max-w-xs mx-auto" style={{ color: "var(--muted)" }}>
+              We're checking your details. This usually doesn't take long.
+            </p>
+            <p className="text-xs flex items-center justify-center gap-1.5 mb-8" style={{ color: "var(--muted)" }}>
+              <Mail size={12} /> We'll email {user.email} once you're approved.
+            </p>
+            <Link href="/" className="btn-secondary tap-scale inline-block">Back to home</Link>
+          </div>
         </main>
       </div>
     );
