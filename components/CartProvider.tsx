@@ -71,6 +71,14 @@ export function CartProvider({
     }
   }, [isSignedIn]);
 
+  // Fetch the real cart once, client-side, after the user's sign-in state
+  // is known — deliberately NOT done server-side in the root layout (see
+  // the comment there for why).
+  useEffect(() => {
+    if (isSignedIn) refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]);
+
   const applyQuantity = useCallback(async (productId: string, quantity: number, prevQty: number) => {
     if (quantity <= 0) {
       await fetch(`/api/cart/${productId}`, { method: "DELETE" });

@@ -4,8 +4,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
 import CartPill from "@/components/CartPill";
-import { getOrCreateUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -27,34 +25,18 @@ export const metadata: Metadata = {
   description: "Book verified pet walkers and sitters near you, and stay on top of vaccinations.",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getOrCreateUser().catch(() => null);
-
-  const cartItemsRaw = user
-    ? await prisma.cartItem.findMany({
-        where: { userId: user.id },
-        include: {
-          product: true,
-          provider: { include: { user: { select: { name: true } } } },
-          pet: true,
-        },
-        orderBy: { createdAt: "desc" },
-      })
-    : [];
-
-  // Dates need to cross the server → client boundary as strings.
-  const initialItems = cartItemsRaw.map((item) => ({
-    ...item,
-    startTime: item.startTime ? item.startTime.toISOString() : null,
-    endTime: item.endTime ? item.endTime.toISOString() : null,
-  }));
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // IMPORTANT: this layout wraps every route in the app, including whatever
+  // pages Clerk's middleware redirects to during its own sign-in handshake.
+  // Calling auth()/getOrCreateUser() here (even indirectly) can fight with
+  // that handshake and cause a redirect loop. CartProvider intentionally
+  // starts empty and fetches the real cart itself, client-side, after mount.
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body>
         <ClerkProvider>
           <SplashScreen />
-          <CartProvider initialItems={initialItems as any}>
+          <CartProvider initialItems={[]}>
             {children}
             <CartPill />
           </CartProvider>
