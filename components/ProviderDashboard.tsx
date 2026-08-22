@@ -6,6 +6,7 @@ import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Pho
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
 import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
+import ProviderVerificationUpload from "@/components/ProviderVerificationUpload";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -143,7 +144,7 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "earnings" | "services" | "hours">(requests.length > 0 ? "requests" : "schedule");
+  const [tab, setTab] = useState<"requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification">(requests.length > 0 ? "requests" : "schedule");
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -166,6 +167,7 @@ export default function ProviderDashboard({
     { key: "earnings", label: "Earnings", count: 0 },
     { key: "services", label: "Services", count: 0 },
     { key: "hours", label: "Hours", count: 0 },
+    { key: "verification", label: "Verification", count: 0 },
   ];
 
   return (
@@ -270,6 +272,8 @@ export default function ProviderDashboard({
         {tab === "services" && <ProviderServicesEditor />}
 
         {tab === "hours" && <ProviderAvailabilityEditor />}
+
+        {tab === "verification" && <ProviderVerificationUpload />}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Star, ShieldCheck, Clock } from "lucide-react";
+import { Star, ShieldCheck, Clock, FileText } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import AdminTabs from "@/components/AdminTabs";
@@ -53,8 +53,23 @@ export default async function AdminProvidersPage() {
                 <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: "var(--muted)" }}>
                   <span>{p.servicesOffered.map((s) => SERVICE_SHORT[s]).join(", ") || "No services set"}</span>
                   <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
-                  {p.verificationDocs.length > 0 && <span>{p.verificationDocs.length} document{p.verificationDocs.length === 1 ? "" : "s"} submitted</span>}
                 </div>
+                {p.verificationDocs.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                    {p.verificationDocs.map((url, i) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs tap-scale"
+                        style={{ color: "var(--terracotta)" }}
+                      >
+                        <FileText size={12} /> Document {i + 1}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           )}
