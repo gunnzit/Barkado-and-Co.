@@ -105,33 +105,18 @@ export default async function Home() {
 
       <CategoryTabs />
 
-      {/* ===== Become a provider banner ===== */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-3">
-        <Link
-          href="/provider"
-          className="tap-scale flex items-center justify-between gap-3 rounded-2xl px-5 py-3.5"
-          style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.2)" }}>
-              <PawPrint size={17} color="white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm">Earn as a pet walker, groomer, sitter, or trainer</p>
-              <p className="text-white/80 text-xs">Set your own hours and prices — become a provider</p>
-            </div>
-          </div>
-          <ChevronRight size={18} color="white" className="shrink-0" />
-        </Link>
-      </div>
-
       {/* ===== Hero ===== */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-3 grid md:grid-cols-2 gap-4 md:gap-10 items-center">
         <div className="animate-fade-up">
           {verifiedCount > 0 && (
-            <span className="trust-chip mb-2">
-              <ShieldCheck size={12} /> {verifiedCount} verified provider{verifiedCount === 1 ? "" : "s"}
-            </span>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="trust-chip">
+                <ShieldCheck size={12} /> {verifiedCount} verified provider{verifiedCount === 1 ? "" : "s"}
+              </span>
+              <Link href="/provider" className="trust-chip tap-scale" style={{ color: "var(--terracotta)" }}>
+                Earn as a provider →
+              </Link>
+            </div>
           )}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1.5 leading-tight">
             Everything your dog needs.

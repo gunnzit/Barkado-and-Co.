@@ -19,7 +19,11 @@ export async function GET() {
   const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
   if (!provider) return NextResponse.json({ error: "Not a provider" }, { status: 403 });
 
-  return NextResponse.json(provider);
+  const pendingRequestsCount = await prisma.booking.count({
+    where: { providerId: provider.id, status: "REQUESTED" },
+  });
+
+  return NextResponse.json({ ...provider, pendingRequestsCount });
 }
 
 export async function PATCH(req: Request) {

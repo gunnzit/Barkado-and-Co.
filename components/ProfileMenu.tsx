@@ -1,14 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { User, PawPrint, LogOut } from "lucide-react";
+import { User, PawPrint, LogOut, ShieldCheck } from "lucide-react";
 
 export default function ProfileMenu() {
   const { isSignedIn, user } = useUser();
   const { signOut, openSignIn } = useClerk();
   const [open, setOpen] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Purely additive check — only shows the provider entry for accounts that
+  // actually have a Provider record. A 403/404 here just means "not a
+  // provider," which is the normal case for almost everyone.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch("/api/provider/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsProvider(true);
+          setPendingCount(data.pendingRequestsCount ?? 0);
+        }
+      })
+      .catch(() => {});
+  }, [isSignedIn]);
 
   if (!isSignedIn) {
     return (
@@ -22,7 +40,7 @@ export default function ProfileMenu() {
     <div className="relative inline-block">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 rounded-full overflow-hidden tap-scale shrink-0"
+        className="relative w-9 h-9 rounded-full overflow-hidden tap-scale shrink-0"
         style={{ border: "1px solid var(--border)" }}
         aria-label="Account menu"
       >
@@ -32,6 +50,12 @@ export default function ProfileMenu() {
           <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--cream)" }}>
             <User size={16} color="var(--terracotta)" />
           </div>
+        )}
+        {isProvider && pendingCount > 0 && (
+          <span
+            className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full"
+            style={{ background: "var(--terracotta)", border: "1.5px solid var(--card)" }}
+          />
         )}
       </button>
 
@@ -62,10 +86,29 @@ export default function ProfileMenu() {
             >
               <PawPrint size={15} color="var(--muted)" /> Your pets
             </Link>
+            {isProvider && (
+              <Link
+                href="/provider"
+                onClick={() => setOpen(false)}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 tap-scale text-sm font-medium"
+                style={{ borderTop: "1px solid var(--border)" }}
+              >
+                <ShieldCheck size={15} color="var(--muted)" />
+                <span className="flex-1">Provider dashboard</span>
+                {pendingCount > 0 && (
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: "var(--terracotta)", color: "white" }}
+                  >
+                    {pendingCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <button
               onClick={() => signOut()}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 tap-scale text-sm font-medium text-left"
-              style={{ color: "var(--terracotta)" }}
+              style={{ color: "var(--terracotta)", borderTop: "1px solid var(--border)" }}
             >
               <LogOut size={15} /> Sign out
             </button>
