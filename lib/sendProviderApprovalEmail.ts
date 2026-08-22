@@ -1,13 +1,17 @@
-import { resend } from "./resend";
+import { Resend } from "resend";
 
 // Failures here are logged, never thrown — an email hiccup should never
-// block the actual approval action from completing.
+// block the actual approval action from completing. The client is built
+// lazily, inside this function, rather than at module load time: Resend's
+// constructor throws immediately on a missing key, and constructing it at
+// import time would crash the whole build before RESEND_API_KEY is set.
 export async function sendProviderApprovalEmail(to: string, name: string) {
   if (!process.env.RESEND_API_KEY) {
     console.warn("RESEND_API_KEY not set — skipping approval email to", to);
     return;
   }
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://barkado-and-co.vercel.app";
 
   try {
