@@ -20,7 +20,7 @@ export default function CartPill() {
     <div className="fixed left-0 right-0 flex justify-center px-6 z-40 cart-pill-in" style={{ bottom: 96 }}>
       <Link
         href="/cart"
-        className="tap-scale flex items-center gap-2.5 rounded-full pl-3.5 pr-3 py-2 w-full max-w-[280px]"
+        className="tap-scale inline-flex items-center gap-2 rounded-full pl-3 pr-2.5 py-2"
         style={{
           background: "rgba(22, 40, 31, 0.62)",
           backdropFilter: "blur(14px)",
@@ -30,7 +30,7 @@ export default function CartPill() {
         }}
       >
         <ShoppingBag size={15} color="var(--gold)" className="shrink-0" />
-        <span className="text-white text-xs font-bold leading-tight flex-1 truncate">
+        <span className="text-white text-xs font-bold leading-tight whitespace-nowrap">
           {label} <span className="font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>· {totalCount} item{totalCount === 1 ? "" : "s"}</span>
         </span>
         <ChevronRight size={15} color="white" className="shrink-0" />
