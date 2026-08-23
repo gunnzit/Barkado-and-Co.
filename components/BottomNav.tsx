@@ -1,25 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Home, PawPrint, GraduationCap, Scissors, ShoppingBag } from "lucide-react";
 
 const PILL_WIDTH = 68;
 const PILL_HEIGHT = 56;
+const DRAG_THRESHOLD = 10; // px of movement before a touch counts as a drag, not a tap
 
-// Routes with their own navigation (drawer menus, checkout flow, etc.) where
-// the customer bottom nav shouldn't show at all.
 const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up"];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
-  const [navRect, setNavRect] = useState({ width: 0, height: 0 });
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [navRect, setNavRect] = useState({ height: 0 });
+  const [centers, setCenters] = useState<number[]>([]);
   const [pillLeft, setPillLeft] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [popping, setPopping] = useState(false);
   const popTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStartX = useRef(0);
+  const draggedRef = useRef(false);
 
   const items = [
     { href: "/", label: "Home", icon: Home, active: pathname === "/" },
@@ -29,28 +33,38 @@ export default function BottomNav() {
     { href: "/accessories", label: "Shop", icon: ShoppingBag, active: pathname === "/accessories" },
   ];
 
-  const slotWidth = navRect.width / items.length;
-  const leftForIndex = (i: number) => slotWidth * i + (slotWidth - PILL_WIDTH) / 2;
-
+  // Measures each icon's real rendered center — accounts for the nav's own
+  // padding automatically, unlike computing position from nav-width math.
   const measure = () => {
-    const rect = navRef.current?.getBoundingClientRect();
-    if (rect) setNavRect({ width: rect.width, height: rect.height });
+    const nav = navRef.current;
+    if (!nav) return;
+    const navBox = nav.getBoundingClientRect();
+    setNavRect({ height: navBox.height });
+    setCenters(
+      itemRefs.current.map((el) => {
+        if (!el) return 0;
+        const r = el.getBoundingClientRect();
+        return r.left - navBox.left + r.width / 2;
+      })
+    );
   };
 
   useEffect(() => {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const leftForIndex = (i: number) => (centers[i] ?? 0) - PILL_WIDTH / 2;
 
   const snapToActive = () => {
     const activeIndex = Math.max(0, items.findIndex((i) => i.active));
     setPillLeft(leftForIndex(activeIndex));
   };
 
-  // A real navigation (pathname changed) gets the pop/bloom animation.
-  // A drag-release snap-back (no navigation) does not.
   useEffect(() => {
+    measure();
     snapToActive();
     setPopping(true);
     if (popTimeout.current) clearTimeout(popTimeout.current);
@@ -59,7 +73,24 @@ export default function BottomNav() {
       if (popTimeout.current) clearTimeout(popTimeout.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, navRect.width]);
+  }, [pathname]);
+
+  const nearestIndexFor = (clientX: number) => {
+    const nav = navRef.current;
+    if (!nav) return 0;
+    const rect = nav.getBoundingClientRect();
+    const x = clientX - rect.left;
+    let closest = 0;
+    let closestDist = Infinity;
+    centers.forEach((c, i) => {
+      const d = Math.abs(x - c);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = i;
+      }
+    });
+    return closest;
+  };
 
   const followPointer = (clientX: number) => {
     const nav = navRef.current;
@@ -70,37 +101,47 @@ export default function BottomNav() {
     setPillLeft(clamped);
   };
 
+  const startDrag = (clientX: number) => {
+    setDragging(true);
+    dragStartX.current = clientX;
+    draggedRef.current = false;
+    followPointer(clientX);
+  };
+
+  const moveDrag = (clientX: number) => {
+    if (Math.abs(clientX - dragStartX.current) > DRAG_THRESHOLD) draggedRef.current = true;
+    followPointer(clientX);
+  };
+
+  const endDrag = (clientX: number) => {
+    setDragging(false);
+    // Only a genuine drag commits navigation to wherever you released —
+    // a plain tap already navigates via the Link's own click handling.
+    if (draggedRef.current) {
+      const index = nearestIndexFor(clientX);
+      const target = items[index];
+      if (target && !target.active) {
+        router.push(target.href);
+        return; // the pathname effect will snap + pop once navigation lands
+      }
+    }
+    snapToActive();
+  };
+
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <nav
       ref={navRef}
       className="bottom-nav bottom-nav-pill-container"
-      style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}
-      onMouseDown={(e) => {
-        setDragging(true);
-        followPointer(e.clientX);
-      }}
-      onMouseMove={(e) => dragging && followPointer(e.clientX)}
-      onMouseUp={() => {
-        setDragging(false);
-        snapToActive();
-      }}
-      onMouseLeave={() => {
-        if (dragging) {
-          setDragging(false);
-          snapToActive();
-        }
-      }}
-      onTouchStart={(e) => {
-        setDragging(true);
-        followPointer(e.touches[0].clientX);
-      }}
-      onTouchMove={(e) => followPointer(e.touches[0].clientX)}
-      onTouchEnd={() => {
-        setDragging(false);
-        snapToActive();
-      }}
+      style={{ bottom: "calc(20px + env(safe-area-inset-bottom))", zIndex: 300 }}
+      onMouseDown={(e) => startDrag(e.clientX)}
+      onMouseMove={(e) => dragging && moveDrag(e.clientX)}
+      onMouseUp={(e) => dragging && endDrag(e.clientX)}
+      onMouseLeave={(e) => dragging && endDrag(e.clientX)}
+      onTouchStart={(e) => startDrag(e.touches[0].clientX)}
+      onTouchMove={(e) => moveDrag(e.touches[0].clientX)}
+      onTouchEnd={(e) => endDrag(e.changedTouches[0].clientX)}
       onTouchCancel={() => {
         setDragging(false);
         snapToActive();
@@ -115,10 +156,15 @@ export default function BottomNav() {
           height: PILL_HEIGHT,
         }}
       />
-      {items.map((item) => {
+      {items.map((item, i) => {
         const Icon = item.icon;
         return (
-          <Link key={item.label} href={item.href} className={`tap-scale bottom-nav-item ${item.active ? "active" : ""}`}>
+          <Link
+            key={item.label}
+            href={item.href}
+            ref={(el) => { itemRefs.current[i] = el; }}
+            className={`tap-scale bottom-nav-item ${item.active ? "active" : ""}`}
+          >
             <Icon size={19} strokeWidth={item.active ? 2.5 : 2} />
             {item.label}
           </Link>
@@ -132,14 +178,33 @@ export default function BottomNav() {
         .bottom-nav-pill {
           position: absolute;
           border-radius: 9999px;
-          background: rgba(255, 255, 255, 0.22);
-          backdrop-filter: blur(10px) saturate(160%);
-          -webkit-backdrop-filter: blur(10px) saturate(160%);
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), inset 0 -1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.12);
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          box-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.7),
+            inset 0 -8px 12px rgba(255, 255, 255, 0.12),
+            0 6px 20px rgba(0, 0, 0, 0.1);
           pointer-events: none;
           z-index: 0;
+          overflow: hidden;
           transition: left 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .bottom-nav-pill::before {
+          content: "";
+          position: absolute;
+          top: -30%;
+          left: 10%;
+          width: 60%;
+          height: 60%;
+          border-radius: 9999px;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+          animation: bottomNavGlowDrift 3.2s ease-in-out infinite;
+        }
+        @keyframes bottomNavGlowDrift {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+          50% { transform: translate(8%, 15%) scale(1.15); opacity: 1; }
         }
         .bottom-nav-pill.dragging {
           transition: none;
