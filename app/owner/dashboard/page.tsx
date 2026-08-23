@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
-import VaccineQuickAccess from "@/components/VaccineQuickAccess";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
 import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -64,7 +63,6 @@ export default async function OwnerDashboard() {
     }),
   ]);
 
-  // Dedupe to most-recent booking per (provider, service type) for quick "Book again"
   const seen = new Set<string>();
   const rebookOptions = allBookingsForRebook.filter((b) => {
     const key = `${b.providerId}-${b.type}`;
@@ -79,8 +77,6 @@ export default async function OwnerDashboard() {
     leash: "🦮", collar: "🔵", bowl: "🥣", toy: "🦴", bed: "🛏️", carrier: "🧳",
   };
 
-  // The dashboard's "active" pet is whichever the person last picked in the
-  // pet switcher (a cookie), falling back to their first/most-recent pet.
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
   const themeClass = resolveThemeClass(activePet);
@@ -89,7 +85,6 @@ export default async function OwnerDashboard() {
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
     <main className="pb-28 max-w-2xl mx-auto">
       <EmergencyButton />
-      <VaccineQuickAccess />
       <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
       <nav className="flex justify-between items-center px-6 pt-4">
         <LocationHeader
