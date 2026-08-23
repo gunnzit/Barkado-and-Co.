@@ -5,16 +5,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Home, PawPrint, GraduationCap, Scissors, ShoppingBag } from "lucide-react";
 
-type Rect = { left: number; top: number; width: number; height: number };
+const PILL_WIDTH = 68;
+const PILL_HEIGHT = 56;
 
 export default function BottomNav() {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const [pill, setPill] = useState<Rect | null>(null);
+  const [navRect, setNavRect] = useState({ width: 0, height: 0 });
+  const [pillLeft, setPillLeft] = useState(0);
   const [dragging, setDragging] = useState(false);
-
-  const isBook = pathname === "/book";
 
   const items = [
     { href: "/", label: "Home", icon: Home, active: pathname === "/" },
@@ -24,53 +23,38 @@ export default function BottomNav() {
     { href: "/accessories", label: "Shop", icon: ShoppingBag, active: pathname === "/accessories" },
   ];
 
+  const slotWidth = navRect.width / items.length;
+
+  const leftForIndex = (i: number) => slotWidth * i + (slotWidth - PILL_WIDTH) / 2;
+
+  const measure = () => {
+    const rect = navRef.current?.getBoundingClientRect();
+    if (rect) setNavRect({ width: rect.width, height: rect.height });
+  };
+
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const snapToActive = () => {
-    const nav = navRef.current;
-    const activeIndex = items.findIndex((i) => i.active);
-    const el = itemRefs.current[activeIndex >= 0 ? activeIndex : 0];
-    if (!nav || !el) return;
-    const navRect = nav.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setPill({
-      left: elRect.left - navRect.left,
-      top: elRect.top - navRect.top,
-      width: elRect.width,
-      height: elRect.height,
-    });
+    const activeIndex = Math.max(0, items.findIndex((i) => i.active));
+    setPillLeft(leftForIndex(activeIndex));
   };
 
   useEffect(() => {
     snapToActive();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, navRect.width]);
 
   const followPointer = (clientX: number) => {
     const nav = navRef.current;
     if (!nav) return;
-    const navRect = nav.getBoundingClientRect();
-    // Find whichever item the pointer is currently over and highlight it —
-    // a magnetic follow rather than pixel-for-pixel cursor tracking.
-    let closest = 0;
-    let closestDist = Infinity;
-    itemRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const center = r.left + r.width / 2;
-      const dist = Math.abs(clientX - center);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = i;
-      }
-    });
-    const el = itemRefs.current[closest];
-    if (!el) return;
-    const elRect = el.getBoundingClientRect();
-    setPill({
-      left: elRect.left - navRect.left,
-      top: elRect.top - navRect.top,
-      width: elRect.width,
-      height: elRect.height,
-    });
+    const rect = nav.getBoundingClientRect();
+    const raw = clientX - rect.left - PILL_WIDTH / 2;
+    const clamped = Math.min(Math.max(raw, 0), rect.width - PILL_WIDTH);
+    setPillLeft(clamped);
   };
 
   return (
@@ -107,26 +91,19 @@ export default function BottomNav() {
         snapToActive();
       }}
     >
-      {pill && (
-        <span
-          className="bottom-nav-pill"
-          style={{
-            left: pill.left,
-            top: pill.top,
-            width: pill.width,
-            height: pill.height,
-          }}
-        />
-      )}
-      {items.map((item, i) => {
+      <span
+        className={`bottom-nav-pill ${dragging ? "dragging" : ""}`}
+        style={{
+          left: pillLeft,
+          top: (navRect.height - PILL_HEIGHT) / 2,
+          width: PILL_WIDTH,
+          height: PILL_HEIGHT,
+        }}
+      />
+      {items.map((item) => {
         const Icon = item.icon;
         return (
-          <Link
-            key={item.label}
-            href={item.href}
-            ref={(el) => { itemRefs.current[i] = el; }}
-            className="tap-scale bottom-nav-item"
-          >
+          <Link key={item.label} href={item.href} className="tap-scale bottom-nav-item">
             <Icon size={19} strokeWidth={item.active ? 2.5 : 2} color={item.active ? "var(--cream)" : undefined} />
             <span style={{ color: item.active ? "var(--cream)" : undefined }}>{item.label}</span>
           </Link>
@@ -143,7 +120,10 @@ export default function BottomNav() {
           background: var(--panel-dark);
           pointer-events: none;
           z-index: 0;
-          transition: left 280ms cubic-bezier(0.34, 1.56, 0.64, 1), top 280ms cubic-bezier(0.34, 1.56, 0.64, 1), width 280ms cubic-bezier(0.34, 1.56, 0.64, 1), height 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+          transition: left 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .bottom-nav-pill.dragging {
+          transition: none;
         }
         .bottom-nav-item {
           position: relative;
