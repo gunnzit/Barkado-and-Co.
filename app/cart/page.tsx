@@ -64,6 +64,7 @@ export default async function CartPage() {
                     price: item.price / 100,
                     description: item.description ?? "",
                     icon: (item.icon as any) ?? "toy",
+                    imageUrls: item.imageUrls,
                   }}
                 />
               ))}

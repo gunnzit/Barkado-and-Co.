@@ -250,8 +250,10 @@ model Product {
   description String?
   category    String
   price       Int // paise
-  imageUrl    String?
-  icon        String? // fallback icon key when no photo yet
+  // Up to 3 photo URLs, in display order. Empty = falls back to the icon
+  // placeholder in the shop UI.
+  imageUrls   String[] @default([])
+  icon        String? // fallback icon key when no photos yet
   stock       Int      @default(100)
   active      Boolean  @default(true)
   // Pet sizes this product suits (e.g. a small harness vs a large one).

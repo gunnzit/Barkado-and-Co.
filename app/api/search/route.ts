@@ -41,6 +41,7 @@ export async function GET(req: Request) {
       price: p.price / 100,
       description: p.description ?? "",
       icon: p.icon ?? "toy",
+      imageUrls: p.imageUrls,
     })),
     services,
   });
