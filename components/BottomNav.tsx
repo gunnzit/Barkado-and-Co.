@@ -107,16 +107,25 @@ export default function BottomNav() {
     setPillLeft(clamped);
   };
 
+  // Deliberately does NOT move the pill yet — only records where the
+  // touch/click started. Moving immediately here was what caused taps to
+  // "teleport" the pill instantly instead of sliding: a tap and the start
+  // of a drag look identical until real movement happens.
   const startDrag = (clientX: number) => {
     setDragging(true);
     dragStartX.current = clientX;
     draggedRef.current = false;
-    followPointer(clientX);
   };
 
+  // Only once movement crosses the threshold do we start actually dragging
+  // the pill — a plain tap never triggers this, so it never gets the
+  // transition-less instant jump; it gets the eased CSS slide instead, via
+  // the pathname effect above, once navigation actually happens.
   const moveDrag = (clientX: number) => {
-    if (Math.abs(clientX - dragStartX.current) > DRAG_THRESHOLD) draggedRef.current = true;
-    followPointer(clientX);
+    if (!draggedRef.current && Math.abs(clientX - dragStartX.current) > DRAG_THRESHOLD) {
+      draggedRef.current = true;
+    }
+    if (draggedRef.current) followPointer(clientX);
   };
 
   const endDrag = (clientX: number) => {
@@ -139,7 +148,7 @@ export default function BottomNav() {
       ref={navRef}
       className="bottom-nav bottom-nav-pill-container"
       style={{
-        bottom: "calc(20px + env(safe-area-inset-bottom))",
+        bottom: "calc(32px + env(safe-area-inset-bottom))",
         zIndex: 300,
         background: "rgba(255, 255, 255, 0.35)",
         backdropFilter: "blur(20px) saturate(180%)",
@@ -159,7 +168,7 @@ export default function BottomNav() {
     >
       {measured && (
         <span
-          className={`bottom-nav-pill ${dragging ? "dragging" : ""} ${popping ? "popping" : ""}`}
+          className={`bottom-nav-pill ${dragging && draggedRef.current ? "dragging" : ""} ${popping ? "popping" : ""}`}
           style={{
             left: pillLeft,
             top: (navRect.height - PILL_HEIGHT) / 2,
