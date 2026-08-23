@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, ShieldCheck, Users, ClipboardList, ShoppingBag } from "lucide-react";
+import { Menu, LayoutDashboard, ShieldCheck, Users, ClipboardList, ShoppingBag, Activity } from "lucide-react";
 import NavDrawer from "@/components/NavDrawer";
 
 const TABS = [
@@ -12,6 +12,7 @@ const TABS = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/bookings", label: "Bookings", icon: ClipboardList },
   { href: "/admin/products", label: "Products", icon: ShoppingBag },
+  { href: "/admin/activity", label: "Activity", icon: Activity },
 ];
 
 export default function AdminTabs() {

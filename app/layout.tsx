@@ -5,6 +5,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
 import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
+import ActivityTracker from "@/components/ActivityTracker";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ClerkProvider>
           <SplashScreen />
+          <ActivityTracker />
           <CartProvider initialItems={[]}>
             {children}
             <CartPill />

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import AdminTabs from "@/components/AdminTabs";
@@ -28,16 +29,17 @@ export default async function AdminUsersPage() {
             <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>No users yet.</p>
           ) : (
             users.map((u) => (
-              <div key={u.id} className="card flex items-center justify-between">
+              <Link key={u.id} href={`/admin/users/${u.id}`} className="card flex items-center justify-between tap-scale">
                 <div>
                   <p className="font-semibold text-sm">{u.name}</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{u.email}{u.phone ? ` · ${u.phone}` : ""}</p>
+                  {u.address && <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{u.address}</p>}
                 </div>
                 <div className="text-right text-xs" style={{ color: "var(--muted)" }}>
                   <p className="flex items-center gap-1 justify-end"><PawPrint size={11} /> {u._count.pets} pet{u._count.pets === 1 ? "" : "s"}</p>
                   <p>{u._count.bookings} booking{u._count.bookings === 1 ? "" : "s"}</p>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

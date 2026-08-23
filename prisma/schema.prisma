@@ -47,6 +47,11 @@ enum CartItemKind {
   SERVICE
 }
 
+enum ActivityType {
+  PAGE_VIEW
+  CLICK
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -65,6 +70,7 @@ model User {
   showStockPhotos Boolean @default(true)
   address         String?
   addresses       Address[]
+  activityEvents  ActivityEvent[]
 }
 
 model Address {
@@ -98,8 +104,6 @@ model Pet {
   insuranceProvider String?
   insurancePolicy   String?
   photoUrl          String?
-  // Manual theme choice, overriding breed-based auto-matching. One of the 5
-  // theme keys (e.g. "dalmatian"), or null/absent to auto-match by breed.
   themeOverride     String?
   createdAt   DateTime @default(now())
 
@@ -108,9 +112,6 @@ model Pet {
   cartItems    CartItem[]
 }
 
-// Up to 3 personal photos a pet owner can upload to appear in their own
-// rotating hero banner (homepage + walking dashboard). Scoped to the
-// uploading user only — never shown to other visitors.
 model HeroPhoto {
   id        String   @id @default(cuid())
   userId    String
@@ -124,7 +125,7 @@ model Vaccination {
   petId        String
   pet          Pet      @relation(fields: [petId], references: [id])
   vaccineName  String
-  type         String   @default("VACCINE") // "VACCINE" or "MEDICINE"
+  type         String   @default("VACCINE")
   dateGiven    DateTime
   nextDueDate  DateTime?
   reminderSent Boolean  @default(false)
@@ -140,18 +141,14 @@ model Provider {
   servicesOffered ServiceType[]
   serviceAreaPin  String?
   radiusKm        Int      @default(5)
-  pricePerWalk    Int? // in paise
-  pricePerSitDay  Int? // in paise
-  pricePerGroom   Int? // in paise
-  pricePerTrain   Int? // in paise
+  pricePerWalk    Int?
+  pricePerSitDay  Int?
+  pricePerGroom   Int?
+  pricePerTrain   Int?
   verified        Boolean  @default(false)
   ratingAvg       Float    @default(0)
   ratingCount     Int      @default(0)
-  // Instant "I'm free right now" toggle — separate from, and layered on top
-  // of, the recurring weekly hours in ProviderAvailability.
   isAvailableNow  Boolean  @default(false)
-  // Real verification: documents a provider submits for approval, and when
-  // they applied. Approval itself is just `verified` flipping to true.
   verificationDocs        String[] @default([])
   verificationSubmittedAt DateTime?
   createdAt       DateTime @default(now())
@@ -161,19 +158,13 @@ model Provider {
   availability ProviderAvailability[]
 }
 
-// A provider's recurring weekly working hours — providers aren't exclusively
-// working for Barkado, so this lets owners see (not just assume) when
-// they're actually free. One row per day they work; a day with no row means
-// they haven't set hours for it. A provider with no rows at all is treated
-// as always available (backward-compatible with providers who never set
-// hours, rather than making them look unavailable everywhere by default).
 model ProviderAvailability {
   id         String   @id @default(cuid())
   providerId String
   provider   Provider @relation(fields: [providerId], references: [id])
-  dayOfWeek  Int      // 0 = Sunday .. 6 = Saturday
-  startTime  String   // "09:00", 24hr
-  endTime    String   // "18:00", 24hr
+  dayOfWeek  Int
+  startTime  String
+  endTime    String
   createdAt  DateTime @default(now())
 
   @@unique([providerId, dayOfWeek])
@@ -191,25 +182,21 @@ model Booking {
   pet          Pet           @relation(fields: [petId], references: [id])
   startTime    DateTime
   endTime      DateTime
-  priceAmount  Int // paise
+  priceAmount  Int
   address      String?
   phone        String?
   latitude     Float?
   longitude    Float?
   razorpayOrderId String?
   paidAt       DateTime?
-  // Links this booking back to the cart checkout / payment that created it,
-  // so a single Order can group accessories and service bookings together.
   orderId      String?
   order        Order?        @relation(fields: [orderId], references: [id])
-  // A REQUESTED booking a provider hasn't responded to by this time can be
-  // treated as expired (auto-declined / needs reassignment).
   requestExpiresAt DateTime?
   createdAt    DateTime      @default(now())
 
   report      WalkReport?
-  review      Review?      // owner's rating of the provider
-  ownerReview OwnerReview? // provider's rating of the owner
+  review      Review?
+  ownerReview OwnerReview?
 }
 
 model WalkReport {
@@ -223,7 +210,6 @@ model WalkReport {
   createdAt  DateTime @default(now())
 }
 
-// Owner rates the provider after a booking.
 model Review {
   id        String   @id @default(cuid())
   bookingId String   @unique
@@ -233,8 +219,6 @@ model Review {
   createdAt DateTime @default(now())
 }
 
-// Provider rates the owner after a booking — the reverse direction, kept as
-// its own model rather than overloading Review with a direction flag.
 model OwnerReview {
   id        String   @id @default(cuid())
   bookingId String   @unique
@@ -249,15 +233,11 @@ model Product {
   name        String
   description String?
   category    String
-  price       Int // paise
-  // Up to 3 photo URLs, in display order. Empty = falls back to the icon
-  // placeholder in the shop UI.
+  price       Int
   imageUrls   String[] @default([])
-  icon        String? // fallback icon key when no photos yet
+  icon        String?
   stock       Int      @default(100)
   active      Boolean  @default(true)
-  // Pet sizes this product suits (e.g. a small harness vs a large one).
-  // Empty array = suitable for any size — sorts as "universal", never excluded.
   suitableSizes PetSize[] @default([])
   createdAt   DateTime @default(now())
 
@@ -265,22 +245,16 @@ model Product {
   orderItems OrderItem[]
 }
 
-// A single cart row is either a PRODUCT (accessory, keyed by productId +
-// quantity) or a SERVICE (a walk/sit/groom/train booking-in-progress,
-// keyed by provider + pet + time window). Both kinds share one cart so
-// checkout can combine accessories and service bookings in one payment.
 model CartItem {
   id        String       @id @default(cuid())
   userId    String
   user      User         @relation(fields: [userId], references: [id])
   kind      CartItemKind @default(PRODUCT)
 
-  // ── PRODUCT fields ──
   productId String?
   product   Product?     @relation(fields: [productId], references: [id])
   quantity  Int          @default(1)
 
-  // ── SERVICE fields ──
   serviceType ServiceType?
   providerId  String?
   provider    Provider?    @relation(fields: [providerId], references: [id])
@@ -290,8 +264,6 @@ model CartItem {
   endTime     DateTime?
   address     String?
   phone       String?
-  // Price snapshot in paise, set at add-to-cart time. For PRODUCT rows the
-  // live product.price is used instead; this is only read for SERVICE rows.
   priceAmount Int?
 
   createdAt DateTime @default(now())
@@ -304,7 +276,7 @@ model Order {
   userId          String
   user            User        @relation(fields: [userId], references: [id])
   status          OrderStatus @default(PENDING)
-  totalAmount     Int // paise
+  totalAmount     Int
   razorpayOrderId String?
   paidAt          DateTime?
   createdAt       DateTime    @default(now())
@@ -320,5 +292,22 @@ model OrderItem {
   productId        String
   product          Product @relation(fields: [productId], references: [id])
   quantity         Int
-  priceAtPurchase  Int // paise, snapshot at order time
+  priceAtPurchase  Int
+}
+
+// Every page view and every click, across the whole app. userId is null for
+// signed-out visitors — still logged, just not attributable to an account.
+// metadata holds context specific to the event (clicked element's text,
+// aria-label, href, tag name).
+model ActivityEvent {
+  id        String       @id @default(cuid())
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id])
+  type      ActivityType
+  path      String?
+  metadata  Json?
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
