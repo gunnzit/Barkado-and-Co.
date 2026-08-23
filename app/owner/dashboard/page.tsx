@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
 import WalkHero from "@/components/WalkHero";
@@ -321,7 +320,6 @@ export default async function OwnerDashboard() {
         )}
       </div>
 
-      <BottomNav />
     </main>
     </div>
   );

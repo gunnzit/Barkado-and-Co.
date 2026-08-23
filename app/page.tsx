@@ -5,7 +5,6 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import BottomNav from "@/components/BottomNav";
 import EmergencyButton from "@/components/EmergencyButton";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
 import LocationHeader from "@/components/LocationHeader";
@@ -352,7 +351,6 @@ export default async function Home() {
           Become a provider →
         </Link>
       </footer>
-      <BottomNav />
     </main>
     </div>
   );

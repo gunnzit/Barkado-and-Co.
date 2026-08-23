@@ -8,12 +8,18 @@ import { Home, PawPrint, GraduationCap, Scissors, ShoppingBag } from "lucide-rea
 const PILL_WIDTH = 68;
 const PILL_HEIGHT = 56;
 
+// Routes with their own navigation (drawer menus, checkout flow, etc.) where
+// the customer bottom nav shouldn't show at all.
+const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up"];
+
 export default function BottomNav() {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
   const [navRect, setNavRect] = useState({ width: 0, height: 0 });
   const [pillLeft, setPillLeft] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [popping, setPopping] = useState(false);
+  const popTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const items = [
     { href: "/", label: "Home", icon: Home, active: pathname === "/" },
@@ -24,7 +30,6 @@ export default function BottomNav() {
   ];
 
   const slotWidth = navRect.width / items.length;
-
   const leftForIndex = (i: number) => slotWidth * i + (slotWidth - PILL_WIDTH) / 2;
 
   const measure = () => {
@@ -43,8 +48,16 @@ export default function BottomNav() {
     setPillLeft(leftForIndex(activeIndex));
   };
 
+  // A real navigation (pathname changed) gets the pop/bloom animation.
+  // A drag-release snap-back (no navigation) does not.
   useEffect(() => {
     snapToActive();
+    setPopping(true);
+    if (popTimeout.current) clearTimeout(popTimeout.current);
+    popTimeout.current = setTimeout(() => setPopping(false), 380);
+    return () => {
+      if (popTimeout.current) clearTimeout(popTimeout.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, navRect.width]);
 
@@ -56,6 +69,8 @@ export default function BottomNav() {
     const clamped = Math.min(Math.max(raw, 0), rect.width - PILL_WIDTH);
     setPillLeft(clamped);
   };
+
+  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <nav
@@ -92,7 +107,7 @@ export default function BottomNav() {
       }}
     >
       <span
-        className={`bottom-nav-pill ${dragging ? "dragging" : ""}`}
+        className={`bottom-nav-pill ${dragging ? "dragging" : ""} ${popping ? "popping" : ""}`}
         style={{
           left: pillLeft,
           top: (navRect.height - PILL_HEIGHT) / 2,
@@ -103,9 +118,9 @@ export default function BottomNav() {
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <Link key={item.label} href={item.href} className="tap-scale bottom-nav-item">
-            <Icon size={19} strokeWidth={item.active ? 2.5 : 2} color={item.active ? "var(--cream)" : undefined} />
-            <span style={{ color: item.active ? "var(--cream)" : undefined }}>{item.label}</span>
+          <Link key={item.label} href={item.href} className={`tap-scale bottom-nav-item ${item.active ? "active" : ""}`}>
+            <Icon size={19} strokeWidth={item.active ? 2.5 : 2} />
+            {item.label}
           </Link>
         );
       })}
@@ -117,13 +132,25 @@ export default function BottomNav() {
         .bottom-nav-pill {
           position: absolute;
           border-radius: 9999px;
-          background: var(--panel-dark);
+          background: rgba(255, 255, 255, 0.22);
+          backdrop-filter: blur(10px) saturate(160%);
+          -webkit-backdrop-filter: blur(10px) saturate(160%);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), inset 0 -1px 2px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.12);
           pointer-events: none;
           z-index: 0;
           transition: left 320ms cubic-bezier(0.22, 1, 0.36, 1);
         }
         .bottom-nav-pill.dragging {
           transition: none;
+        }
+        .bottom-nav-pill.popping {
+          animation: bottomNavPillPop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes bottomNavPillPop {
+          0% { transform: scale(1); }
+          35% { transform: scale(1.22); }
+          100% { transform: scale(1); }
         }
         .bottom-nav-item {
           position: relative;

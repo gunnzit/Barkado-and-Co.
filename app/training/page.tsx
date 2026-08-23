@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import LocationHeader from "@/components/LocationHeader";
@@ -56,7 +55,6 @@ export default async function TrainingPage() {
           defaultPhone={user.phone}
         />
 
-        <BottomNav />
       </main>
     </div>
   );

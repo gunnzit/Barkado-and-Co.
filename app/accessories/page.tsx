@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { AccessoryCard } from "@/components/AccessoryCard";
-import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -93,7 +92,6 @@ export default async function AccessoriesPage() {
         ))
       )}
 
-      <BottomNav />
     </main>
     </div>
   );

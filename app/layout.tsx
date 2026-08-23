@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
 import CartPill from "@/components/CartPill";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -31,6 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Calling auth()/getOrCreateUser() here (even indirectly) can fight with
   // that handshake and cause a redirect loop. CartProvider intentionally
   // starts empty and fetches the real cart itself, client-side, after mount.
+  //
+  // BottomNav is mounted here, as a sibling to {children}, rather than
+  // inside each individual page — that's what keeps it visible during route
+  // transitions (loading.tsx replaces {children}'s content, not this layout
+  // itself, so BottomNav never unmounts). It self-hides via pathname check
+  // on routes that have their own navigation (provider, admin, cart, etc).
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body>
@@ -39,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider initialItems={[]}>
             {children}
             <CartPill />
+            <BottomNav />
           </CartProvider>
         </ClerkProvider>
       </body>
