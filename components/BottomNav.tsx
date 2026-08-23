@@ -18,6 +18,7 @@ export default function BottomNav() {
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [navRect, setNavRect] = useState({ height: 0 });
   const [centers, setCenters] = useState<number[]>([]);
+  const [measured, setMeasured] = useState(false);
   const [pillLeft, setPillLeft] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [popping, setPopping] = useState(false);
@@ -40,13 +41,13 @@ export default function BottomNav() {
     if (!nav) return;
     const navBox = nav.getBoundingClientRect();
     setNavRect({ height: navBox.height });
-    setCenters(
-      itemRefs.current.map((el) => {
-        if (!el) return 0;
-        const r = el.getBoundingClientRect();
-        return r.left - navBox.left + r.width / 2;
-      })
-    );
+    const next = itemRefs.current.map((el) => {
+      if (!el) return 0;
+      const r = el.getBoundingClientRect();
+      return r.left - navBox.left + r.width / 2;
+    });
+    setCenters(next);
+    setMeasured(true);
   };
 
   useEffect(() => {
@@ -65,6 +66,11 @@ export default function BottomNav() {
 
   useEffect(() => {
     measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!measured) return;
     snapToActive();
     setPopping(true);
     if (popTimeout.current) clearTimeout(popTimeout.current);
@@ -73,7 +79,7 @@ export default function BottomNav() {
       if (popTimeout.current) clearTimeout(popTimeout.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [measured, centers, pathname]);
 
   const nearestIndexFor = (clientX: number) => {
     const nav = navRef.current;
@@ -115,14 +121,12 @@ export default function BottomNav() {
 
   const endDrag = (clientX: number) => {
     setDragging(false);
-    // Only a genuine drag commits navigation to wherever you released —
-    // a plain tap already navigates via the Link's own click handling.
     if (draggedRef.current) {
       const index = nearestIndexFor(clientX);
       const target = items[index];
       if (target && !target.active) {
         router.push(target.href);
-        return; // the pathname effect will snap + pop once navigation lands
+        return;
       }
     }
     snapToActive();
@@ -134,7 +138,13 @@ export default function BottomNav() {
     <nav
       ref={navRef}
       className="bottom-nav bottom-nav-pill-container"
-      style={{ bottom: "calc(20px + env(safe-area-inset-bottom))", zIndex: 300 }}
+      style={{
+        bottom: "calc(20px + env(safe-area-inset-bottom))",
+        zIndex: 300,
+        background: "rgba(255, 255, 255, 0.35)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      }}
       onMouseDown={(e) => startDrag(e.clientX)}
       onMouseMove={(e) => dragging && moveDrag(e.clientX)}
       onMouseUp={(e) => dragging && endDrag(e.clientX)}
@@ -147,15 +157,17 @@ export default function BottomNav() {
         snapToActive();
       }}
     >
-      <span
-        className={`bottom-nav-pill ${dragging ? "dragging" : ""} ${popping ? "popping" : ""}`}
-        style={{
-          left: pillLeft,
-          top: (navRect.height - PILL_HEIGHT) / 2,
-          width: PILL_WIDTH,
-          height: PILL_HEIGHT,
-        }}
-      />
+      {measured && (
+        <span
+          className={`bottom-nav-pill ${dragging ? "dragging" : ""} ${popping ? "popping" : ""}`}
+          style={{
+            left: pillLeft,
+            top: (navRect.height - PILL_HEIGHT) / 2,
+            width: PILL_WIDTH,
+            height: PILL_HEIGHT,
+          }}
+        />
+      )}
       {items.map((item, i) => {
         const Icon = item.icon;
         return (
@@ -163,29 +175,27 @@ export default function BottomNav() {
             key={item.label}
             href={item.href}
             ref={(el) => { itemRefs.current[i] = el; }}
-            className={`tap-scale bottom-nav-item ${item.active ? "active" : ""}`}
+            className="tap-scale bottom-nav-item"
+            style={{ color: item.active ? "var(--forest, #16281f)" : "var(--muted, #8a7f6f)", opacity: 1 }}
           >
-            <Icon size={19} strokeWidth={item.active ? 2.5 : 2} />
-            {item.label}
+            <Icon size={19} strokeWidth={item.active ? 2.5 : 2} style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))" }} />
+            <span style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.1))" }}>{item.label}</span>
           </Link>
         );
       })}
 
       <style jsx>{`
-        .bottom-nav-pill-container {
-          overflow: hidden;
-        }
         .bottom-nav-pill {
           position: absolute;
           border-radius: 9999px;
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.45);
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px) saturate(160%);
+          -webkit-backdrop-filter: blur(10px) saturate(160%);
+          border: 1px solid rgba(255, 255, 255, 0.55);
           box-shadow:
-            inset 0 1px 2px rgba(255, 255, 255, 0.7),
-            inset 0 -8px 12px rgba(255, 255, 255, 0.12),
-            0 6px 20px rgba(0, 0, 0, 0.1);
+            inset 0 1px 2px rgba(255, 255, 255, 0.8),
+            inset 0 -8px 12px rgba(255, 255, 255, 0.15),
+            0 4px 14px rgba(0, 0, 0, 0.08);
           pointer-events: none;
           z-index: 0;
           overflow: hidden;
@@ -199,7 +209,7 @@ export default function BottomNav() {
           width: 60%;
           height: 60%;
           border-radius: 9999px;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%);
           animation: bottomNavGlowDrift 3.2s ease-in-out infinite;
         }
         @keyframes bottomNavGlowDrift {
