@@ -90,7 +90,6 @@ export default function BottomNav() {
 
       <style jsx>{`
         .bottom-nav-glow-container {
-          position: relative;
           overflow: hidden;
         }
         .bottom-nav-glow {
