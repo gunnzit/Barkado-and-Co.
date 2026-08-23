@@ -9,7 +9,7 @@ export default function EmergencyButton() {
       style={{
         background: "#c0392b",
         color: "white",
-        bottom: "calc(90px + env(safe-area-inset-bottom))",
+        bottom: "calc(112px + env(safe-area-inset-bottom))",
         right: 16,
       }}
       aria-label="Emergency vet contacts"

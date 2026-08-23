@@ -17,7 +17,7 @@ export default function CartPill() {
   const label = hasService && hasProduct ? "View cart" : hasService ? "View booking" : "View cart";
 
   return (
-    <div className="fixed left-0 right-0 flex justify-center px-6 z-40 cart-pill-in" style={{ bottom: 96 }}>
+    <div className="fixed left-0 right-0 flex justify-center px-6 z-40 cart-pill-in" style={{ bottom: "calc(112px + env(safe-area-inset-bottom))" }}>
       <Link
         href="/cart"
         className="tap-scale inline-flex items-center gap-2 rounded-full pl-3 pr-2.5 py-2"
