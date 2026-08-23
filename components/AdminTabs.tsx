@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShieldCheck, Users, ClipboardList, ShoppingBag } from "lucide-react";
+import { Menu, LayoutDashboard, ShieldCheck, Users, ClipboardList, ShoppingBag } from "lucide-react";
+import NavDrawer from "@/components/NavDrawer";
 
 const TABS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -14,28 +16,40 @@ const TABS = [
 
 export default function AdminTabs() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
+  const current = TABS.find((t) => isActive(t.href));
 
   return (
-    <div className="flex gap-2 px-6 mb-5 overflow-x-auto no-scrollbar">
-      {TABS.map((t) => {
-        const active = t.href === "/admin" ? pathname === "/admin" : pathname.startsWith(t.href);
-        const Icon = t.icon;
-        return (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="tap-scale px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0"
-            style={{
-              background: active ? "var(--panel-dark)" : "var(--card)",
-              color: active ? "white" : "inherit",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <Icon size={13} />
-            {t.label}
-          </Link>
-        );
-      })}
+    <div className="px-6 mb-5">
+      <button
+        onClick={() => setOpen(true)}
+        className="tap-scale flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+      >
+        <Menu size={15} />
+        {current?.label ?? "Menu"}
+      </button>
+
+      <NavDrawer open={open} onClose={() => setOpen(false)} title="Admin menu">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = isActive(t.href);
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3 tap-scale text-left"
+              style={{ background: active ? "var(--cream)" : "transparent" }}
+            >
+              <Icon size={16} color={active ? "var(--terracotta)" : "var(--muted)"} />
+              <span className="text-sm font-medium" style={{ color: active ? "var(--terracotta)" : "inherit" }}>{t.label}</span>
+            </Link>
+          );
+        })}
+      </NavDrawer>
     </div>
   );
 }

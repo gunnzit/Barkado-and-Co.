@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X, Navigation, IndianRupee, ChevronRight } from "lucide-react";
+import {
+  Menu, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X,
+  Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck,
+} from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
 import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
 import ProviderVerificationUpload from "@/components/ProviderVerificationUpload";
+import NavDrawer from "@/components/NavDrawer";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -135,6 +139,8 @@ function WalkReportForm({ bookingId, onDone }: { bookingId: string; onDone: () =
   );
 }
 
+type Tab = "home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification";
+
 export default function ProviderDashboard({
   requests,
   schedule,
@@ -144,7 +150,8 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
 }) {
-  const [tab, setTab] = useState<"home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification">("home");
+  const [tab, setTab] = useState<Tab>("home");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const router = useRouter();
@@ -160,36 +167,57 @@ export default function ProviderDashboard({
     router.refresh();
   };
 
-  const tabs: { key: typeof tab; label: string; count: number }[] = [
-    { key: "home", label: "Home", count: 0 },
-    { key: "requests", label: "Requests", count: requests.length },
-    { key: "schedule", label: "Schedule", count: schedule.length },
-    { key: "history", label: "History", count: history.length },
-    { key: "earnings", label: "Earnings", count: 0 },
-    { key: "services", label: "Services", count: 0 },
-    { key: "hours", label: "Hours", count: 0 },
-    { key: "verification", label: "Verification", count: 0 },
+  const tabs: { key: Tab; label: string; count: number; icon: any }[] = [
+    { key: "home", label: "Home", count: 0, icon: HomeIcon },
+    { key: "requests", label: "Requests", count: requests.length, icon: Inbox },
+    { key: "schedule", label: "Schedule", count: schedule.length, icon: Calendar },
+    { key: "history", label: "History", count: history.length, icon: HistoryIcon },
+    { key: "earnings", label: "Earnings", count: 0, icon: Wallet },
+    { key: "services", label: "Services", count: 0, icon: Settings },
+    { key: "hours", label: "Hours", count: 0, icon: Clock },
+    { key: "verification", label: "Verification", count: 0, icon: ShieldCheck },
   ];
+
+  const goTo = (key: Tab) => {
+    setTab(key);
+    setDrawerOpen(false);
+  };
 
   return (
     <div>
-      <div className="flex gap-2 px-6 mb-5 overflow-x-auto no-scrollbar">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className="tap-scale px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0"
-            style={{
-              background: tab === t.key ? "var(--panel-dark)" : "var(--card)",
-              color: tab === t.key ? "white" : "inherit",
-              border: "1px solid var(--border)",
-            }}
-          >
-            {t.label}
-            {t.count > 0 && <span style={{ opacity: 0.7 }}>· {t.count}</span>}
-          </button>
-        ))}
+      <div className="px-6 mb-5">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="tap-scale flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        >
+          <Menu size={15} />
+          {tabs.find((t) => t.key === tab)?.label}
+        </button>
       </div>
+
+      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Provider menu">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => goTo(t.key)}
+              className="w-full flex items-center gap-3 px-4 py-3 tap-scale text-left"
+              style={{ background: active ? "var(--cream)" : "transparent" }}
+            >
+              <Icon size={16} color={active ? "var(--terracotta)" : "var(--muted)"} />
+              <span className="text-sm font-medium flex-1" style={{ color: active ? "var(--terracotta)" : "inherit" }}>{t.label}</span>
+              {t.count > 0 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "var(--terracotta)", color: "white" }}>
+                  {t.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </NavDrawer>
 
       <div className="px-6 space-y-3">
         {tab === "home" && (() => {
