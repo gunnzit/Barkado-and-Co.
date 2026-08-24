@@ -9,7 +9,7 @@ const PILL_WIDTH = 68;
 const PILL_HEIGHT = 56;
 const DRAG_THRESHOLD = 10; // px of movement before a touch counts as a drag, not a tap
 
-const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up"];
+const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up", "/accessories/"];
 
 export default function BottomNav() {
   const pathname = usePathname();
