@@ -20,6 +20,7 @@ type ProductData = {
   description: string | null;
   category: string;
   price: number; // paise
+  compareAtPrice: number | null; // paise
   imageUrls: string[];
   icon: string | null;
   active: boolean;
@@ -33,6 +34,7 @@ export default function AdminProductForm({ initial }: { initial?: ProductData })
   const [description, setDescription] = useState(initial?.description ?? "");
   const [category, setCategory] = useState(initial?.category ?? CATEGORY_OPTIONS[0]);
   const [price, setPrice] = useState(initial ? String(initial.price / 100) : "");
+  const [compareAtPrice, setCompareAtPrice] = useState(initial?.compareAtPrice ? String(initial.compareAtPrice / 100) : "");
   const [imageUrls, setImageUrls] = useState<string[]>(initial?.imageUrls ?? []);
   const [icon, setIcon] = useState(initial?.icon ?? ICON_OPTIONS[0].key);
   const [active, setActive] = useState(initial?.active ?? true);
@@ -85,6 +87,7 @@ export default function AdminProductForm({ initial }: { initial?: ProductData })
       description: description.trim() || undefined,
       category: category.trim(),
       price: Number(price),
+      compareAtPrice: compareAtPrice ? Number(compareAtPrice) : undefined,
       imageUrls,
       icon,
       active,
@@ -201,6 +204,21 @@ export default function AdminProductForm({ initial }: { initial?: ProductData })
             style={{ borderColor: "var(--border)" }}
           />
         </div>
+      </div>
+
+      <div className="card mb-3">
+        <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Compare-at price (₹) — optional</label>
+        <p className="text-[11px] mt-0.5 mb-1.5" style={{ color: "var(--muted)" }}>
+          A higher "original" price shown crossed out, with a real % off badge. Leave blank for no discount shown.
+        </p>
+        <input
+          type="number"
+          value={compareAtPrice}
+          onChange={(e) => setCompareAtPrice(e.target.value)}
+          placeholder="e.g. 129"
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+          style={{ borderColor: "var(--border)" }}
+        />
       </div>
 
       <div className="card mb-3">

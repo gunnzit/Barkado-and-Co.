@@ -42,6 +42,7 @@ export async function GET(req: Request) {
       description: p.description ?? "",
       icon: p.icon ?? "toy",
       imageUrls: p.imageUrls,
+      compareAtPrice: p.compareAtPrice ? p.compareAtPrice / 100 : null,
     })),
     services,
   });

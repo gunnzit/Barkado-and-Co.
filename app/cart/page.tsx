@@ -64,6 +64,7 @@ export default async function CartPage() {
                     price: item.price / 100,
                     description: item.description ?? "",
                     icon: (item.icon as any) ?? "toy",
+                    compareAtPrice: item.compareAtPrice ? item.compareAtPrice / 100 : null,
                     imageUrls: item.imageUrls,
                   }}
                 />

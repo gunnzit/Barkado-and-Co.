@@ -8,6 +8,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1),
   price: z.number().int().positive(), // rupees, converted to paise below
+  compareAtPrice: z.number().int().positive().optional(), // rupees, optional MRP
   imageUrls: z.array(z.string()).max(3).default([]),
   icon: z.string().optional(),
   active: z.boolean().default(true),
@@ -40,6 +41,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       description: parsed.data.description || null,
       category: parsed.data.category,
       price: parsed.data.price * 100,
+      compareAtPrice: parsed.data.compareAtPrice ? parsed.data.compareAtPrice * 100 : null,
       imageUrls: parsed.data.imageUrls,
       icon: parsed.data.icon || null,
       active: parsed.data.active,
