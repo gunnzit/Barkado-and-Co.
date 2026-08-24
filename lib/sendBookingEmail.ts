@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-type BookingEmailType = "ACCEPTED" | "DECLINED" | "COMPLETED" | "NEW_REQUEST" | "EXPIRED";
+type BookingEmailType = "ACCEPTED" | "DECLINED" | "COMPLETED" | "NEW_REQUEST" | "EXPIRED" | "RESCHEDULED";
 
 const SUBJECTS: Record<BookingEmailType, string> = {
   ACCEPTED: "Your booking was accepted",
@@ -8,6 +8,7 @@ const SUBJECTS: Record<BookingEmailType, string> = {
   COMPLETED: "Your booking is complete",
   NEW_REQUEST: "New booking request",
   EXPIRED: "Your booking request expired",
+  RESCHEDULED: "A booking was rescheduled — please re-confirm",
 };
 
 // Same lazy-construction pattern as sendProviderApprovalEmail — the Resend
@@ -20,6 +21,7 @@ export async function sendBookingEmail(params: {
   serviceLabel: string;
   otherPartyName: string;
   petName?: string;
+  newTime?: string;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.warn(`RESEND_API_KEY not set — skipping ${params.type} email to`, params.to);
@@ -55,6 +57,12 @@ export async function sendBookingEmail(params: {
     case "EXPIRED":
       heading = `Your ${params.serviceLabel} request expired`;
       body = `Nobody responded to your request in time, so it's been automatically cancelled. You can book another provider anytime.`;
+      break;
+    case "RESCHEDULED":
+      heading = "A booking was rescheduled";
+      body = `${params.otherPartyName} moved their ${params.serviceLabel}${params.petName ? ` for ${params.petName}` : ""} to ${params.newTime ?? "a new time"}. Please confirm you're still available.`;
+      ctaHref = `${appUrl}/provider`;
+      ctaLabel = "Review and confirm";
       break;
   }
 

@@ -27,7 +27,64 @@ export function CancelBookingButton({ bookingId }: { bookingId: string }) {
   );
 }
 
-export function RateBookingForm({ bookingId }: { bookingId: string }) {
+export function RescheduleForm({ bookingId, currentStart }: { bookingId: string; currentStart: string }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(currentStart.slice(0, 16)); // datetime-local format
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const submit = async () => {
+    if (!value) return;
+    setSubmitting(true);
+    setError("");
+    const newStart = new Date(value);
+    const newEnd = new Date(newStart.getTime() + 30 * 60000); // matches the 30-min default used at booking time
+    const res = await fetch(`/api/bookings/${bookingId}/reschedule`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startTime: newStart.toISOString(), endTime: newEnd.toISOString() }),
+    });
+    setSubmitting(false);
+    if (res.ok) {
+      setOpen(false);
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Couldn't reschedule — please try again.");
+    }
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="btn-secondary text-xs tap-scale">
+        Reschedule
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 pt-2">
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
+        style={{ borderColor: "var(--border)" }}
+      />
+      {error && <p className="text-xs" style={{ color: "var(--terracotta)" }}>{error}</p>}
+      <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+        The provider will need to re-confirm this new time.
+      </p>
+      <div className="flex gap-2">
+        <button onClick={() => setOpen(false)} className="btn-secondary text-xs flex-1 tap-scale">Cancel</button>
+        <button onClick={submit} disabled={submitting} className="btn-primary text-xs flex-1 tap-scale" style={{ opacity: submitting ? 0.6 : 1 }}>
+          {submitting ? "Saving…" : "Confirm new time"}
+        </button>
+      </div>
+    </div>
+  );
+}
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");

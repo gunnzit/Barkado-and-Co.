@@ -3,7 +3,7 @@ import { ArrowLeft, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Shoppin
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
-import { CancelBookingButton, RateBookingForm } from "@/components/BookingActions";
+import { CancelBookingButton, RateBookingForm, RescheduleForm } from "@/components/BookingActions";
 import { expireStaleBookings } from "@/lib/expireStaleBookings";
 
 const SERVICE_LABEL: Record<string, string> = {
@@ -101,6 +101,11 @@ export default async function OwnerBookingsPage() {
                       <span className="font-bold text-sm">₹{(b.priceAmount / 100).toFixed(0)}</span>
                       {canCancel && <CancelBookingButton bookingId={b.id} />}
                     </div>
+                    {canCancel && (
+                      <div className="mt-2">
+                        <RescheduleForm bookingId={b.id} currentStart={b.startTime.toISOString()} />
+                      </div>
+                    )}
                     {b.review && (
                       <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--muted)" }}>
                         <Star size={11} fill="var(--gold)" color="var(--gold)" /> You rated {b.review.rating}/5
