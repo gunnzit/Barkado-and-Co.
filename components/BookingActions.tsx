@@ -85,6 +85,8 @@ export function RescheduleForm({ bookingId, currentStart }: { bookingId: string;
     </div>
   );
 }
+
+export function RateBookingForm({ bookingId }: { bookingId: string }) {
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
