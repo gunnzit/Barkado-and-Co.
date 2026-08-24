@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { CancelBookingButton, RateBookingForm } from "@/components/BookingActions";
+import { expireStaleBookings } from "@/lib/expireStaleBookings";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -26,6 +27,7 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   COMPLETED: { bg: "var(--cream)", text: "var(--terracotta)" },
   CANCELLED: { bg: "#f3e8e8", text: "#a53a3a" },
   DECLINED: { bg: "#f3e8e8", text: "#a53a3a" },
+  EXPIRED: { bg: "#f3e8e8", text: "#a53a3a" },
 };
 
 function formatWhen(d: Date) {
@@ -35,6 +37,8 @@ function formatWhen(d: Date) {
 export default async function OwnerBookingsPage() {
   const user = await getOrCreateUser();
   if (!user) redirect("/sign-in");
+
+  await expireStaleBookings();
 
   const [bookings, orders] = await Promise.all([
     prisma.booking.findMany({

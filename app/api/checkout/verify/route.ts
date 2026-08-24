@@ -96,6 +96,7 @@ export async function POST(req: Request) {
             razorpayOrderId: razorpay_order_id,
             paidAt,
             orderId: order.id,
+            requestExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           },
         })
       ),

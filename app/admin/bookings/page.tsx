@@ -7,7 +7,7 @@ const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk", SITTING: "Home Staycation", GROOMING: "Luxury Spa Session", TRAINING: "Good Manners Programme",
 };
 
-const STATUS_FILTERS = ["ALL", "REQUESTED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "DECLINED"];
+const STATUS_FILTERS = ["ALL", "REQUESTED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "DECLINED", "EXPIRED"];
 
 function formatWhen(d: Date) {
   return d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });

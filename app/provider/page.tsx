@@ -5,6 +5,7 @@ import { getOrCreateUser } from "@/lib/auth";
 import ProviderDashboard from "@/components/ProviderDashboard";
 import ProviderJoinForm from "@/components/ProviderJoinForm";
 import ProviderOnlineToggle from "@/components/ProviderOnlineToggle";
+import { expireStaleBookings } from "@/lib/expireStaleBookings";
 
 const BENEFITS = [
   { icon: Wallet, title: "Set your own prices", desc: "You decide what you charge for each service you offer." },
@@ -108,6 +109,8 @@ export default async function ProviderPage() {
     );
   }
 
+  await expireStaleBookings();
+
   const bookings = await prisma.booking.findMany({
     where: { providerId: provider.id },
     include: {
@@ -129,7 +132,7 @@ export default async function ProviderPage() {
     .filter((b) => b.status === "ACCEPTED" || b.status === "IN_PROGRESS")
     .map(serialize);
   const history = bookings
-    .filter((b) => ["COMPLETED", "CANCELLED", "DECLINED"].includes(b.status))
+    .filter((b) => ["COMPLETED", "CANCELLED", "DECLINED", "EXPIRED"].includes(b.status))
     .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())
     .slice(0, 20)
     .map(serialize);

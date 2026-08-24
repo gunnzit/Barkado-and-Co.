@@ -28,6 +28,7 @@ enum BookingStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  EXPIRED
 }
 
 enum PetSize {
@@ -61,9 +62,6 @@ model User {
   role      Role     @default(OWNER)
   createdAt DateTime @default(now())
 
-  // Rating providers give this user as an owner, after a completed booking —
-  // mirrors Provider.ratingAvg/ratingCount, lets providers see who they're
-  // about to work with before accepting a request.
   ratingAvg   Float @default(0)
   ratingCount Int   @default(0)
 
@@ -83,7 +81,7 @@ model Address {
   id             String   @id @default(cuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id])
-  label          String   @default("Home") // Home | Work | Hotel | Other
+  label          String   @default("Home")
   fullAddress    String
   googleMapsLink String?
   receiverName   String
