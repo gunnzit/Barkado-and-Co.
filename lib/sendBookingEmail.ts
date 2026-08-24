@@ -1,12 +1,13 @@
 import { Resend } from "resend";
 
-type BookingEmailType = "ACCEPTED" | "DECLINED" | "COMPLETED" | "NEW_REQUEST";
+type BookingEmailType = "ACCEPTED" | "DECLINED" | "COMPLETED" | "NEW_REQUEST" | "EXPIRED";
 
 const SUBJECTS: Record<BookingEmailType, string> = {
   ACCEPTED: "Your booking was accepted",
   DECLINED: "Update on your booking request",
   COMPLETED: "Your booking is complete",
   NEW_REQUEST: "New booking request",
+  EXPIRED: "Your booking request expired",
 };
 
 // Same lazy-construction pattern as sendProviderApprovalEmail — the Resend
@@ -50,6 +51,10 @@ export async function sendBookingEmail(params: {
       body = `${params.otherPartyName} just requested a ${params.serviceLabel}${params.petName ? ` for ${params.petName}` : ""}.`;
       ctaHref = `${appUrl}/provider`;
       ctaLabel = "Open your dashboard";
+      break;
+    case "EXPIRED":
+      heading = `Your ${params.serviceLabel} request expired`;
+      body = `Nobody responded to your request in time, so it's been automatically cancelled. You can book another provider anytime.`;
       break;
   }
 
