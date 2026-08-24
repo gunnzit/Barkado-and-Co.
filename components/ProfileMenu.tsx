@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { User, PawPrint, LogOut, ShieldCheck } from "lucide-react";
+import { User, PawPrint, LogOut, ShieldCheck, ClipboardList } from "lucide-react";
 
 export default function ProfileMenu() {
   const { isSignedIn, user } = useUser();
@@ -85,6 +85,13 @@ export default function ProfileMenu() {
               className="w-full flex items-center gap-2.5 px-4 py-2.5 tap-scale text-sm font-medium"
             >
               <PawPrint size={15} color="var(--muted)" /> Your pets
+            </Link>
+            <Link
+              href="/owner/bookings"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 tap-scale text-sm font-medium"
+            >
+              <ClipboardList size={15} color="var(--muted)" /> Your bookings
             </Link>
             {isProvider && (
               <Link
