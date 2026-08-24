@@ -61,6 +61,12 @@ model User {
   role      Role     @default(OWNER)
   createdAt DateTime @default(now())
 
+  // Rating providers give this user as an owner, after a completed booking —
+  // mirrors Provider.ratingAvg/ratingCount, lets providers see who they're
+  // about to work with before accepting a request.
+  ratingAvg   Float @default(0)
+  ratingCount Int   @default(0)
+
   pets     Pet[]
   provider Provider?
   bookings Booking[] @relation("OwnerBookings")
@@ -295,10 +301,6 @@ model OrderItem {
   priceAtPurchase  Int
 }
 
-// Every page view and every click, across the whole app. userId is null for
-// signed-out visitors — still logged, just not attributable to an account.
-// metadata holds context specific to the event (clicked element's text,
-// aria-label, href, tag name).
 model ActivityEvent {
   id        String       @id @default(cuid())
   userId    String?

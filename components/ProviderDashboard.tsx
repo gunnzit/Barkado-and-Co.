@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Menu, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X,
-  Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck,
+  Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck, Star,
 } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
@@ -36,7 +36,8 @@ export type ProviderBooking = {
   address: string | null;
   phone: string | null;
   pet: { name: string };
-  owner: { name: string };
+  owner: { name: string; ratingAvg?: number; ratingCount?: number };
+  ownerReview?: { rating: number } | null;
 };
 
 function formatWhen(iso: string) {
@@ -53,7 +54,14 @@ function BookingCard({ booking, children }: { booking: ProviderBooking; children
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{SERVICE_LABEL[booking.type]}</p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>For {booking.pet.name} · owner {booking.owner.name}</p>
+          <p className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+            For {booking.pet.name} · owner {booking.owner.name}
+            {booking.owner.ratingCount != null && booking.owner.ratingCount > 0 && (
+              <span className="flex items-center gap-0.5">
+                <Star size={10} fill="var(--gold)" color="var(--gold)" /> {booking.owner.ratingAvg?.toFixed(1)}
+              </span>
+            )}
+          </p>
         </div>
         <span className="font-bold text-sm shrink-0">₹{(booking.priceAmount / 100).toFixed(0)}</span>
       </div>
@@ -134,6 +142,56 @@ function WalkReportForm({ bookingId, onDone }: { bookingId: string; onDone: () =
       />
       <button onClick={submit} disabled={submitting} className="btn-primary w-full text-sm tap-scale" style={{ opacity: submitting ? 0.6 : 1 }}>
         {submitting ? "Submitting…" : "Submit report & complete"}
+      </button>
+    </div>
+  );
+}
+
+function RateOwnerForm({ bookingId, onDone }: { bookingId: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (rating === 0) return;
+    setSubmitting(true);
+    await fetch(`/api/bookings/${bookingId}/owner-review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating, comment: comment || undefined }),
+    });
+    setSubmitting(false);
+    onDone();
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="btn-secondary text-xs tap-scale mt-2">
+        Rate this owner
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 pt-3 mt-3" style={{ borderTop: "1px solid var(--border)" }}>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} onClick={() => setRating(n)} className="tap-scale" aria-label={`${n} stars`}>
+            <Star size={20} fill={n <= rating ? "var(--gold)" : "none"} color="var(--gold)" />
+          </button>
+        ))}
+      </div>
+      <textarea
+        placeholder="Optional comment"
+        className="w-full border rounded-lg px-2.5 py-1.5 text-xs"
+        style={{ borderColor: "var(--border)" }}
+        rows={2}
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+      />
+      <button onClick={submit} disabled={submitting || rating === 0} className="btn-primary w-full text-sm tap-scale" style={{ opacity: rating === 0 ? 0.5 : 1 }}>
+        {submitting ? "Submitting…" : "Submit rating"}
       </button>
     </div>
   );
@@ -361,6 +419,15 @@ export default function ProviderDashboard({
                 >
                   {b.status}
                 </span>
+                {b.status === "COMPLETED" && (
+                  b.ownerReview ? (
+                    <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--muted)" }}>
+                      <Star size={11} fill="var(--gold)" color="var(--gold)" /> You rated the owner {b.ownerReview.rating}/5
+                    </p>
+                  ) : (
+                    <RateOwnerForm bookingId={b.id} onDone={() => router.refresh()} />
+                  )
+                )}
               </BookingCard>
             ))
           )

@@ -110,7 +110,11 @@ export default async function ProviderPage() {
 
   const bookings = await prisma.booking.findMany({
     where: { providerId: provider.id },
-    include: { pet: { select: { name: true } }, owner: { select: { name: true } } },
+    include: {
+      pet: { select: { name: true } },
+      owner: { select: { name: true, ratingAvg: true, ratingCount: true } },
+      ownerReview: { select: { rating: true } },
+    },
     orderBy: { startTime: "asc" },
   });
 
