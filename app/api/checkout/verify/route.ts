@@ -3,6 +3,14 @@ import crypto from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
+import { sendBookingEmail } from "@/lib/sendBookingEmail";
+
+const SERVICE_LABEL: Record<string, string> = {
+  WALKING: "Adventure Walk",
+  SITTING: "Home Staycation",
+  GROOMING: "Luxury Spa Session",
+  TRAINING: "Good Manners Programme",
+};
 
 const verifySchema = z.object({
   localOrderId: z.string(),
@@ -48,7 +56,7 @@ export async function POST(req: Request) {
 
   const cartItems = await prisma.cartItem.findMany({
     where: { userId: user.id },
-    include: { product: true },
+    include: { product: true, provider: { include: { user: true } }, pet: true },
   });
 
   const paidAt = new Date();
@@ -93,6 +101,23 @@ export async function POST(req: Request) {
       ),
     prisma.cartItem.deleteMany({ where: { userId: user.id } }),
   ]);
+
+  // Notify each provider of their new request — after the transaction has
+  // actually committed, so we're only emailing about bookings that are
+  // guaranteed to exist. Never blocks the response on a failed send.
+  const serviceItems = cartItems.filter((item) => item.kind === "SERVICE" && item.provider && item.pet);
+  await Promise.all(
+    serviceItems.map((item) =>
+      sendBookingEmail({
+        type: "NEW_REQUEST",
+        to: item.provider!.user.email,
+        recipientName: item.provider!.user.name,
+        serviceLabel: SERVICE_LABEL[item.serviceType!] ?? item.serviceType!,
+        otherPartyName: user.name,
+        petName: item.pet!.name,
+      })
+    )
+  );
 
   return NextResponse.json({ success: true, orderId: order.id });
 }
