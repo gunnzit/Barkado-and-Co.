@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, MousePointerClick, Users, Activity as ActivityIcon } from "lucide-react";
+import { Eye, MousePointerClick, Users, Activity as ActivityIcon, User, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import AdminTabs from "@/components/AdminTabs";
@@ -28,6 +28,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     identifiedVisitorRows,
     recentForTrend,
     topPagesRaw,
+    byUserRaw,
     recentClicksForAgg,
     totalEventCount,
     pageOfEvents,
@@ -46,6 +47,13 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
       _count: { path: true },
       orderBy: { _count: { path: "desc" } },
       take: 8,
+    }),
+    prisma.activityEvent.groupBy({
+      by: ["userId"],
+      where: { userId: { not: null } },
+      _count: true,
+      orderBy: { _count: { userId: "desc" } },
+      take: 20,
     }),
     // metadata is JSON, which Prisma can't groupBy directly — aggregated in
     // JS below from the most recent 1000 clicks. Fine at current volume;
@@ -81,6 +89,19 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const dailyTrend = Object.entries(buckets).map(([date, v]) => ({ date, ...v }));
 
   const topPages = topPagesRaw.map((p) => ({ label: p.path ?? "unknown", count: p._count.path }));
+
+  const byUserIds = byUserRaw.map((r) => r.userId!).filter(Boolean);
+  const byUserProfiles = await prisma.user.findMany({
+    where: { id: { in: byUserIds } },
+    select: { id: true, name: true, email: true },
+  });
+  const byUser = byUserRaw
+    .map((r) => {
+      const profile = byUserProfiles.find((u) => u.id === r.userId);
+      if (!profile) return null;
+      return { id: profile.id, name: profile.name, email: profile.email, count: r._count };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
 
   const clickCounts: Record<string, number> = {};
   recentClicksForAgg.forEach((e) => {
@@ -144,6 +165,34 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
             <div className="card">
               <p className="text-sm font-bold mb-3">Most clicked</p>
               <TopBarChart data={topClicks} color="#16281f" />
+            </div>
+          )}
+
+          {byUser.length > 0 && (
+            <div className="card">
+              <p className="text-sm font-bold mb-3">By user</p>
+              <div className="space-y-1">
+                {byUser.map((u) => (
+                  <Link
+                    key={u.id}
+                    href={`/admin/users/${u.id}`}
+                    className="flex items-center gap-3 py-2 tap-scale"
+                    style={{ borderTop: "1px solid var(--border)" }}
+                  >
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+                      <User size={14} color="var(--terracotta)" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{u.name}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--muted)" }}>{u.email}</p>
+                    </div>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full shrink-0" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                      {u.count}
+                    </span>
+                    <ChevronRight size={14} color="var(--muted)" className="shrink-0" />
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 

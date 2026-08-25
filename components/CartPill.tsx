@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 
+const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up"];
+
 export default function CartPill() {
   const { totalCount, items } = useCart();
   const pathname = usePathname();
 
   if (totalCount === 0) return null;
-  if (pathname === "/cart" || pathname.startsWith("/cart/")) return null;
+  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   const hasService = items.some((i) => i.kind === "SERVICE");
   const hasProduct = items.some((i) => i.kind === "PRODUCT");
