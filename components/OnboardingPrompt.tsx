@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 export default function OnboardingPrompt({
@@ -21,6 +22,8 @@ export default function OnboardingPrompt({
   if (!open) return null;
 
   const canSave = (!needsPhone || phone.trim()) && (!needsAddress || address.trim());
+
+  const skip = () => setOpen(false);
 
   const save = async () => {
     setSaving(true);
@@ -49,8 +52,16 @@ export default function OnboardingPrompt({
       className="fixed inset-0 flex items-center justify-center p-6 vaccine-modal-backdrop"
       style={{ background: "rgba(0,0,0,0.6)", zIndex: 100 }}
     >
-      <div className="card w-full max-w-sm vaccine-modal-pop" style={{ background: "var(--card)" }}>
-        <h3 className="font-bold text-lg mb-1">Just one quick thing</h3>
+      <div
+        className="card w-full max-w-sm vaccine-modal-pop overflow-y-auto"
+        style={{ background: "var(--card)", maxHeight: "85vh" }}
+      >
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h3 className="font-bold text-lg">Just one quick thing</h3>
+          <button onClick={skip} className="tap-scale shrink-0 p-1" aria-label="Skip for now">
+            <X size={18} color="var(--muted)" />
+          </button>
+        </div>
         <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
           We'll only ask for this once — it'll be used automatically for every booking after this.
         </p>
@@ -85,6 +96,10 @@ export default function OnboardingPrompt({
           style={{ opacity: canSave ? 1 : 0.5 }}
         >
           {saving ? "Saving…" : "Save and continue"}
+        </button>
+
+        <button onClick={skip} className="w-full text-center text-xs font-semibold tap-scale mt-2 py-1" style={{ color: "var(--muted)" }}>
+          Skip for now
         </button>
       </div>
     </div>

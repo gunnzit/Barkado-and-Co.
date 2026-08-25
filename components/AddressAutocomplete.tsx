@@ -89,8 +89,8 @@ export default function AddressAutocomplete({
 
       {open && suggestions.length > 0 && (
         <div
-          className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-lg z-50"
-          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+          className="absolute left-0 right-0 mt-1 rounded-xl overflow-y-auto shadow-lg z-50"
+          style={{ background: "var(--card)", border: "1px solid var(--border)", maxHeight: 220 }}
         >
           {suggestions.map((s) => (
             <button
