@@ -16,7 +16,7 @@ export async function sendProviderApprovalEmail(to: string, name: string) {
 
   try {
     await resend.emails.send({
-      from: "Barkado & Co. <onboarding@resend.dev>",
+      from: "Barkado & Co. <hello@barkadoandco.com>",
       to,
       subject: "You're approved! Welcome to Barkado & Co.",
       html: `

@@ -69,7 +69,7 @@ export async function sendBookingEmail(params: {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "Barkado & Co. <onboarding@resend.dev>",
+      from: "Barkado & Co. <hello@barkadoandco.com>",
       to: params.to,
       subject: SUBJECTS[params.type],
       html: `
