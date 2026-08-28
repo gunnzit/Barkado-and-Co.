@@ -347,9 +347,16 @@ export default async function Home() {
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
           Everything your dog needs. One passport.
         </p>
-        <Link href="/provider" className="text-xs font-semibold tap-scale inline-block" style={{ color: "var(--terracotta)" }}>
+        <Link href="/provider" className="text-xs font-semibold tap-scale inline-block mb-4" style={{ color: "var(--terracotta)" }}>
           Become a provider →
         </Link>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
+          <Link href="/legal/terms" className="tap-scale">Terms & Conditions</Link>
+          <Link href="/legal/privacy" className="tap-scale">Privacy Policy</Link>
+          <Link href="/legal/refund" className="tap-scale">Cancellation & Refund</Link>
+          <Link href="/legal/shipping" className="tap-scale">Shipping Policy</Link>
+          <Link href="/legal/contact" className="tap-scale">Contact Us</Link>
+        </div>
       </footer>
     </main>
     </div>
