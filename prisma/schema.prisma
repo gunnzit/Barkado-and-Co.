@@ -224,6 +224,14 @@ model Booking {
   requestExpiresAt DateTime?
   cancelledBy  String?
   cancellationFeePaid Boolean @default(false)
+  // Commission snapshot at booking time — priceAmount stays the BASE price
+  // (platform-fixed for Walking, provider-set otherwise). These three
+  // record what the owner actually paid in total and what the provider
+  // actually earns, so historical bookings stay accurate even if
+  // commission rates change later.
+  maintenanceFeePaise Int?
+  ownerTotalPaise     Int?
+  providerPayoutPaise Int?
   createdAt    DateTime      @default(now())
 
   report      WalkReport?

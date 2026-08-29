@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { sendBookingEmail } from "./sendBookingEmail";
+import { computeServiceCommission } from "./commission";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -49,8 +50,9 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
       ),
     ...cartItems
       .filter((item) => item.kind === "SERVICE")
-      .map((item) =>
-        prisma.booking.create({
+      .map((item) => {
+        const commission = computeServiceCommission(item.priceAmount ?? 0);
+        return prisma.booking.create({
           data: {
             type: item.serviceType!,
             status: "REQUESTED",
@@ -60,6 +62,9 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
             startTime: item.startTime!,
             endTime: item.endTime!,
             priceAmount: item.priceAmount ?? 0,
+            maintenanceFeePaise: commission.maintenanceFeePaise,
+            ownerTotalPaise: commission.ownerTotalPaise,
+            providerPayoutPaise: commission.providerPayoutPaise,
             address: item.address,
             phone: item.phone,
             razorpayOrderId,
@@ -67,8 +72,8 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
             orderId: order.id,
             requestExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           },
-        })
-      ),
+        });
+      }),
     prisma.cartItem.deleteMany({ where: { userId: order.userId } }),
   ]);
 

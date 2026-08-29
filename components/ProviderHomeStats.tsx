@@ -11,6 +11,7 @@ type Earnings = {
   completionRate: number | null;
   totalBookings: number;
   streak: { goal: number; current: number };
+  profileViews: number;
 };
 
 export default function ProviderHomeStats() {
@@ -62,6 +63,10 @@ export default function ProviderHomeStats() {
         <div className="rounded-xl p-3" style={{ background: "var(--cream)" }}>
           <p className="text-lg font-bold">{data.completionRate != null ? `${Math.round(data.completionRate * 100)}%` : "—"}</p>
           <p className="text-[11px]" style={{ color: "var(--muted)" }}>Completion rate</p>
+        </div>
+        <div className="rounded-xl p-3 col-span-2" style={{ background: "var(--cream)" }}>
+          <p className="text-lg font-bold">{data.profileViews}</p>
+          <p className="text-[11px]" style={{ color: "var(--muted)" }}>Profile views (last 30 days)</p>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import RazorpayCheckoutButton from "@/components/RazorpayCheckoutButton";
+import { computeServiceCommission } from "@/lib/commission";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -33,9 +34,16 @@ export default function CartItemsList() {
 
   const itemsTotal = items.reduce((sum, i) => {
     if (i.kind === "PRODUCT" && i.product) return sum + i.product.price * i.quantity;
-    if (i.kind === "SERVICE") return sum + (i.priceAmount ?? 0);
+    if (i.kind === "SERVICE") return sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise;
     return sum;
   }, 0);
+
+  const maintenanceFeeTotal = serviceItems.reduce(
+    (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).maintenanceFeePaise,
+    0
+  );
+
+  const grandTotal = itemsTotal + maintenanceFeeTotal;
 
   if (!loading && items.length === 0) {
     return (
@@ -69,7 +77,7 @@ export default function CartItemsList() {
                 <button onClick={() => removeItem(item.id)} className="tap-scale" aria-label="Remove">
                   <X size={16} color="var(--muted)" />
                 </button>
-                <span className="text-sm font-bold">₹{((item.priceAmount ?? 0) / 100).toFixed(0)}</span>
+                <span className="text-sm font-bold">₹{(computeServiceCommission(item.priceAmount ?? 0).sellingPricePaise / 100).toFixed(0)}</span>
               </div>
             </div>
           );
@@ -113,9 +121,15 @@ export default function CartItemsList() {
                 <span style={{ color: "var(--muted)" }}>Items total</span>
                 <span className="font-semibold">₹{(itemsTotal / 100).toFixed(0)}</span>
               </div>
+              {maintenanceFeeTotal > 0 && (
+                <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: "var(--muted)" }}>Maintenance fee</span>
+                  <span className="font-semibold">₹{(maintenanceFeeTotal / 100).toFixed(0)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-bold pt-2" style={{ borderTop: "1px solid var(--border)" }}>
                 <span>Grand total</span>
-                <span>₹{(itemsTotal / 100).toFixed(0)}</span>
+                <span>₹{(grandTotal / 100).toFixed(0)}</span>
               </div>
             </div>
           </div>
@@ -124,10 +138,10 @@ export default function CartItemsList() {
             <div className="max-w-lg mx-auto flex items-center gap-4">
               <div className="shrink-0">
                 <p className="text-xs" style={{ color: "var(--muted)" }}>Total</p>
-                <p className="font-bold text-lg">₹{(itemsTotal / 100).toFixed(0)}</p>
+                <p className="font-bold text-lg">₹{(grandTotal / 100).toFixed(0)}</p>
               </div>
               <div className="flex-1">
-                <RazorpayCheckoutButton amountLabel={`₹${(itemsTotal / 100).toFixed(0)}`} disabled={items.length === 0} />
+                <RazorpayCheckoutButton amountLabel={`₹${(grandTotal / 100).toFixed(0)}`} disabled={items.length === 0} />
               </div>
             </div>
           </div>

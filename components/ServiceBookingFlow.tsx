@@ -29,8 +29,17 @@ const COPY: Record<
   TRAINING: { noun: "training session", providerNoun: "Trainers", findLabel: "Find a trainer", detailsTitle: (pet) => `Book ${pet}'s training`, needsEndDate: false },
 };
 
-function priceFor(serviceType: keyof typeof COPY, p: Provider): number {
-  const field = { WALKING: p.pricePerWalk, SITTING: p.pricePerSitDay, GROOMING: p.pricePerGroom, TRAINING: p.pricePerTrain }[serviceType];
+// Walking prices are set by the platform, not individual providers —
+// Grooming, Training, and Sitting remain provider-set.
+const WALK_PRICING_PAISE: Record<30 | 45 | 60, number> = {
+  30: 30000, // ₹300
+  45: 32500, // ₹325
+  60: 35000, // ₹350
+};
+
+function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
+  if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
+  const field = { SITTING: p.pricePerSitDay, GROOMING: p.pricePerGroom, TRAINING: p.pricePerTrain }[serviceType];
   return (field ?? 0) / 100;
 }
 
@@ -59,6 +68,7 @@ export default function ServiceBookingFlow({
   );
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [walkDurationMin, setWalkDurationMin] = useState<30 | 45 | 60>(30);
   const address = defaultAddress ?? "";
   const phone = defaultPhone ?? "";
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -81,7 +91,8 @@ export default function ServiceBookingFlow({
     // Single-visit services default a short window from the chosen start time.
     if (!COPY[serviceType].needsEndDate && start && !end) {
       const startDate = new Date(start);
-      setEnd(new Date(startDate.getTime() + 30 * 60000).toISOString().slice(0, 16));
+      const minutes = serviceType === "WALKING" ? walkDurationMin : 30;
+      setEnd(new Date(startDate.getTime() + minutes * 60000).toISOString().slice(0, 16));
     }
     setPhase("providers");
   };
@@ -191,6 +202,32 @@ export default function ServiceBookingFlow({
                 />
               </div>
             )}
+            {serviceType === "WALKING" && (
+              <div>
+                <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Duration</label>
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  {([30, 45, 60] as const).map((min) => (
+                    <button
+                      key={min}
+                      onClick={() => {
+                        setWalkDurationMin(min);
+                        setEnd(""); // force recompute against the new duration
+                      }}
+                      className="tap-scale rounded-xl py-2.5 text-center"
+                      style={{
+                        background: walkDurationMin === min ? "var(--panel-dark)" : "var(--cream)",
+                        border: `1px solid ${walkDurationMin === min ? "var(--panel-dark)" : "var(--border)"}`,
+                      }}
+                    >
+                      <p className="text-sm font-bold" style={{ color: walkDurationMin === min ? "white" : undefined }}>{min} min</p>
+                      <p className="text-[11px]" style={{ color: walkDurationMin === min ? "rgba(255,255,255,0.75)" : "var(--muted)" }}>
+                        ₹{WALK_PRICING_PAISE[min] / 100}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="card mb-4">
@@ -260,7 +297,7 @@ export default function ServiceBookingFlow({
                       <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
                       <span>· {p._count.bookings} completed</span>
                       <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
-                        ₹{priceFor(serviceType, p).toFixed(0)}
+                        ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
                       </span>
                     </div>
                   </div>

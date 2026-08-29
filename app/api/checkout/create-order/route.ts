@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { razorpay } from "@/lib/razorpay";
+import { computeServiceCommission } from "@/lib/commission";
 
 // Computes the current cart total, opens a matching order on Razorpay, and
 // records a local PENDING Order row linking the two. The client uses the
@@ -24,7 +25,10 @@ export async function POST() {
         return sum + item.product.price * item.quantity;
       }
       if (item.kind === "SERVICE") {
-        return sum + (item.priceAmount ?? 0);
+        // priceAmount on the cart item is the BASE price — the owner
+        // actually pays base + 8% (split as selling-price markup +
+        // separate maintenance fee, itemized in the cart UI).
+        return sum + computeServiceCommission(item.priceAmount ?? 0).ownerTotalPaise;
       }
       return sum;
     }, 0);

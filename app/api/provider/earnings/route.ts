@@ -14,21 +14,24 @@ export async function GET() {
   const startOfWeek = new Date(startOfToday);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // back to Sunday
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [todayAgg, weekAgg, monthAgg, allBookings] = await Promise.all([
+  const [todayAgg, weekAgg, monthAgg, allBookings, profileViews] = await Promise.all([
+    // Sums providerPayoutPaise — what the provider actually takes home
+    // after the 15% platform commission — not the inflated base price.
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED", startTime: { gte: startOfToday } },
-      _sum: { priceAmount: true },
+      _sum: { providerPayoutPaise: true },
       _count: true,
     }),
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED", startTime: { gte: startOfWeek } },
-      _sum: { priceAmount: true },
+      _sum: { providerPayoutPaise: true },
       _count: true,
     }),
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED", startTime: { gte: startOfMonth } },
-      _sum: { priceAmount: true },
+      _sum: { providerPayoutPaise: true },
       _count: true,
     }),
     // Pulled once, counted in memory — simplest way to get acceptance/
@@ -36,6 +39,12 @@ export async function GET() {
     prisma.booking.findMany({
       where: { providerId: provider.id },
       select: { status: true },
+    }),
+    // Real page-view count of this provider's profile page, last 30 days —
+    // reuses the site-wide activity tracking that's already running,
+    // nothing fabricated.
+    prisma.activityEvent.count({
+      where: { type: "PAGE_VIEW", path: `/providers/${provider.id}`, createdAt: { gte: thirtyDaysAgo } },
     }),
   ]);
 
@@ -51,12 +60,13 @@ export async function GET() {
   const weekCompletedCount = weekAgg._count;
 
   return NextResponse.json({
-    today: { totalPaise: todayAgg._sum.priceAmount ?? 0, count: todayAgg._count },
-    week: { totalPaise: weekAgg._sum.priceAmount ?? 0, count: weekAgg._count },
-    month: { totalPaise: monthAgg._sum.priceAmount ?? 0, count: monthAgg._count },
+    today: { totalPaise: todayAgg._sum.providerPayoutPaise ?? 0, count: todayAgg._count },
+    week: { totalPaise: weekAgg._sum.providerPayoutPaise ?? 0, count: weekAgg._count },
+    month: { totalPaise: monthAgg._sum.providerPayoutPaise ?? 0, count: monthAgg._count },
     acceptanceRate: respondedTotal > 0 ? accepted / respondedTotal : null,
     completionRate: accepted > 0 ? completed / accepted : null,
     totalBookings: total,
     streak: { goal: weeklyGoal, current: weekCompletedCount },
+    profileViews,
   });
 }
