@@ -15,7 +15,7 @@ export default function ProviderPlansTabs({ basePricePaise }: { basePricePaise: 
   const [tab, setTab] = useState<"weekly" | "monthly">("weekly");
   const baseRupees = Math.round(basePricePaise / 100);
 
-  const weeklyPlans = [
+  const weeklyPlans: { badge: string; name: string; price: number; unit: string; features: string[]; accent: string; dark?: boolean }[] = [
     {
       badge: "1 Session / Week",
       name: "Basic Manners",
@@ -35,7 +35,7 @@ export default function ProviderPlansTabs({ basePricePaise }: { basePricePaise: 
     },
   ];
 
-  const monthlyPlans = [
+  const monthlyPlans: { badge: string; name: string; price: number; unit: string; features: string[]; accent: string; dark?: boolean }[] = [
     {
       badge: "4 Sessions Total",
       name: "Puppy Foundation",
