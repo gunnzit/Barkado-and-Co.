@@ -204,12 +204,14 @@ export default function ProviderDashboard({
   requests,
   schedule,
   history,
+  servicesOffered,
   sponsoredUntil,
 }: {
   requests: ProviderBooking[];
   schedule: ProviderBooking[];
   history: ProviderBooking[];
-  sponsoredUntil: string | null;
+  servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
+  sponsoredUntil: Partial<Record<"WALKING" | "SITTING" | "GROOMING" | "TRAINING" | "HOMEPAGE", string | null>>;
 }) {
   const [tab, setTab] = useState<Tab>("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -458,7 +460,7 @@ export default function ProviderDashboard({
 
         {tab === "verification" && <ProviderVerificationUpload />}
 
-        {tab === "promote" && <ProviderPromotePanel sponsoredUntil={sponsoredUntil} />}
+        {tab === "promote" && <ProviderPromotePanel servicesOffered={servicesOffered} sponsoredUntil={sponsoredUntil} />}
       </div>
     </div>
   );
