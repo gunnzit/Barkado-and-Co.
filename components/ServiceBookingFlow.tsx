@@ -93,6 +93,25 @@ const TIME_SLOTS: { period: "Morning" | "Afternoon" | "Evening"; icon: typeof Su
   },
 ];
 
+// SAMPLE / PLACEHOLDER DATA — Experience and specialty tags have no real
+// field on Provider yet (providers will set these themselves later).
+// Cycled by a hash of the provider's id so cards don't all show identical
+// values, but none of this is real per-provider data. Flagged clearly here
+// so it isn't mistaken for something safe to leave as-is before real
+// customers see real trainers with fake experience/specialties.
+const SAMPLE_EXPERIENCE = ["3 years", "5+ years", "8+ years", "2 years"];
+const SAMPLE_SPECIALTIES: [string, string][] = [
+  ["Behavioral", "Puppy"],
+  ["Agility", "Sports"],
+  ["Anxiety", "Reactivity"],
+  ["Obedience", "Socialization"],
+];
+function sampleIndexFor(id: string, mod: number) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 1000;
+  return hash % mod;
+}
+
 function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
   if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
   const field = { SITTING: p.pricePerSitDay, GROOMING: p.pricePerGroom, TRAINING: p.pricePerTrain }[serviceType];
@@ -172,6 +191,18 @@ export default function ServiceBookingFlow({
       setStart(`${selectedDateIso}T${hh}:${mm}`);
     }
   }, [selectedDateIso, selectedSlot]);
+
+  // Training has no real "time of day" concept yet — trainers offer
+  // week/month-long plans, not single time-slot sessions (that packages/
+  // pricing model is a separate, later feature). Since the Booking table
+  // still requires a non-null startTime today, this auto-fills a neutral
+  // placeholder time once a start date is picked, without ever showing a
+  // time-slot UI to the owner for Training.
+  useEffect(() => {
+    if (serviceType === "TRAINING" && selectedDateIso && !selectedSlot) {
+      setSelectedSlot({ label: "12:00 PM", hour: 12, minute: 0 });
+    }
+  }, [serviceType, selectedDateIso, selectedSlot]);
 
   // Top-ranked walkers shown as a preview strip on the Walking intro screen,
   // before any time is picked — fetched with no startTime, so this is
@@ -532,7 +563,9 @@ export default function ServiceBookingFlow({
 
           {/* ===== Select Date ===== */}
           <div className="mb-6">
-            <h2 className="font-bold text-sm mb-3">Select Date</h2>
+            <h2 className="font-bold text-sm mb-3">
+              {serviceType === "TRAINING" ? "When would you like to start?" : "Select Date"}
+            </h2>
             <div className="card flex justify-between gap-1 p-3">
               {dateStrip.map((d) => {
                 const selected = selectedDateIso === d.iso;
@@ -553,37 +586,41 @@ export default function ServiceBookingFlow({
             </div>
           </div>
 
-          {/* ===== Select Time ===== */}
-          <div className="mb-6">
-            <h2 className="font-bold text-sm mb-3">Select Time</h2>
-            <div className="space-y-4">
-              {TIME_SLOTS.map((group) => (
-                <div key={group.period}>
-                  <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--muted)" }}>
-                    <group.icon size={12} /> {group.period} ({group.hours})
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {group.slots.map((slot) => {
-                      const selected = selectedSlot?.label === slot.label;
-                      return (
-                        <button
-                          key={slot.label}
-                          onClick={() => setSelectedSlot(slot)}
-                          className="tap-scale px-4 py-2.5 rounded-xl text-sm font-semibold"
-                          style={{
-                            background: selected ? "var(--card)" : "var(--card)",
-                            border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
-                          }}
-                        >
-                          {slot.label}
-                        </button>
-                      );
-                    })}
+          {/* ===== Select Time — Walking only. Training has no single-slot
+              time concept (real plan/scheduling handled trainer-side,
+              later), so this section is skipped entirely for Training. ===== */}
+          {serviceType === "WALKING" && (
+            <div className="mb-6">
+              <h2 className="font-bold text-sm mb-3">Select Time</h2>
+              <div className="space-y-4">
+                {TIME_SLOTS.map((group) => (
+                  <div key={group.period}>
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--muted)" }}>
+                      <group.icon size={12} /> {group.period} ({group.hours})
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {group.slots.map((slot) => {
+                        const selected = selectedSlot?.label === slot.label;
+                        return (
+                          <button
+                            key={slot.label}
+                            onClick={() => setSelectedSlot(slot)}
+                            className="tap-scale px-4 py-2.5 rounded-xl text-sm font-semibold"
+                            style={{
+                              background: selected ? "var(--card)" : "var(--card)",
+                              border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
+                            }}
+                          >
+                            {slot.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ===== Address/phone — shown if on file, prompt to add if missing ===== */}
           {address && phone ? (
@@ -762,6 +799,47 @@ export default function ServiceBookingFlow({
                       />
                     </div>
                   </div>
+
+                  {/* ===== Training-only: experience + specialty tags are
+                      SAMPLE data (no real field exists yet — providers will
+                      set these themselves later). Plans price uses the
+                      provider's real pricePerTrain rate, just framed to
+                      match the "Plans from" style. "View Profile" is
+                      non-clickable — no profile page exists yet. ===== */}
+                  {serviceType === "TRAINING" && (
+                    <>
+                      <div className="mt-3 pt-3 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "var(--muted)" }}>Experience</p>
+                          <p className="text-sm font-semibold">{SAMPLE_EXPERIENCE[sampleIndexFor(p.id, SAMPLE_EXPERIENCE.length)]}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "var(--muted)" }}>Specialties</p>
+                          <div className="flex flex-wrap gap-1">
+                            {SAMPLE_SPECIALTIES[sampleIndexFor(p.id, SAMPLE_SPECIALTIES.length)].map((tag) => (
+                              <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+                        <div>
+                          <p className="text-[11px]" style={{ color: "var(--muted)" }}>Plans from</p>
+                          <p className="font-bold text-base">₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}</p>
+                        </div>
+                        <button
+                          disabled
+                          className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                          style={{ border: "1px solid var(--border)", color: "var(--muted)", cursor: "not-allowed" }}
+                          title="Provider profile pages are coming soon"
+                        >
+                          View Profile
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
