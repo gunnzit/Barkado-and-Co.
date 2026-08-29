@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag, Plus, Sun, CloudSun, Moon } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -21,6 +21,12 @@ type Provider = {
   _count: { bookings: number };
   availableAtRequestedTime: boolean | null;
   isSponsored?: boolean;
+};
+
+type PetOption = {
+  id: string;
+  name: string;
+  photoUrl: string | null;
 };
 
 const COPY: Record<
@@ -50,16 +56,71 @@ const WALK_PACKAGES: { min: 30 | 45 | 60; name: string; blurb: string }[] = [
   { min: 60, name: "The Marathon", blurb: "Full exercise session" },
 ];
 
+// Fixed time slots for the Walking "Schedule & Pet" screen, grouped by
+// period — spacing matches the reference design (~90 min apart). This is a
+// simple, fixed menu of options, not a query against real provider
+// schedules; actual per-provider availability is still checked afterward,
+// once a specific provider is chosen on the next screen.
+const TIME_SLOTS: { period: "Morning" | "Afternoon" | "Evening"; icon: typeof Sun; hours: string; slots: { label: string; hour: number; minute: number }[] }[] = [
+  {
+    period: "Morning",
+    icon: Sun,
+    hours: "8AM - 12PM",
+    slots: [
+      { label: "08:00 AM", hour: 8, minute: 0 },
+      { label: "09:30 AM", hour: 9, minute: 30 },
+      { label: "11:00 AM", hour: 11, minute: 0 },
+    ],
+  },
+  {
+    period: "Afternoon",
+    icon: CloudSun,
+    hours: "12PM - 4PM",
+    slots: [
+      { label: "12:30 PM", hour: 12, minute: 30 },
+      { label: "02:00 PM", hour: 14, minute: 0 },
+      { label: "03:30 PM", hour: 15, minute: 30 },
+    ],
+  },
+  {
+    period: "Evening",
+    icon: Moon,
+    hours: "4PM - 8PM",
+    slots: [
+      { label: "05:00 PM", hour: 17, minute: 0 },
+      { label: "06:30 PM", hour: 18, minute: 30 },
+    ],
+  },
+];
+
 function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
   if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
   const field = { SITTING: p.pricePerSitDay, GROOMING: p.pricePerGroom, TRAINING: p.pricePerTrain }[serviceType];
   return (field ?? 0) / 100;
 }
 
+// Builds the next 7 days starting today, for the date strip.
+function buildDateStrip(): { label: string; dayNum: number; iso: string; isToday: boolean }[] {
+  const days = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push({
+      label: d.toLocaleDateString("en-US", { weekday: "short" }),
+      dayNum: d.getDate(),
+      iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      isToday: i === 0,
+    });
+  }
+  return days;
+}
+
 export default function ServiceBookingFlow({
   serviceType,
   activePetId,
   activePetName,
+  pets = [],
   hasPets,
   showStartButton,
   isFirstWalk = false,
@@ -69,6 +130,7 @@ export default function ServiceBookingFlow({
   serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
   activePetId: string | null;
   activePetName: string | null;
+  pets?: PetOption[];
   hasPets: boolean;
   showStartButton: boolean;
   isFirstWalk?: boolean;
@@ -88,6 +150,28 @@ export default function ServiceBookingFlow({
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [addError, setAddError] = useState(false);
+
+  // Schedule & Pet screen state (Walking only) — which pet, which date,
+  // which fixed time slot. Defaults to the globally "active" pet, but can
+  // be changed here without affecting the pet switcher elsewhere in the app.
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(activePetId);
+  const [selectedDateIso, setSelectedDateIso] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ label: string; hour: number; minute: number } | null>(null);
+  const dateStrip = buildDateStrip();
+  const selectedPet = pets.find((p) => p.id === selectedPetId);
+
+  useEffect(() => {
+    if (dateStrip.length > 0 && !selectedDateIso) setSelectedDateIso(dateStrip[0].iso);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedDateIso && selectedSlot) {
+      const hh = String(selectedSlot.hour).padStart(2, "0");
+      const mm = String(selectedSlot.minute).padStart(2, "0");
+      setStart(`${selectedDateIso}T${hh}:${mm}`);
+    }
+  }, [selectedDateIso, selectedSlot]);
 
   // Top-ranked walkers shown as a preview strip on the Walking intro screen,
   // before any time is picked — fetched with no startTime, so this is
@@ -124,12 +208,13 @@ export default function ServiceBookingFlow({
   };
 
   const addToCart = async (providerId: string) => {
+    const petId = serviceType === "WALKING" ? selectedPetId : activePetId;
     setSubmittingId(providerId);
     setAddError(false);
     const result = await addService({
       serviceType,
       providerId,
-      petId: activePetId!,
+      petId: petId!,
       startTime: start,
       endTime: end,
       address,
@@ -144,7 +229,11 @@ export default function ServiceBookingFlow({
     setSubmittingId(null);
   };
 
-  const detailsValid = start && (COPY[serviceType].needsEndDate ? end : true) && address && phone;
+  const walkDetailsValid = selectedPetId && selectedDateIso && selectedSlot && address && phone;
+  const detailsValid =
+    serviceType === "WALKING"
+      ? walkDetailsValid
+      : start && (COPY[serviceType].needsEndDate ? end : true) && address && phone;
 
   if (!hasPets) {
     return (
@@ -304,8 +393,133 @@ export default function ServiceBookingFlow({
         </div>
       )}
 
-      {/* ===== Details ===== */}
-      {phase === "details" && (
+      {/* ===== Details — Walking gets the Schedule & Pet screen; other
+          service types keep the original free-entry date/time form. ===== */}
+      {phase === "details" && serviceType === "WALKING" && (
+        <div className="animate-fade-up">
+          <h1 className="text-2xl font-bold mb-6">Schedule &amp; Pet</h1>
+
+          {/* ===== Select Pet ===== */}
+          <div className="mb-6">
+            <h2 className="font-bold text-sm mb-3">Select Pet</h2>
+            <div className="flex gap-4">
+              {pets.map((p) => {
+                const selected = selectedPetId === p.id;
+                return (
+                  <button key={p.id} onClick={() => setSelectedPetId(p.id)} className="tap-scale text-center">
+                    <img
+                      src={p.photoUrl || `https://i.pravatar.cc/150?u=pet-${p.id}`}
+                      alt={p.name}
+                      className="w-16 h-16 rounded-full object-cover mb-1.5"
+                      style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}` }}
+                    />
+                    <p className="text-xs font-semibold" style={{ color: selected ? undefined : "var(--muted)" }}>{p.name}</p>
+                  </button>
+                );
+              })}
+              <Link href="/owner/pets" className="tap-scale text-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-1.5"
+                  style={{ border: "2px dashed var(--border)" }}
+                >
+                  <Plus size={20} color="var(--muted)" />
+                </div>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>Add Pet</p>
+              </Link>
+            </div>
+          </div>
+
+          {/* ===== Select Date ===== */}
+          <div className="mb-6">
+            <h2 className="font-bold text-sm mb-3">Select Date</h2>
+            <div className="card flex justify-between gap-1 p-3">
+              {dateStrip.map((d) => {
+                const selected = selectedDateIso === d.iso;
+                return (
+                  <button
+                    key={d.iso}
+                    onClick={() => setSelectedDateIso(d.iso)}
+                    className="tap-scale flex-1 flex flex-col items-center py-2 rounded-xl"
+                    style={{ background: selected ? "var(--panel-dark)" : "transparent" }}
+                  >
+                    <span className="text-[11px] font-semibold mb-1" style={{ color: selected ? "rgba(255,255,255,0.75)" : "var(--muted)" }}>
+                      {d.label}
+                    </span>
+                    <span className="text-sm font-bold" style={{ color: selected ? "white" : undefined }}>{d.dayNum}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ===== Select Time ===== */}
+          <div className="mb-6">
+            <h2 className="font-bold text-sm mb-3">Select Time</h2>
+            <div className="space-y-4">
+              {TIME_SLOTS.map((group) => (
+                <div key={group.period}>
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--muted)" }}>
+                    <group.icon size={12} /> {group.period} ({group.hours})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {group.slots.map((slot) => {
+                      const selected = selectedSlot?.label === slot.label;
+                      return (
+                        <button
+                          key={slot.label}
+                          onClick={() => setSelectedSlot(slot)}
+                          className="tap-scale px-4 py-2.5 rounded-xl text-sm font-semibold"
+                          style={{
+                            background: selected ? "var(--card)" : "var(--card)",
+                            border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
+                          }}
+                        >
+                          {slot.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== Address/phone — shown if on file, prompt to add if missing ===== */}
+          {address && phone ? (
+            <div className="card mb-6">
+              <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Meeting at</p>
+              <p className="text-sm mb-1">{address}</p>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>{phone}</p>
+              <Link href="/owner/profile" className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
+                Edit in profile
+              </Link>
+            </div>
+          ) : (
+            <div className="card mb-6" style={{ border: "1px solid var(--terracotta)" }}>
+              <p className="text-sm font-semibold mb-1" style={{ color: "var(--terracotta)" }}>
+                Add your address and phone number to continue
+              </p>
+              <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+                Your walker needs to know where and how to reach you.
+              </p>
+              <Link href="/owner/profile" className="btn-primary inline-block text-sm">
+                Add in profile
+              </Link>
+            </div>
+          )}
+
+          <button
+            onClick={goToProviders}
+            disabled={!detailsValid}
+            className="btn-primary w-full tap-scale"
+            style={{ opacity: detailsValid ? 1 : 0.5 }}
+          >
+            Continue to find walkers
+          </button>
+        </div>
+      )}
+
+      {phase === "details" && serviceType !== "WALKING" && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-1">
             {COPY[serviceType].detailsTitle(activePetName ?? "your pet")}
@@ -339,9 +553,6 @@ export default function ServiceBookingFlow({
                 />
               </div>
             )}
-            {/* Duration is no longer selected here for Walking — it's locked in
-                on the intro screen's package cards before this step is ever
-                reached (Walking always passes through "intro" first). */}
           </div>
 
           <div className="card mb-4">

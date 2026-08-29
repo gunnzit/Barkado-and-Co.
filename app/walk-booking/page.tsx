@@ -52,6 +52,7 @@ export default async function WalkBookingPage() {
           serviceType="WALKING"
           activePetId={activePet?.id ?? null}
           activePetName={activePet?.name ?? null}
+          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl }))}
           hasPets={pets.length > 0}
           showStartButton={true}
           isFirstWalk={isFirstWalk}

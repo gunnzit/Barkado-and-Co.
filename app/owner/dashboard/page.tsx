@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import EmergencyButton from "@/components/EmergencyButton";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
-import WalkHero from "@/components/WalkHero";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import LocationHeader from "@/components/LocationHeader";
@@ -97,22 +96,18 @@ export default async function OwnerDashboard() {
           <ProfileMenu />
         </div>
       </nav>
-      {/* ===== Hero photo moment — tap to book a walk ===== */}
-      <WalkHero
-        firstName={firstName}
-        petName={activePet?.name ?? null}
-        petPhoto={activePet?.photoUrl ?? null}
-        petBreed={activePet?.breed ?? null}
-        walksThisWeek={walksThisWeek}
-      />
 
-      {/* ===== Search ===== */}
-      <div className="px-6 -mt-6 relative z-10 animate-fade-up" style={{ animationDelay: "80ms" }}>
-        <div className="bg-white rounded-2xl flex items-center gap-3 px-5 py-4 shadow-sm" style={{ border: "1px solid var(--border)" }}>
-          <Search size={18} color="var(--muted)" />
-          <span className="text-sm" style={{ color: "var(--muted)" }}>Find a walker or sitter nearby</span>
-        </div>
-      </div>
+      {/* ===== Search — now the main entry point into booking, since the
+          old WalkHero ("Is Coco ready to walk?") duplicated what the
+          /walk-booking page's own hero + package cards now do. ===== */}
+      <Link
+        href="/walk-booking"
+        className="mx-6 mt-6 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-sm tap-scale animate-fade-up"
+        style={{ background: "white", border: "1px solid var(--border)" }}
+      >
+        <Search size={18} color="var(--muted)" />
+        <span className="text-sm" style={{ color: "var(--muted)" }}>Find a walker or sitter nearby</span>
+      </Link>
 
       {/* ===== Page label — this page is dedicated to Walking only ===== */}
       <div className="px-6 mt-6 mb-8 animate-fade-up" style={{ animationDelay: "120ms" }}>
@@ -125,7 +120,7 @@ export default async function OwnerDashboard() {
       <div className="mb-8 animate-fade-up overflow-hidden" style={{ animationDelay: "140ms" }}>
         <div className="marquee-track">
           {[...Array(2)].flatMap((_, dup) => [
-            <Link href="/book" key={`walk-${dup}`} className="shrink-0 tap-scale mx-2 rounded-2xl overflow-hidden relative" style={{ width: 260, height: 120 }}>
+            <Link href="/walk-booking" key={`walk-${dup}`} className="shrink-0 tap-scale mx-2 rounded-2xl overflow-hidden relative" style={{ width: 260, height: 120 }}>
               <Image src="/images/promo-first-walk.jpg" alt="First walk free" fill sizes="260px" className="object-cover" />
               <div className="absolute inset-0 flex flex-col justify-end p-4" style={{ background: "linear-gradient(180deg, transparent 30%, rgba(43,29,20,0.8) 100%)" }}>
                 <p className="text-white font-bold text-sm">First walk, on us</p>
@@ -159,7 +154,7 @@ export default async function OwnerDashboard() {
           <div className="flex gap-3 overflow-x-auto no-scrollbar px-6">
             {rebookOptions.map((b) => (
               <Link
-                href={`/book?service=${b.type}`}
+                href={`/walk-booking`}
                 key={b.id}
                 className="card shrink-0 tap-scale flex flex-col justify-between"
                 style={{ width: 180, minHeight: 110 }}
@@ -204,7 +199,7 @@ export default async function OwnerDashboard() {
               <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>Track profile</p>
             </div>
           </Link>
-          <Link href="/book" className="card tap-scale flex flex-col justify-between" style={{ minHeight: 130 }}>
+          <Link href="/walk-booking" className="card tap-scale flex flex-col justify-between" style={{ minHeight: 130 }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#e3f0e6" }}>
               <PawPrint size={17} color="#4a8f5c" />
             </div>
@@ -229,7 +224,7 @@ export default async function OwnerDashboard() {
       <div className="mb-10 animate-fade-up" style={{ animationDelay: "240ms" }}>
         <div className="flex items-center justify-between px-6 mb-4">
           <h2 className="text-lg font-bold">Recommended near you</h2>
-          <Link href="/book" className="text-sm font-medium tap-scale" style={{ color: "var(--tan-dark, var(--tan))" }}>
+          <Link href="/walk-booking" className="text-sm font-medium tap-scale" style={{ color: "var(--tan-dark, var(--tan))" }}>
             See all
           </Link>
         </div>
@@ -241,7 +236,7 @@ export default async function OwnerDashboard() {
         ) : (
           <div className="flex gap-4 overflow-x-auto no-scrollbar px-6">
             {providers.map((p, i) => (
-              <Link href="/book" key={p.id} className="shrink-0 tap-scale" style={{ width: 168 }}>
+              <Link href="/walk-booking" key={p.id} className="shrink-0 tap-scale" style={{ width: 168 }}>
                 <div className="img-frame relative" style={{ height: 130 }}>
                   <Image src={photos[i % photos.length]} alt={p.user.name} fill sizes="168px" className="object-cover" />
                   <span
