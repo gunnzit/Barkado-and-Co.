@@ -765,9 +765,23 @@ export default function ServiceBookingFlow({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <FavoriteButton providerId={p.id} />
-                      <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
-                        {submittingId === p.id ? "…" : "Choose"}
-                      </button>
+                      {serviceType === "TRAINING" ? (
+                        // Training has no direct "Choose" purchase yet — it
+                        // routes to the profile page's plan selection
+                        // instead. Pet/date context carried as query params
+                        // so the profile page has what it needs once real
+                        // plan checkout is wired up.
+                        <Link
+                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
+                          className="btn-primary text-sm tap-scale"
+                        >
+                          View Plans
+                        </Link>
+                      ) : (
+                        <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                          {submittingId === p.id ? "…" : "Choose"}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -816,7 +830,7 @@ export default function ServiceBookingFlow({
                           <p className="font-bold text-base">₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}</p>
                         </div>
                         <Link
-                          href={`/provider/${p.id}`}
+                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
                           className="tap-scale text-xs font-semibold px-3 py-1.5 rounded-full"
                           style={{ border: "1px solid var(--panel-dark)", color: "var(--panel-dark)" }}
                         >

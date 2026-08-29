@@ -15,11 +15,27 @@ function timeAgo(date: Date) {
   return `${Math.floor(days / 30)} month${Math.floor(days / 30) === 1 ? "" : "s"} ago`;
 }
 
-export default async function TrainerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TrainerProfilePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ petId?: string; start?: string }>;
+}) {
+  const { petId, start } = await searchParams;
   const { id } = await params;
 
   const user = await getOrCreateUser();
   if (!user) redirect("/sign-in");
+
+  // Carried over from the Schedule & Pet screen, via URL params, so this
+  // context is ready to attach to a real booking once plan checkout is
+  // wired up. Not used for anything yet beyond display — Select Plan stays
+  // disabled below.
+  const contextPet = petId ? await prisma.pet.findUnique({ where: { id: petId }, select: { name: true } }) : null;
+  const contextDateLabel = start
+    ? new Date(start).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : null;
 
   const provider = await prisma.provider.findUnique({
     where: { id },
@@ -72,6 +88,14 @@ export default async function TrainerProfilePage({ params }: { params: Promise<{
         <h1 className="font-bold text-base">Trainer Profile</h1>
         <div style={{ width: 36 }} />
       </header>
+
+      {contextPet && contextDateLabel && (
+        <div className="max-w-5xl mx-auto px-4 md:px-8 mb-4">
+          <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: "var(--cream)", border: "1px solid var(--border)" }}>
+            Booking for <strong>{contextPet.name}</strong>, starting <strong>{contextDateLabel}</strong>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-5xl mx-auto px-4 md:px-8 pb-16 md:grid md:grid-cols-12 md:gap-8">
         {/* ===== Left column: hero, about, specialties, certifications ===== */}
