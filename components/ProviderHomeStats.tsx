@@ -46,7 +46,7 @@ export default function ProviderHomeStats() {
             <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              formatter={(v: number) => [`₹${v}`, "Earned"]}
+              formatter={(v: any) => [`₹${v}`, "Earned"]}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--border)" }}
             />
             <Bar dataKey="value" fill="var(--terracotta)" radius={[6, 6, 0, 0]} />
