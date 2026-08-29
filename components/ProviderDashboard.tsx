@@ -12,6 +12,7 @@ import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
 import ProviderVerificationUpload from "@/components/ProviderVerificationUpload";
 import NavDrawer from "@/components/NavDrawer";
 import ProviderPromotePanel from "@/components/ProviderPromotePanel";
+import ProviderHomeStats from "@/components/ProviderHomeStats";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -283,7 +284,7 @@ export default function ProviderDashboard({
         })}
       </NavDrawer>
 
-      <div className="px-6 space-y-3">
+      <div key={tab} className="px-6 space-y-3 provider-tab-content">
         {tab === "home" && (() => {
           const todayStr = new Date().toDateString();
           const todaysCompleted = history.filter((b) => b.status === "COMPLETED" && new Date(b.startTime).toDateString() === todayStr);
@@ -291,10 +292,42 @@ export default function ProviderDashboard({
           const todaysSchedule = schedule.filter((b) => new Date(b.startTime).toDateString() === todayStr);
           const offeredServices = Array.from(new Set([...requests, ...schedule, ...history].map((b) => b.type)));
 
+          const activeSponsorships = Object.entries(sponsoredUntil).filter(
+            ([, until]) => until && new Date(until).getTime() > Date.now()
+          );
+          const isFeatured = activeSponsorships.length > 0;
+
           return (
-            <div className="space-y-3 animate-fade-up">
+            <div className="space-y-3">
+              <button
+                onClick={() => setTab("promote")}
+                className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up"
+                style={{
+                  animationDelay: "0ms",
+                  background: isFeatured ? "var(--panel-dark)" : "var(--card)",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: isFeatured ? "rgba(255,255,255,0.15)" : "var(--cream)" }}
+                  >
+                    <Sparkles size={16} color={isFeatured ? "var(--gold)" : "var(--terracotta)"} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: isFeatured ? "white" : undefined }}>
+                      {isFeatured ? "You're featured" : "Get seen first"}
+                    </p>
+                    <p className="text-xs" style={{ color: isFeatured ? "rgba(255,255,255,0.7)" : "var(--muted)" }}>
+                      {isFeatured ? "Manage your featured listings" : "Promote your profile to owners"}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={16} color={isFeatured ? "rgba(255,255,255,0.7)" : "var(--muted)"} />
+              </button>
+
               {requests.length > 0 && (
-                <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left">
+                <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "60ms" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdece0" }}>
                       <Clock size={16} color="#a5652a" />
@@ -308,7 +341,7 @@ export default function ProviderDashboard({
                 </button>
               )}
 
-              <button onClick={() => setTab("earnings")} className="card w-full tap-scale flex items-center justify-between text-left">
+              <button onClick={() => setTab("earnings")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "120ms" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
                     <IndianRupee size={16} color="var(--terracotta)" />
@@ -321,7 +354,7 @@ export default function ProviderDashboard({
                 <ChevronRight size={16} color="var(--muted)" />
               </button>
 
-              <button onClick={() => setTab("schedule")} className="card w-full tap-scale flex items-center justify-between text-left">
+              <button onClick={() => setTab("schedule")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "180ms" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
                     <Clock size={16} color="var(--terracotta)" />
@@ -338,8 +371,12 @@ export default function ProviderDashboard({
                 <ChevronRight size={16} color="var(--muted)" />
               </button>
 
+              <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
+                <ProviderHomeStats />
+              </div>
+
               {offeredServices.length > 0 && (
-                <div className="card">
+                <div className="card animate-fade-up" style={{ animationDelay: "300ms" }}>
                   <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>You offer</p>
                   <div className="flex flex-wrap gap-2">
                     {offeredServices.map((s) => (
@@ -462,6 +499,16 @@ export default function ProviderDashboard({
 
         {tab === "promote" && <ProviderPromotePanel servicesOffered={servicesOffered} sponsoredUntil={sponsoredUntil} />}
       </div>
+
+      <style jsx>{`
+        .provider-tab-content {
+          animation: providerTabFadeIn 260ms ease;
+        }
+        @keyframes providerTabFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
