@@ -39,6 +39,10 @@ export default async function OwnerProfile() {
           <span>📅 Booking history</span>
           <span>›</span>
         </Link>
+        <Link href="/owner/wishlist" className="card flex justify-between items-center">
+          <span>❤️ Wishlist</span>
+          <span>›</span>
+        </Link>
         <Link href="/provider/onboarding" className="card flex justify-between items-center">
           <span>🚶 Become a provider</span>
           <span>›</span>

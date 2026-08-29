@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Minus, Plus } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
+import FavoriteButton from "@/components/FavoriteButton";
 
 export type Accessory = {
   id: string;
@@ -54,6 +55,14 @@ export function AccessoryCard({ item }: { item: Accessory }) {
           </div>
         )}
       </Link>
+
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute"
+        style={{ top: 8, right: 8, zIndex: 2 }}
+      >
+        <FavoriteButton productId={item.id} size={14} />
+      </div>
 
       <div
         onClick={(e) => e.stopPropagation()}

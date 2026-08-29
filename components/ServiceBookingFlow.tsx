@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
+import FavoriteButton from "@/components/FavoriteButton";
 
 type Provider = {
   id: string;
@@ -316,9 +317,12 @@ export default function ServiceBookingFlow({
                         </div>
                       </div>
                     </div>
-                    <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale shrink-0">
-                      {submittingId === p.id ? "…" : "Choose"}
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <FavoriteButton providerId={p.id} />
+                      <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                        {submittingId === p.id ? "…" : "Choose"}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Reliability score bar — based on the same declined/expired/
