@@ -180,7 +180,9 @@ export default async function ProviderPage() {
           schedule={schedule as any}
           history={history as any}
           servicesOffered={provider.servicesOffered as any}
+          providerId={provider.id}
           providerName={user.name}
+          photoUrl={provider.photoUrl}
           ratingAvg={provider.ratingAvg}
           completedCount={provider._count.bookings}
           sponsoredUntil={{

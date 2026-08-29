@@ -206,7 +206,9 @@ export default function ProviderDashboard({
   schedule,
   history,
   servicesOffered,
+  providerId,
   providerName,
+  photoUrl,
   ratingAvg,
   completedCount,
   sponsoredUntil,
@@ -215,7 +217,9 @@ export default function ProviderDashboard({
   schedule: ProviderBooking[];
   history: ProviderBooking[];
   servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
+  providerId: string;
   providerName: string;
+  photoUrl: string | null;
   ratingAvg: number;
   completedCount: number;
   sponsoredUntil: Partial<Record<"WALKING" | "SITTING" | "GROOMING" | "TRAINING" | "HOMEPAGE", string | null>>;
@@ -505,9 +509,11 @@ export default function ProviderDashboard({
 
         {tab === "promote" && (
           <ProviderPromotePanel
+            providerId={providerId}
             servicesOffered={servicesOffered}
             sponsoredUntil={sponsoredUntil}
             providerName={providerName}
+            photoUrl={photoUrl}
             ratingAvg={ratingAvg}
             completedCount={completedCount}
           />

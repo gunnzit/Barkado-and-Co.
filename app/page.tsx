@@ -17,7 +17,7 @@ import HeroImageRotator from "@/components/HeroImageRotator";
 import ProfileMenu from "@/components/ProfileMenu";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
-  Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion,
+  Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion, Sparkles,
 } from "lucide-react";
 
 const SERVICES = [
@@ -36,7 +36,7 @@ const PASSPORT_ITEMS = [
 ];
 
 export default async function Home() {
-  const [verifiedCount, providers, completedAgg, ratingAgg, products] = await Promise.all([
+  const [verifiedCount, providers, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
     prisma.provider.count({ where: { verified: true } }),
     prisma.provider.findMany({
       where: { verified: true },
@@ -50,6 +50,14 @@ export default async function Home() {
     prisma.booking.count({ where: { status: "COMPLETED" } }),
     prisma.provider.aggregate({ where: { verified: true }, _avg: { ratingAvg: true } }),
     prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" } }),
+    // Real homepage-tier sponsorship placement — null if nobody currently
+    // has an active Homepage sponsorship, in which case nothing renders.
+    // Highest-rated wins if more than one provider is sponsored at once.
+    prisma.provider.findFirst({
+      where: { verified: true, sponsoredHomepageUntil: { gt: new Date() } },
+      include: { user: { select: { name: true } }, _count: { select: { bookings: { where: { status: "COMPLETED" } } } } },
+      orderBy: { ratingAvg: "desc" },
+    }),
   ]);
 
   const avgRating = ratingAgg._avg.ratingAvg;
@@ -168,6 +176,30 @@ export default async function Home() {
             </p>
           </Link>
         </div>
+
+        {featuredProvider && (
+          <Link
+            href={`/providers/${featuredProvider.id}`}
+            className="tap-scale rounded-2xl p-5 mt-4 flex items-center gap-4"
+            style={{ background: "var(--panel-dark)" }}
+          >
+            <div className="w-14 h-14 rounded-full overflow-hidden shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              {featuredProvider.photoUrl ? (
+                <img src={featuredProvider.photoUrl} alt={featuredProvider.user.name} className="w-full h-full object-cover" />
+              ) : null}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Sparkles size={12} color="var(--gold)" />
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "var(--gold)" }}>Featured provider</p>
+              </div>
+              <p className="font-bold text-white text-sm truncate">{featuredProvider.user.name}</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
+                ★ {featuredProvider.ratingAvg.toFixed(1)} · {featuredProvider._count.bookings} completed
+              </p>
+            </div>
+          </Link>
+        )}
       </section>
       </ScrollReveal>
 

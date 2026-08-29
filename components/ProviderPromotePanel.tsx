@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Globe, ShieldCheck, Star, Eye } from "lucide-react";
+import { Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Globe, Eye } from "lucide-react";
+import ProviderListPreviewModal from "@/components/ProviderListPreviewModal";
+import ProviderHomepagePreviewModal from "@/components/ProviderHomepagePreviewModal";
 
 declare global {
   interface Window {
@@ -36,20 +38,25 @@ const SCOPE_META: Record<Scope, { label: string; icon: any; prices: { 7: number;
 };
 
 export default function ProviderPromotePanel({
+  providerId,
   servicesOffered,
   sponsoredUntil,
   providerName,
+  photoUrl,
   ratingAvg,
   completedCount,
 }: {
+  providerId: string;
   servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
   sponsoredUntil: Partial<Record<Scope, string | null>>;
   providerName: string;
+  photoUrl: string | null;
   ratingAvg: number;
   completedCount: number;
 }) {
   const scopeOptions: Scope[] = [...servicesOffered, "HOMEPAGE"];
   const [selectedScope, setSelectedScope] = useState<Scope>(scopeOptions[0]);
+  const [previewScope, setPreviewScope] = useState<Scope | null>(null);
   const [busy, setBusy] = useState<7 | 30 | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -103,7 +110,6 @@ export default function ProviderPromotePanel({
 
   const selectedStatus = statusFor(selectedScope);
   const selectedPrices = SCOPE_META[selectedScope].prices;
-  const isHomepage = selectedScope === "HOMEPAGE";
 
   return (
     <div className="px-6 space-y-4">
@@ -116,10 +122,10 @@ export default function ProviderPromotePanel({
             const status = statusFor(scope);
             const active = selectedScope === scope;
             return (
-              <button
+              <div
                 key={scope}
                 onClick={() => setSelectedScope(scope)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl tap-scale text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl tap-scale text-left cursor-pointer"
                 style={{
                   background: active ? "var(--panel-dark)" : "var(--card)",
                   border: `1px solid ${active ? "var(--panel-dark)" : "var(--border)"}`,
@@ -133,38 +139,23 @@ export default function ProviderPromotePanel({
                   </p>
                 </div>
                 {status && <Sparkles size={14} color={active ? "var(--gold)" : "var(--terracotta)"} />}
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewScope(scope);
+                  }}
+                  className="tap-scale flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full shrink-0"
+                  style={{
+                    background: active ? "rgba(255,255,255,0.15)" : "var(--cream)",
+                    color: active ? "white" : "var(--terracotta)",
+                  }}
+                >
+                  <Eye size={11} /> Preview
+                </button>
+              </div>
             );
           })}
         </div>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
-          <Eye size={12} /> How you'll appear to owners
-        </p>
-        <div className="card flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <p className="font-semibold text-sm">{providerName}</p>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
-                <ShieldCheck size={10} /> Verified
-              </span>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
-                <Sparkles size={10} /> Sponsored
-              </span>
-            </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
-              <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {ratingAvg.toFixed(1)}</span>
-              <span>· {completedCount} completed</span>
-            </div>
-          </div>
-        </div>
-        <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>
-          {isHomepage
-            ? "This badge will show on every service category you offer."
-            : `This is how you'll look at the top of owners' ${SCOPE_META[selectedScope].label.toLowerCase()} search results.`}
-        </p>
       </div>
 
       <div className="card">
@@ -193,6 +184,23 @@ export default function ProviderPromotePanel({
         </div>
         {error && <p className="text-xs mt-3" style={{ color: "var(--terracotta)" }}>{error}</p>}
       </div>
+
+      {previewScope && previewScope !== "HOMEPAGE" && (
+        <ProviderListPreviewModal
+          service={previewScope}
+          providerId={providerId}
+          onClose={() => setPreviewScope(null)}
+        />
+      )}
+      {previewScope === "HOMEPAGE" && (
+        <ProviderHomepagePreviewModal
+          providerName={providerName}
+          photoUrl={photoUrl}
+          ratingAvg={ratingAvg}
+          completedCount={completedCount}
+          onClose={() => setPreviewScope(null)}
+        />
+      )}
     </div>
   );
 }
