@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -39,6 +39,15 @@ const WALK_PRICING_PAISE: Record<30 | 45 | 60, number> = {
   45: 32500, // ₹325
   60: 35000, // ₹350
 };
+
+// Package labels shown on the Walking intro screen — deliberately distinct
+// from SERVICE_LABEL's "Adventure Walk" (the overall product name used
+// elsewhere, e.g. in cart) to avoid two different things sharing one name.
+const WALK_PACKAGES: { min: 30 | 45 | 60; name: string; blurb: string }[] = [
+  { min: 30, name: "Standard Walk", blurb: "Neighborhood stroll" },
+  { min: 45, name: "Extended Walk", blurb: "More time to explore" },
+  { min: 60, name: "The Marathon", blurb: "Full exercise session" },
+];
 
 function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
   if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
@@ -78,6 +87,19 @@ export default function ServiceBookingFlow({
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [addError, setAddError] = useState(false);
+
+  // Top-ranked walkers shown as a preview strip on the Walking intro screen,
+  // before any time is picked — fetched with no startTime, so this is
+  // ranking-only (composite score), not availability-filtered. Non-clickable
+  // for now since individual provider profile pages don't exist yet.
+  const [topWalkers, setTopWalkers] = useState<Provider[]>([]);
+  useEffect(() => {
+    if (phase !== "intro" || serviceType !== "WALKING") return;
+    fetch(`/api/providers?service=WALKING`)
+      .then((r) => r.json())
+      .then((data: Provider[]) => setTopWalkers(data.slice(0, 4)))
+      .catch(() => {});
+  }, [phase, serviceType]);
 
   useEffect(() => {
     if (phase !== "providers") return;
@@ -137,36 +159,113 @@ export default function ServiceBookingFlow({
 
   return (
     <div className="px-6">
-      {/* ===== Intro (Walking only) — big Start button ===== */}
+      {/* ===== Intro (Walking only) — hero, packages, features, top walkers ===== */}
       {phase === "intro" && (
-        <div className="animate-fade-up text-center py-10">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cream)" }}>
-            <PawPrint size={28} color="var(--terracotta)" />
-          </div>
-          {isFirstWalk ? (
-            <>
+        <div className="animate-fade-up">
+          <div className="text-center py-8">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cream)" }}>
+              <PawPrint size={28} color="var(--terracotta)" />
+            </div>
+            {isFirstWalk && (
               <span
                 className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
                 style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
               >
                 Your first walk is free
               </span>
-              <h1 className="text-2xl font-bold mb-2">Let's get {activePetName ?? "your pet"} moving 🎉</h1>
-              <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>Pick a time and we'll find a walker nearby — on us.</p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-2xl font-bold mb-2">Ready for another walk?</h1>
-              <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>Pick a time and we'll find a walker nearby.</p>
-            </>
+            )}
+            <h1 className="text-2xl font-bold mb-2">Professional Dog Walking</h1>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Adventure, exercise, and peace of mind for {activePetName ?? "your pup"}.
+            </p>
+          </div>
+
+          {/* ===== Select Package ===== */}
+          <div className="card mb-6">
+            <h2 className="font-bold text-lg mb-1">Select Package</h2>
+            <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+              Choose the best fit for {activePetName ?? "your pet"}'s energy level.
+            </p>
+            <div className="space-y-2.5">
+              {WALK_PACKAGES.map((pkg) => {
+                const selected = walkDurationMin === pkg.min;
+                return (
+                  <button
+                    key={pkg.min}
+                    onClick={() => setWalkDurationMin(pkg.min)}
+                    className="tap-scale w-full flex items-center justify-between rounded-xl px-4 py-3 text-left"
+                    style={{
+                      background: selected ? "var(--cream)" : "var(--card)",
+                      border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
+                    }}
+                  >
+                    <div>
+                      <p className="font-bold text-sm">{pkg.name}</p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>
+                        {pkg.min} minutes · {pkg.blurb}
+                      </p>
+                    </div>
+                    <p className="font-bold text-base">₹{WALK_PRICING_PAISE[pkg.min] / 100}</p>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPhase("details")}
+              className="btn-primary w-full tap-scale mt-5"
+            >
+              Book a Walk
+            </button>
+            <p className="text-center text-[11px] mt-2" style={{ color: "var(--muted)" }}>
+              Free cancellation up to 24h before.
+            </p>
+          </div>
+
+          {/* ===== Why Choose Our Walks ===== */}
+          <div className="mb-6">
+            <h2 className="font-bold text-lg mb-3">Why Choose Our Walks?</h2>
+            <div className="space-y-2.5">
+              {[
+                { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #16281f)" },
+                { icon: Camera, title: "Photo Updates", desc: "Paw-some moments delivered to your phone — coming soon.", color: "var(--terracotta)" },
+                { icon: ShieldCheck, title: "Verified Walkers", desc: "Every walker is document-verified before going live.", color: "var(--gold)" },
+                { icon: Clock, title: "Flexible Durations", desc: "30, 45, or 60-minute walks to fit your schedule.", color: "var(--heritage-red, #c0392b)" },
+              ].map((f) => (
+                <div key={f.title} className="card flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
+                    <f.icon size={16} color={f.color} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">{f.title}</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== Meet Our Top Walkers ===== */}
+          {topWalkers.length > 0 && (
+            <div className="mb-4">
+              <h2 className="font-bold text-lg mb-3">Meet Our Top Walkers</h2>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                {topWalkers.map((w) => (
+                  <div key={w.id} className="card shrink-0" style={{ width: 140 }}>
+                    <img
+                      src={w.photoUrl || `https://i.pravatar.cc/150?u=${w.id}`}
+                      alt={w.user.name}
+                      className="w-14 h-14 rounded-full object-cover mx-auto mb-2"
+                      style={{ border: "1px solid var(--border)" }}
+                    />
+                    <p className="font-semibold text-xs text-center truncate">{w.user.name}</p>
+                    <p className="flex items-center justify-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
+                      <Star size={10} fill="var(--gold)" color="var(--gold)" /> {w.ratingAvg.toFixed(1)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-          <button
-            onClick={() => setPhase("details")}
-            className="tap-scale walk-start-pulse px-8 py-4 rounded-full font-bold text-white"
-            style={{ background: "var(--terracotta)" }}
-          >
-            {isFirstWalk ? "Start your free walk" : "Book walk again"}
-          </button>
         </div>
       )}
 
@@ -205,32 +304,9 @@ export default function ServiceBookingFlow({
                 />
               </div>
             )}
-            {serviceType === "WALKING" && (
-              <div>
-                <label className="text-xs font-semibold" style={{ color: "var(--muted)" }}>Duration</label>
-                <div className="grid grid-cols-3 gap-2 mt-1">
-                  {([30, 45, 60] as const).map((min) => (
-                    <button
-                      key={min}
-                      onClick={() => {
-                        setWalkDurationMin(min);
-                        setEnd(""); // force recompute against the new duration
-                      }}
-                      className="tap-scale rounded-xl py-2.5 text-center"
-                      style={{
-                        background: walkDurationMin === min ? "var(--panel-dark)" : "var(--cream)",
-                        border: `1px solid ${walkDurationMin === min ? "var(--panel-dark)" : "var(--border)"}`,
-                      }}
-                    >
-                      <p className="text-sm font-bold" style={{ color: walkDurationMin === min ? "white" : undefined }}>{min} min</p>
-                      <p className="text-[11px]" style={{ color: walkDurationMin === min ? "rgba(255,255,255,0.75)" : "var(--muted)" }}>
-                        ₹{WALK_PRICING_PAISE[min] / 100}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Duration is no longer selected here for Walking — it's locked in
+                on the intro screen's package cards before this step is ever
+                reached (Walking always passes through "intro" first). */}
           </div>
 
           <div className="card mb-4">
