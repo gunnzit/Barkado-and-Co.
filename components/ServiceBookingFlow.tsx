@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag, Plus, Sun, CloudSun, Moon, GraduationCap } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
+import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -93,24 +94,9 @@ const TIME_SLOTS: { period: "Morning" | "Afternoon" | "Evening"; icon: typeof Su
   },
 ];
 
-// SAMPLE / PLACEHOLDER DATA — Experience and specialty tags have no real
-// field on Provider yet (providers will set these themselves later).
-// Cycled by a hash of the provider's id so cards don't all show identical
-// values, but none of this is real per-provider data. Flagged clearly here
-// so it isn't mistaken for something safe to leave as-is before real
-// customers see real trainers with fake experience/specialties.
-const SAMPLE_EXPERIENCE = ["3 years", "5+ years", "8+ years", "2 years"];
-const SAMPLE_SPECIALTIES: [string, string][] = [
-  ["Behavioral", "Puppy"],
-  ["Agility", "Sports"],
-  ["Anxiety", "Reactivity"],
-  ["Obedience", "Socialization"],
-];
-function sampleIndexFor(id: string, mod: number) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 1000;
-  return hash % mod;
-}
+// Experience/specialty sample data now lives in lib/trainerSampleData.ts —
+// shared with the provider profile page so the same trainer shows the
+// same placeholder values everywhere they appear.
 
 function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
   if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
@@ -739,8 +725,8 @@ export default function ServiceBookingFlow({
             <div className="space-y-3">
               {providers.map((p) => (
                 <div key={p.id} className="card">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Real photo if the provider has uploaded one; otherwise a
                           consistent placeholder avatar seeded by provider ID, so
                           the same provider always shows the same stand-in face
@@ -751,9 +737,9 @@ export default function ServiceBookingFlow({
                         className="w-12 h-12 rounded-full object-cover shrink-0"
                         style={{ border: "1px solid var(--border)" }}
                       />
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="font-semibold text-sm">{p.user.name}</p>
+                          <p className="font-semibold text-sm truncate">{p.user.name}</p>
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
                             <ShieldCheck size={10} /> Verified
                           </span>
@@ -768,7 +754,7 @@ export default function ServiceBookingFlow({
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
                           <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
                           <span>· {p._count.bookings} completed</span>
                           <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
@@ -829,14 +815,13 @@ export default function ServiceBookingFlow({
                           <p className="text-[11px]" style={{ color: "var(--muted)" }}>Plans from</p>
                           <p className="font-bold text-base">₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}</p>
                         </div>
-                        <button
-                          disabled
-                          className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                          style={{ border: "1px solid var(--border)", color: "var(--muted)", cursor: "not-allowed" }}
-                          title="Provider profile pages are coming soon"
+                        <Link
+                          href={`/provider/${p.id}`}
+                          className="tap-scale text-xs font-semibold px-3 py-1.5 rounded-full"
+                          style={{ border: "1px solid var(--panel-dark)", color: "var(--panel-dark)" }}
                         >
                           View Profile
-                        </button>
+                        </Link>
                       </div>
                     </>
                   )}
