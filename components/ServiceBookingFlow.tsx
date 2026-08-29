@@ -8,6 +8,7 @@ import { useCart } from "@/components/CartProvider";
 
 type Provider = {
   id: string;
+  photoUrl: string | null;
   pricePerWalk?: number;
   pricePerSitDay?: number;
   pricePerGroom?: number;
@@ -278,32 +279,44 @@ export default function ServiceBookingFlow({
               {providers.map((p) => (
                 <div key={p.id} className="card">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="font-semibold text-sm">{p.user.name}</p>
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
-                          <ShieldCheck size={10} /> Verified
-                        </span>
-                        {p.isSponsored && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
-                            <Sparkles size={10} /> Sponsored
+                    <div className="flex items-center gap-3">
+                      {/* Real photo if the provider has uploaded one; otherwise a
+                          consistent placeholder avatar seeded by provider ID, so
+                          the same provider always shows the same stand-in face
+                          instead of a different random one on every reload. */}
+                      <img
+                        src={p.photoUrl || `https://i.pravatar.cc/150?u=${p.id}`}
+                        alt={p.user.name}
+                        className="w-12 h-12 rounded-full object-cover shrink-0"
+                        style={{ border: "1px solid var(--border)" }}
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="font-semibold text-sm">{p.user.name}</p>
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                            <ShieldCheck size={10} /> Verified
                           </span>
-                        )}
-                        {p.availableAtRequestedTime === false && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
-                            <Clock size={10} /> Outside their hours
+                          {p.isSponsored && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
+                              <Sparkles size={10} /> Sponsored
+                            </span>
+                          )}
+                          {p.availableAtRequestedTime === false && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
+                              <Clock size={10} /> Outside their hours
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
+                          <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
+                          <span>· {p._count.bookings} completed</span>
+                          <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
+                            ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
                           </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
-                        <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
-                        <span>· {p._count.bookings} completed</span>
-                        <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
-                          ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                    <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale shrink-0">
                       {submittingId === p.id ? "…" : "Choose"}
                     </button>
                   </div>
