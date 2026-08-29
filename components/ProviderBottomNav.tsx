@@ -1,0 +1,239 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { LayoutDashboard, Calendar, Star, User, Wallet } from "lucide-react";
+
+// Controls ProviderDashboard's internal `tab` state directly — NOT a
+// route-based nav. There are no separate /provider/earnings-style pages;
+// everything lives inside one component. Same pill-drag interaction as the
+// owner-side BottomNav and the earlier (now superseded) route-based version
+// of this file, just wired to onSelect(tab) instead of next/navigation.
+
+const PILL_WIDTH = 68;
+const PILL_HEIGHT = 56;
+const DRAG_THRESHOLD = 10;
+
+export type ProviderNavTab = "home" | "earnings" | "schedule" | "promote" | "account";
+
+const ITEMS: { key: ProviderNavTab; label: string; icon: any }[] = [
+  { key: "home", label: "Home", icon: LayoutDashboard },
+  { key: "earnings", label: "Earnings", icon: Wallet },
+  { key: "schedule", label: "Schedule", icon: Calendar },
+  { key: "promote", label: "Promote", icon: Star },
+  { key: "account", label: "My Account", icon: User },
+];
+
+export default function ProviderBottomNav({
+  active,
+  onSelect,
+}: {
+  active: ProviderNavTab;
+  onSelect: (tab: ProviderNavTab) => void;
+}) {
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [navRect, setNavRect] = useState({ height: 0 });
+  const [centers, setCenters] = useState<number[]>([]);
+  const [measured, setMeasured] = useState(false);
+  const [pillLeft, setPillLeft] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [popping, setPopping] = useState(false);
+  const popTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStartX = useRef(0);
+  const draggedRef = useRef(false);
+
+  const measure = () => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const navBox = nav.getBoundingClientRect();
+    setNavRect({ height: navBox.height });
+    const next = itemRefs.current.map((el) => {
+      if (!el) return 0;
+      const r = el.getBoundingClientRect();
+      return r.left - navBox.left + r.width / 2;
+    });
+    setCenters(next);
+    setMeasured(true);
+  };
+
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const leftForIndex = (i: number) => (centers[i] ?? 0) - PILL_WIDTH / 2;
+
+  const activeIndex = ITEMS.findIndex((i) => i.key === active);
+
+  const snapToActive = () => {
+    setPillLeft(leftForIndex(Math.max(0, activeIndex)));
+  };
+
+  useEffect(() => {
+    if (!measured) return;
+    snapToActive();
+    setPopping(true);
+    if (popTimeout.current) clearTimeout(popTimeout.current);
+    popTimeout.current = setTimeout(() => setPopping(false), 380);
+    return () => {
+      if (popTimeout.current) clearTimeout(popTimeout.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [measured, centers, active]);
+
+  const nearestIndexFor = (clientX: number) => {
+    const nav = navRef.current;
+    if (!nav) return 0;
+    const rect = nav.getBoundingClientRect();
+    const x = clientX - rect.left;
+    let closest = 0;
+    let closestDist = Infinity;
+    centers.forEach((c, i) => {
+      const d = Math.abs(x - c);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = i;
+      }
+    });
+    return closest;
+  };
+
+  const followPointer = (clientX: number) => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const rect = nav.getBoundingClientRect();
+    const raw = clientX - rect.left - PILL_WIDTH / 2;
+    const clamped = Math.min(Math.max(raw, 0), rect.width - PILL_WIDTH);
+    setPillLeft(clamped);
+  };
+
+  const startDrag = (clientX: number) => {
+    setDragging(true);
+    dragStartX.current = clientX;
+    draggedRef.current = false;
+  };
+
+  const moveDrag = (clientX: number) => {
+    if (!draggedRef.current && Math.abs(clientX - dragStartX.current) > DRAG_THRESHOLD) {
+      draggedRef.current = true;
+    }
+    if (draggedRef.current) followPointer(clientX);
+  };
+
+  const endDrag = (clientX: number) => {
+    setDragging(false);
+    if (draggedRef.current) {
+      const index = nearestIndexFor(clientX);
+      const target = ITEMS[index];
+      if (target && target.key !== active) {
+        onSelect(target.key);
+        return;
+      }
+    }
+    snapToActive();
+  };
+
+  return (
+    <nav
+      ref={navRef}
+      className="bottom-nav bottom-nav-pill-container"
+      style={{
+        bottom: "calc(32px + env(safe-area-inset-bottom))",
+        zIndex: 300,
+        background: "rgba(255, 255, 255, 0.35)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      }}
+      onMouseDown={(e) => startDrag(e.clientX)}
+      onMouseMove={(e) => dragging && moveDrag(e.clientX)}
+      onMouseUp={(e) => dragging && endDrag(e.clientX)}
+      onMouseLeave={(e) => dragging && endDrag(e.clientX)}
+      onTouchStart={(e) => startDrag(e.touches[0].clientX)}
+      onTouchMove={(e) => moveDrag(e.touches[0].clientX)}
+      onTouchEnd={(e) => endDrag(e.changedTouches[0].clientX)}
+      onTouchCancel={() => {
+        setDragging(false);
+        snapToActive();
+      }}
+    >
+      {measured && (
+        <span
+          className={`bottom-nav-pill ${dragging && draggedRef.current ? "dragging" : ""} ${popping ? "popping" : ""}`}
+          style={{
+            left: pillLeft,
+            top: (navRect.height - PILL_HEIGHT) / 2,
+            width: PILL_WIDTH,
+            height: PILL_HEIGHT,
+          }}
+        />
+      )}
+      {ITEMS.map((item, i) => {
+        const Icon = item.icon;
+        const isActive = item.key === active;
+        return (
+          <button
+            key={item.key}
+            onClick={() => onSelect(item.key)}
+            ref={(el) => { itemRefs.current[i] = el; }}
+            className="tap-scale bottom-nav-item"
+            style={{ color: isActive ? "var(--forest, #16281f)" : "var(--muted, #8a7f6f)", opacity: 1 }}
+          >
+            <Icon size={19} strokeWidth={isActive ? 2.5 : 2} style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))" }} />
+            <span style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.1))" }}>{item.label}</span>
+          </button>
+        );
+      })}
+
+      <style jsx>{`
+        .bottom-nav-pill {
+          position: absolute;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px) saturate(160%);
+          -webkit-backdrop-filter: blur(10px) saturate(160%);
+          border: 1px solid rgba(255, 255, 255, 0.55);
+          box-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.8),
+            inset 0 -8px 12px rgba(255, 255, 255, 0.15),
+            0 4px 14px rgba(0, 0, 0, 0.08);
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+          transition: left 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .bottom-nav-pill::before {
+          content: "";
+          position: absolute;
+          top: -30%;
+          left: 10%;
+          width: 60%;
+          height: 60%;
+          border-radius: 9999px;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%);
+          animation: bottomNavGlowDrift 3.2s ease-in-out infinite;
+        }
+        @keyframes bottomNavGlowDrift {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+          50% { transform: translate(8%, 15%) scale(1.15); opacity: 1; }
+        }
+        .bottom-nav-pill.dragging {
+          transition: none;
+        }
+        .bottom-nav-pill.popping {
+          animation: bottomNavPillPop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes bottomNavPillPop {
+          0% { transform: scale(1); }
+          35% { transform: scale(1.22); }
+          100% { transform: scale(1); }
+        }
+        .bottom-nav-item {
+          position: relative;
+          z-index: 1;
+        }
+      `}</style>
+    </nav>
+  );
+}

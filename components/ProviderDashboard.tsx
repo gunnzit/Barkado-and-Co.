@@ -13,6 +13,8 @@ import ProviderVerificationUpload from "@/components/ProviderVerificationUpload"
 import NavDrawer from "@/components/NavDrawer";
 import ProviderPromotePanel from "@/components/ProviderPromotePanel";
 import ProviderHomeStats from "@/components/ProviderHomeStats";
+import ProviderBottomNav, { ProviderNavTab } from "@/components/ProviderBottomNav";
+import ProviderAccountPanel from "@/components/ProviderAccountPanel";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -199,7 +201,7 @@ function RateOwnerForm({ bookingId, onDone }: { bookingId: string; onDone: () =>
   );
 }
 
-type Tab = "home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification" | "promote";
+type Tab = "home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification" | "promote" | "account";
 
 export default function ProviderDashboard({
   requests,
@@ -241,7 +243,11 @@ export default function ProviderDashboard({
     router.refresh();
   };
 
-  const tabs: { key: Tab; label: string; count: number; icon: any }[] = [
+  // Split into what's reachable from the fixed bottom nav (5 primary
+  // destinations) versus the side drawer (everything else). Both control
+  // the same `tab` state — this is not a route change, just which UI
+  // surface exposes which tab.
+  const allTabs: { key: Tab; label: string; count: number; icon: any }[] = [
     { key: "home", label: "Home", count: 0, icon: HomeIcon },
     { key: "requests", label: "Requests", count: requests.length, icon: Inbox },
     { key: "schedule", label: "Schedule", count: schedule.length, icon: Calendar },
@@ -253,26 +259,30 @@ export default function ProviderDashboard({
     { key: "promote", label: "Promote", count: 0, icon: Sparkles },
   ];
 
+  const drawerTabs = allTabs.filter((t) => ["requests", "history", "services", "hours", "verification"].includes(t.key));
+
   const goTo = (key: Tab) => {
     setTab(key);
     setDrawerOpen(false);
   };
 
+  const currentLabel = tab === "account" ? "My Account" : allTabs.find((t) => t.key === tab)?.label ?? "Menu";
+
   return (
     <div>
-      <div className="px-6 mb-5">
+      <div className="px-6 mb-5 flex items-center justify-between">
         <button
           onClick={() => setDrawerOpen(true)}
           className="tap-scale flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
           style={{ background: "var(--card)", border: "1px solid var(--border)" }}
         >
           <Menu size={15} />
-          {tabs.find((t) => t.key === tab)?.label}
+          {currentLabel}
         </button>
       </div>
 
-      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Provider menu">
-        {tabs.map((t) => {
+      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="More">
+        {drawerTabs.map((t) => {
           const Icon = t.icon;
           const active = tab === t.key;
           return (
@@ -294,7 +304,7 @@ export default function ProviderDashboard({
         })}
       </NavDrawer>
 
-      <div key={tab} className="px-6 space-y-3 provider-tab-content">
+      <div key={tab} className="px-6 pb-28 space-y-3 provider-tab-content">
         {tab === "home" && (() => {
           const todayStr = new Date().toDateString();
           const todaysCompleted = history.filter((b) => b.status === "COMPLETED" && new Date(b.startTime).toDateString() === todayStr);
@@ -518,7 +528,21 @@ export default function ProviderDashboard({
             completedCount={completedCount}
           />
         )}
+
+        {tab === "account" && (
+          <ProviderAccountPanel
+            providerId={providerId}
+            providerName={providerName}
+            photoUrl={photoUrl}
+            ratingAvg={ratingAvg}
+            completedCount={completedCount}
+            isTrainingProvider={servicesOffered.includes("TRAINING")}
+            onNavigateTab={(t) => setTab(t)}
+          />
+        )}
       </div>
+
+      <ProviderBottomNav active={tab as ProviderNavTab} onSelect={(t) => setTab(t)} />
 
       <style jsx>{`
         .provider-tab-content {
