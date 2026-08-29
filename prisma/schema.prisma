@@ -192,7 +192,7 @@ model SponsorshipPurchase {
   id              String   @id @default(cuid())
   providerId      String
   provider        Provider @relation(fields: [providerId], references: [id])
-  scope           String   // WALKING | SITTING | GROOMING | TRAINING | HOMEPAGE
+  scope           String   @default("HOMEPAGE") // WALKING | SITTING | GROOMING | TRAINING | HOMEPAGE
   durationDays    Int      // 7 or 30
   amount          Int      // paise
   razorpayOrderId String?
