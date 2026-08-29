@@ -3,6 +3,7 @@ import { Poppins, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
+import { FavoritesProvider } from "@/components/FavoritesProvider";
 import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
 import ActivityTracker from "@/components/ActivityTracker";
@@ -31,8 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // IMPORTANT: this layout wraps every route in the app, including whatever
   // pages Clerk's middleware redirects to during its own sign-in handshake.
   // Calling auth()/getOrCreateUser() here (even indirectly) can fight with
-  // that handshake and cause a redirect loop. CartProvider intentionally
-  // starts empty and fetches the real cart itself, client-side, after mount.
+  // that handshake and cause a redirect loop. CartProvider and
+  // FavoritesProvider both intentionally start empty and fetch their real
+  // data client-side, after mount, for the same reason.
   //
   // BottomNav is mounted here, as a sibling to {children}, rather than
   // inside each individual page — that's what keeps it visible during route
@@ -46,9 +48,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SplashScreen />
           <ActivityTracker />
           <CartProvider initialItems={[]}>
-            {children}
-            <CartPill />
-            <BottomNav />
+            <FavoritesProvider>
+              {children}
+              <CartPill />
+              <BottomNav />
+            </FavoritesProvider>
           </CartProvider>
         </ClerkProvider>
       </body>
