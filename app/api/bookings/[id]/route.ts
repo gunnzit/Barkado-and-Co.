@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { sendBookingEmail } from "@/lib/sendBookingEmail";
+import { getOwnerCancellationStatus } from "@/lib/cancellationPolicy";
 
 const statusSchema = z.object({
   status: z.enum(["ACCEPTED", "DECLINED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
@@ -46,16 +47,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Owners may only cancel" }, { status: 403 });
   }
 
+  // A pure owner (not also the provider) cancelling for free is only
+  // allowed under the free-cancellation threshold. Past that, they must go
+  // through the fee-payment flow instead — this route rejects the attempt
+  // rather than silently letting a fee-eligible cancellation through free,
+  // since the client-side check alone can't be trusted.
+  if (isOwner && !isProvider && parsed.data.status === "CANCELLED") {
+    const feeStatus = await getOwnerCancellationStatus(user.id);
+    if (feeStatus.feeRequired) {
+      return NextResponse.json(
+        { error: "fee_required", feeAmount: feeStatus.feeAmount, recentCancellations: feeStatus.recentCancellations },
+        { status: 402 }
+      );
+    }
+  }
+
+  const cancelledBy = parsed.data.status === "CANCELLED" ? (isProvider ? "PROVIDER" : "OWNER") : undefined;
+
   const updated = await prisma.booking.update({
     where: { id: resolvedParams.id },
-    data: { status: parsed.data.status },
+    data: { status: parsed.data.status, ...(cancelledBy ? { cancelledBy } : {}) },
   });
 
-  // Notify the owner on the transitions that actually matter to them.
-  // sendBookingEmail never throws — a missing key or a Resend hiccup logs
-  // and moves on, it never fails the status update itself. Awaited (not
-  // fire-and-forget) so the serverless function doesn't exit before the
-  // send completes.
   const serviceLabel = SERVICE_LABEL[booking.type] ?? booking.type;
   const emailType =
     parsed.data.status === "ACCEPTED" ? "ACCEPTED" :

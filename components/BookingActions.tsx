@@ -4,26 +4,112 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+function loadRazorpayScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve();
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load payment widget"));
+    document.body.appendChild(script);
+  });
+}
+
 export function CancelBookingButton({ bookingId }: { bookingId: string }) {
   const [busy, setBusy] = useState(false);
+  const [feeInfo, setFeeInfo] = useState<{ amount: number } | null>(null);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const cancel = async () => {
+  const attemptFreeCancel = async () => {
     if (!confirm("Cancel this booking? This can't be undone.")) return;
     setBusy(true);
-    await fetch(`/api/bookings/${bookingId}`, {
+    setError("");
+    const res = await fetch(`/api/bookings/${bookingId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "CANCELLED" }),
     });
     setBusy(false);
-    router.refresh();
+
+    if (res.ok) {
+      router.refresh();
+      return;
+    }
+
+    if (res.status === 402) {
+      const data = await res.json();
+      setFeeInfo({ amount: data.feeAmount });
+      return;
+    }
+
+    setError("Couldn't cancel — please try again.");
   };
 
+  const payFeeAndCancel = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await loadRazorpayScript();
+      const orderRes = await fetch(`/api/bookings/${bookingId}/cancel-fee/create-order`, { method: "POST" });
+      if (!orderRes.ok) throw new Error("order_failed");
+      const order = await orderRes.json();
+
+      const rzp = new window.Razorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        order_id: order.razorpayOrderId,
+        name: "Barkado & Co.",
+        description: "Cancellation fee",
+        handler: async (response: any) => {
+          const verifyRes = await fetch(`/api/bookings/${bookingId}/cancel-fee/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+          setBusy(false);
+          if (verifyRes.ok) {
+            router.refresh();
+          } else {
+            setError("Payment succeeded but cancellation failed — contact support.");
+          }
+        },
+        modal: { ondismiss: () => setBusy(false) },
+      });
+      rzp.open();
+    } catch {
+      setBusy(false);
+      setError("Couldn't start payment — please try again.");
+    }
+  };
+
+  if (feeInfo) {
+    return (
+      <div className="text-right">
+        <p className="text-[11px] mb-1" style={{ color: "var(--terracotta)" }}>
+          You've used your free cancellations this month — this one costs ₹{(feeInfo.amount / 100).toFixed(0)}.
+        </p>
+        <button onClick={payFeeAndCancel} disabled={busy} className="btn-secondary text-xs tap-scale">
+          {busy ? "…" : `Pay ₹${(feeInfo.amount / 100).toFixed(0)} to cancel`}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <button onClick={cancel} disabled={busy} className="btn-secondary text-xs tap-scale" style={{ opacity: busy ? 0.6 : 1 }}>
-      {busy ? "…" : "Cancel booking"}
-    </button>
+    <div className="text-right">
+      <button onClick={attemptFreeCancel} disabled={busy} className="btn-secondary text-xs tap-scale" style={{ opacity: busy ? 0.6 : 1 }}>
+        {busy ? "…" : "Cancel booking"}
+      </button>
+      {error && <p className="text-[11px] mt-1" style={{ color: "var(--terracotta)" }}>{error}</p>}
+    </div>
   );
 }
 

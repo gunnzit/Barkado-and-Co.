@@ -155,11 +155,16 @@ model Provider {
   isAvailableNow  Boolean  @default(false)
   verificationDocs        String[] @default([])
   verificationSubmittedAt DateTime?
+  // When set and in the future, this provider shows as "Sponsored" and
+  // sorts above the regular ranked list. Extending an active sponsorship
+  // adds to this date rather than replacing it (see finalizeSponsorship).
+  sponsoredUntil DateTime?
   createdAt       DateTime @default(now())
 
   bookings     Booking[]
   cartItems    CartItem[]
   availability ProviderAvailability[]
+  sponsorshipPurchases SponsorshipPurchase[]
 }
 
 model ProviderAvailability {
@@ -172,6 +177,20 @@ model ProviderAvailability {
   createdAt  DateTime @default(now())
 
   @@unique([providerId, dayOfWeek])
+}
+
+// A provider paying for a period of boosted visibility in the ranked list.
+// Kept as its own audit-trail model (rather than just mutating
+// Provider.sponsoredUntil directly) so there's a real payment history.
+model SponsorshipPurchase {
+  id              String   @id @default(cuid())
+  providerId      String
+  provider        Provider @relation(fields: [providerId], references: [id])
+  durationDays    Int      // 7 or 30
+  amount          Int      // paise
+  razorpayOrderId String?
+  paidAt          DateTime?
+  createdAt       DateTime @default(now())
 }
 
 model Booking {
@@ -196,6 +215,15 @@ model Booking {
   orderId      String?
   order        Order?        @relation(fields: [orderId], references: [id])
   requestExpiresAt DateTime?
+  // Who actually cancelled this booking — null unless status is CANCELLED.
+  // Distinguishing owner-initiated from provider-initiated cancellations
+  // matters: only provider-initiated ones count against their ranking, and
+  // only owner-initiated ones count toward the owner's cancellation-fee
+  // threshold.
+  cancelledBy  String?
+  // Set once a cancellation fee has actually been paid for this booking's
+  // cancellation (owner-side fee flow only).
+  cancellationFeePaid Boolean @default(false)
   createdAt    DateTime      @default(now())
 
   report      WalkReport?
@@ -237,10 +265,7 @@ model Product {
   name        String
   description String?
   category    String
-  price       Int // paise
-  // Optional "original" price shown crossed out, e.g. an MRP. When set,
-  // the shop UI shows a real % off badge computed from these two fields —
-  // never fabricated.
+  price       Int
   compareAtPrice Int?
   imageUrls   String[] @default([])
   icon        String?

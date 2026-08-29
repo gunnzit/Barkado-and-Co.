@@ -382,13 +382,26 @@ export default function ProviderDashboard({
             schedule.map((b) => (
               <BookingCard key={b.id} booking={b}>
                 {b.status === "ACCEPTED" && (
-                  <button
-                    onClick={() => setStatus(b.id, "IN_PROGRESS")}
-                    disabled={busyId === b.id}
-                    className="btn-primary w-full text-sm tap-scale"
-                  >
-                    Start
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setStatus(b.id, "IN_PROGRESS")}
+                      disabled={busyId === b.id}
+                      className="btn-primary flex-1 text-sm tap-scale"
+                    >
+                      Start
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Cancel this booking? This will count against your reliability score and can't be undone.")) {
+                          setStatus(b.id, "CANCELLED");
+                        }
+                      }}
+                      disabled={busyId === b.id}
+                      className="btn-secondary text-sm tap-scale px-4"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 )}
                 {b.status === "IN_PROGRESS" && reportOpenFor !== b.id && (
                   <button

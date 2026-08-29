@@ -12,6 +12,18 @@ const providerSchema = z.object({
   pricePerSitDay: z.number().int().positive().optional(),
 });
 
+// Composite ranking weights — how much each factor moves a provider up the
+// list. Rating and reliability (not declining/expiring/cancelling on
+// people) are weighted heaviest since they're the strongest trust signals;
+// tenure matters least since "been around a while" shouldn't outweigh
+// actually being good at the job.
+const RATING_WEIGHT = 0.4;
+const RELIABILITY_WEIGHT = 0.3;
+const VOLUME_WEIGHT = 0.2;
+const TENURE_WEIGHT = 0.1;
+const VOLUME_CAP = 50; // completed bookings beyond this don't add further score
+const TENURE_CAP_DAYS = 180; // ~6 months for full tenure credit
+
 // Public: browse providers (owners searching)
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -27,19 +39,25 @@ export async function GET(req: Request) {
     },
     include: {
       user: { select: { name: true } },
-      _count: { select: { bookings: { where: { status: "COMPLETED" } } } },
       availability: true,
+      // Full booking list (not just a count) — needed to compute
+      // completed volume AND the reliability penalty (declined/expired/
+      // provider-cancelled) from the same query.
+      bookings: { select: { status: true, cancelledBy: true } },
     },
-    orderBy: { ratingAvg: "desc" },
   });
+
+  const now = Date.now();
 
   // Flag (not filter, per product decision) providers whose set hours don't
   // cover the requested time. A provider with no hours rows at all is
   // treated as always available — most providers haven't set hours yet, and
   // defaulting them to "unavailable" everywhere would be wrong.
   const requested = startTime ? new Date(startTime) : null;
-  const result = providers.map((p) => {
-    const { availability, ...rest } = p;
+
+  const scored = providers.map((p) => {
+    const { availability, bookings, ...rest } = p;
+
     let availableAtRequestedTime: boolean | null = null;
     if (requested && availability.length > 0) {
       const dayOfWeek = requested.getDay();
@@ -55,10 +73,46 @@ export async function GET(req: Request) {
         availableAtRequestedTime = minutes >= startMinutes && minutes <= endMinutes;
       }
     }
-    return { ...rest, availableAtRequestedTime };
+
+    const completedCount = bookings.filter((b) => b.status === "COMPLETED").length;
+    const totalCount = bookings.length;
+    // Reliability penalty: declined requests, auto-expired (never
+    // responded), and cancellations the PROVIDER themselves initiated.
+    // Owner-initiated cancellations never count against the provider —
+    // there's no fair way to blame them for a decision they didn't make.
+    const badCount = bookings.filter(
+      (b) => b.status === "DECLINED" || b.status === "EXPIRED" || (b.status === "CANCELLED" && b.cancelledBy === "PROVIDER")
+    ).length;
+    const reliability = totalCount === 0 ? 1 : 1 - badCount / totalCount;
+
+    const ratingScore = rest.ratingAvg / 5;
+    const volumeScore = Math.min(completedCount / VOLUME_CAP, 1);
+    const tenureDays = (now - rest.createdAt.getTime()) / (24 * 60 * 60 * 1000);
+    const tenureScore = Math.min(tenureDays / TENURE_CAP_DAYS, 1);
+
+    const composite =
+      RATING_WEIGHT * ratingScore +
+      RELIABILITY_WEIGHT * reliability +
+      VOLUME_WEIGHT * volumeScore +
+      TENURE_WEIGHT * tenureScore;
+
+    const isSponsored = !!(rest.sponsoredUntil && rest.sponsoredUntil.getTime() > now);
+
+    return {
+      ...rest,
+      _count: { bookings: completedCount }, // preserved shape for existing frontend code
+      availableAtRequestedTime,
+      isSponsored,
+      composite,
+    };
   });
 
-  return NextResponse.json(result);
+  scored.sort((a, b) => {
+    if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
+    return b.composite - a.composite;
+  });
+
+  return NextResponse.json(scored);
 }
 
 // Register as a provider (creates Provider row for current user, role stays as-is until admin verifies)
