@@ -208,7 +208,7 @@ export default function ServiceBookingFlow({
   };
 
   const addToCart = async (providerId: string) => {
-    const petId = serviceType === "WALKING" ? selectedPetId : activePetId;
+    const petId = (serviceType === "WALKING" || serviceType === "TRAINING") ? selectedPetId : activePetId;
     setSubmittingId(providerId);
     setAddError(false);
     const result = await addService({
@@ -229,10 +229,10 @@ export default function ServiceBookingFlow({
     setSubmittingId(null);
   };
 
-  const walkDetailsValid = selectedPetId && selectedDateIso && selectedSlot && address && phone;
-  const detailsValid =
-    serviceType === "WALKING"
-      ? walkDetailsValid
+  const sharedScheduleDetailsValid = selectedPetId && selectedDateIso && selectedSlot && address && phone;
+  const usesSharedScheduleScreen = serviceType === "WALKING" || serviceType === "TRAINING";
+  const detailsValid = usesSharedScheduleScreen
+      ? sharedScheduleDetailsValid
       : start && (COPY[serviceType].needsEndDate ? end : true) && address && phone;
 
   if (!hasPets) {
@@ -493,9 +493,10 @@ export default function ServiceBookingFlow({
         </div>
       )}
 
-      {/* ===== Details — Walking gets the Schedule & Pet screen; other
-          service types keep the original free-entry date/time form. ===== */}
-      {phase === "details" && serviceType === "WALKING" && (
+      {/* ===== Details — Walking and Training share the Schedule & Pet
+          screen (pet picker, date strip, fixed time slots); Sitting and
+          Grooming keep the original free-entry date/time form. ===== */}
+      {phase === "details" && usesSharedScheduleScreen && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-6">Schedule &amp; Pet</h1>
 
@@ -600,7 +601,7 @@ export default function ServiceBookingFlow({
                 Add your address and phone number to continue
               </p>
               <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-                Your walker needs to know where and how to reach you.
+                Your {serviceType === "TRAINING" ? "trainer" : "walker"} needs to know where and how to reach you.
               </p>
               <Link href="/owner/profile" className="btn-primary inline-block text-sm">
                 Add in profile
@@ -614,12 +615,12 @@ export default function ServiceBookingFlow({
             className="btn-primary w-full tap-scale"
             style={{ opacity: detailsValid ? 1 : 0.5 }}
           >
-            Continue to find walkers
+            Continue to {COPY[serviceType].findLabel.charAt(0).toLowerCase() + COPY[serviceType].findLabel.slice(1)}
           </button>
         </div>
       )}
 
-      {phase === "details" && serviceType !== "WALKING" && (
+      {phase === "details" && !usesSharedScheduleScreen && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-1">
             {COPY[serviceType].detailsTitle(activePetName ?? "your pet")}
