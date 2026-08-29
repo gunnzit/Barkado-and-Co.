@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
 
@@ -16,6 +16,7 @@ type Provider = {
   user: { name: string };
   _count: { bookings: number };
   availableAtRequestedTime: boolean | null;
+  isSponsored?: boolean;
 };
 
 const COPY: Record<
@@ -244,6 +245,11 @@ export default function ServiceBookingFlow({
                       <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
                         <ShieldCheck size={10} /> Verified
                       </span>
+                      {p.isSponsored && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
+                          <Sparkles size={10} /> Sponsored
+                        </span>
+                      )}
                       {p.availableAtRequestedTime === false && (
                         <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
                           <Clock size={10} /> Outside their hours

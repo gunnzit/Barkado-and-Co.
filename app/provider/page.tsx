@@ -172,7 +172,12 @@ export default async function ProviderPage() {
           </div>
         </div>
 
-        <ProviderDashboard requests={requests as any} schedule={schedule as any} history={history as any} />
+        <ProviderDashboard
+          requests={requests as any}
+          schedule={schedule as any}
+          history={history as any}
+          sponsoredUntil={provider.sponsoredUntil ? provider.sponsoredUntil.toISOString() : null}
+        />
       </main>
     </div>
   );

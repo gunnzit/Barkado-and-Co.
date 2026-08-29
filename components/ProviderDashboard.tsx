@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Menu, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X,
-  Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck, Star,
+  Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck, Star, Sparkles,
 } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
 import ProviderEarningsPanel from "@/components/ProviderEarningsPanel";
 import ProviderVerificationUpload from "@/components/ProviderVerificationUpload";
 import NavDrawer from "@/components/NavDrawer";
+import ProviderPromotePanel from "@/components/ProviderPromotePanel";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -197,16 +198,18 @@ function RateOwnerForm({ bookingId, onDone }: { bookingId: string; onDone: () =>
   );
 }
 
-type Tab = "home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification";
+type Tab = "home" | "requests" | "schedule" | "history" | "earnings" | "services" | "hours" | "verification" | "promote";
 
 export default function ProviderDashboard({
   requests,
   schedule,
   history,
+  sponsoredUntil,
 }: {
   requests: ProviderBooking[];
   schedule: ProviderBooking[];
   history: ProviderBooking[];
+  sponsoredUntil: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -234,6 +237,7 @@ export default function ProviderDashboard({
     { key: "services", label: "Services", count: 0, icon: Settings },
     { key: "hours", label: "Hours", count: 0, icon: Clock },
     { key: "verification", label: "Verification", count: 0, icon: ShieldCheck },
+    { key: "promote", label: "Promote", count: 0, icon: Sparkles },
   ];
 
   const goTo = (key: Tab) => {
@@ -453,6 +457,8 @@ export default function ProviderDashboard({
         {tab === "hours" && <ProviderAvailabilityEditor />}
 
         {tab === "verification" && <ProviderVerificationUpload />}
+
+        {tab === "promote" && <ProviderPromotePanel sponsoredUntil={sponsoredUntil} />}
       </div>
     </div>
   );
