@@ -116,6 +116,10 @@ export async function GET(req: Request) {
       availableAtRequestedTime,
       isSponsored,
       composite,
+      // Reliability as a whole-number percentage (0–100) for display —
+      // same underlying calculation already used in the ranking math above,
+      // just exposed to the frontend rather than kept internal.
+      reliabilityScore: Math.round(reliability * 100),
     };
   });
 

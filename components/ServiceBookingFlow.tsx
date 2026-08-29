@@ -13,6 +13,7 @@ type Provider = {
   pricePerGroom?: number;
   pricePerTrain?: number;
   ratingAvg: number;
+  reliabilityScore: number;
   user: { name: string };
   _count: { bookings: number };
   availableAtRequestedTime: boolean | null;
@@ -275,35 +276,52 @@ export default function ServiceBookingFlow({
           ) : (
             <div className="space-y-3">
               {providers.map((p) => (
-                <div key={p.id} className="card flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="font-semibold text-sm">{p.user.name}</p>
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
-                        <ShieldCheck size={10} /> Verified
-                      </span>
-                      {p.isSponsored && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
-                          <Sparkles size={10} /> Sponsored
+                <div key={p.id} className="card">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="font-semibold text-sm">{p.user.name}</p>
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                          <ShieldCheck size={10} /> Verified
                         </span>
-                      )}
-                      {p.availableAtRequestedTime === false && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
-                          <Clock size={10} /> Outside their hours
+                        {p.isSponsored && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
+                            <Sparkles size={10} /> Sponsored
+                          </span>
+                        )}
+                        {p.availableAtRequestedTime === false && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
+                            <Clock size={10} /> Outside their hours
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
+                        <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
+                        <span>· {p._count.bookings} completed</span>
+                        <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
+                          ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
                         </span>
-                      )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
-                      <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
-                      <span>· {p._count.bookings} completed</span>
-                      <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
-                        ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
-                      </span>
+                    <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                      {submittingId === p.id ? "…" : "Choose"}
+                    </button>
+                  </div>
+
+                  {/* Reliability score bar — based on the same declined/expired/
+                      provider-cancelled calculation used in ranking, now shown directly. */}
+                  <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                    <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
+                      <span style={{ color: "var(--muted)" }}>Reliability Score</span>
+                      <span>{p.reliabilityScore}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${p.reliabilityScore}%`, background: "var(--panel-dark)" }}
+                      />
                     </div>
                   </div>
-                  <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
-                    {submittingId === p.id ? "…" : "Choose"}
-                  </button>
                 </div>
               ))}
             </div>
