@@ -27,7 +27,6 @@ const SERVICES = [
   { title: "Home Staycation", tag: "Sitting & boarding", desc: "In-home care with daily updates while you're away.", icon: HomeIcon, price: "from ₹899 / night", href: "/sitting", built: true },
   { title: "Good Manners Programme", tag: "Training", desc: "Force-free trainers for basics, leash work and reactivity.", icon: Dumbbell, price: "from ₹599", href: "/training", built: true },
   { title: "Tail Wind Travel", tag: "Travel & relocation", desc: "Pet-friendly stays and transfers, handled end to end.", icon: Plane, price: "Coming soon", href: "#", built: false },
-  { title: "Forever Home Match", tag: "Adoption", desc: "Meet shelter dogs matched to your home and hours.", icon: Heart, price: "Coming soon", href: "#", built: false },
   { title: "The Curated Shelf", tag: "Accessories", desc: "Harnesses, beds, and everyday essentials for your pet.", icon: ShoppingBag, price: "from ₹249", href: "/accessories", built: true },
 ];
 
