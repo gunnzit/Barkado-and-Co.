@@ -10,6 +10,7 @@
   --terracotta: #c97a56;
   --terracotta-dark: #b06843;
   --gold: #e8a94a;
+  --heritage-red: #c0392b;
   --muted: #6b7368;
   --card: #ffffff;
   --border: #e6e2d6;
@@ -275,6 +276,7 @@ input::placeholder, textarea::placeholder {
   --terracotta: #e2986b;
   --terracotta-dark: #eeb28c;
   --gold: #f0b45e;
+  --heritage-red: #e0574a;
   --muted: #9aa39c;
   --card: #1c2b23;
   --border: #2c3b32;
