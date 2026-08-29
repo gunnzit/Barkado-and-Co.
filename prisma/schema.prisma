@@ -75,6 +75,7 @@ model User {
   address         String?
   addresses       Address[]
   activityEvents  ActivityEvent[]
+  favorites       Favorite[]
 }
 
 model Address {
@@ -170,6 +171,7 @@ model Provider {
   cartItems    CartItem[]
   availability ProviderAvailability[]
   sponsorshipPurchases SponsorshipPurchase[]
+  favorites    Favorite[]
 }
 
 model ProviderAvailability {
@@ -284,6 +286,7 @@ model Product {
 
   cartItems  CartItem[]
   orderItems OrderItem[]
+  favorites  Favorite[]
 }
 
 model CartItem {
@@ -347,4 +350,23 @@ model ActivityEvent {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+// A user's saved product or provider — never both on the same row. The two
+// separate @@unique constraints below (one per relation) stop the same
+// user from favoriting the same product twice or the same provider twice,
+// while keeping products and providers in one shared table so the wishlist
+// page only needs to query one place to show everything a user has saved.
+model Favorite {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  productId  String?
+  product    Product?  @relation(fields: [productId], references: [id])
+  providerId String?
+  provider   Provider? @relation(fields: [providerId], references: [id])
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, productId])
+  @@unique([userId, providerId])
 }
