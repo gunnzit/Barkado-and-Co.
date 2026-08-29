@@ -28,7 +28,7 @@ export default function BottomNav() {
 
   const items = [
     { href: "/", label: "Home", icon: Home, active: pathname === "/" },
-    { href: "/owner/dashboard", label: "Walks", icon: PawPrint, active: pathname === "/owner/dashboard" || pathname === "/walk-booking" },
+    { href: "/walk-booking", label: "Walks", icon: PawPrint, active: pathname === "/walk-booking" },
     { href: "/training", label: "Training", icon: GraduationCap, active: pathname === "/training" },
     { href: "/grooming", label: "Groom", icon: Scissors, active: pathname === "/grooming" },
     { href: "/accessories", label: "Shop", icon: ShoppingBag, active: pathname === "/accessories" },

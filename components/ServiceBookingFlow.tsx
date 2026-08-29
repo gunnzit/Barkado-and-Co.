@@ -680,7 +680,7 @@ export default function ServiceBookingFlow({
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Link href="/cart" className="btn-primary inline-block">View cart</Link>
-            <Link href={serviceType === "WALKING" ? "/owner/dashboard" : "/"} className="btn-secondary inline-block">Keep browsing</Link>
+            <Link href="/" className="btn-secondary inline-block">Keep browsing</Link>
           </div>
         </div>
       )}

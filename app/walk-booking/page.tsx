@@ -43,7 +43,7 @@ export default async function WalkBookingPage() {
         </nav>
 
         <div className="px-6 py-5">
-          <Link href="/owner/dashboard" className="tap-scale inline-block">
+          <Link href="/" className="tap-scale inline-block">
             <ArrowLeft size={20} />
           </Link>
         </div>
