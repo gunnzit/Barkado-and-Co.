@@ -248,9 +248,9 @@ export default function ServiceBookingFlow({
   }
 
   return (
-    <div className={phase === "intro" && serviceType === "WALKING" ? "" : "px-6"}>
-      {/* ===== Intro (Walking only) — hero photo, packages, features, top walkers ===== */}
-      {phase === "intro" && (
+    <div className={phase === "intro" && (serviceType === "WALKING" || serviceType === "TRAINING") ? "" : "px-6"}>
+      {/* ===== Intro (Walking) — hero photo, packages, features, top walkers ===== */}
+      {phase === "intro" && serviceType === "WALKING" && (
         <div className="animate-fade-up">
           {/* ===== Hero photo ===== */}
           <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
@@ -388,6 +388,106 @@ export default function ServiceBookingFlow({
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Intro (Training) — hero photo, categories (no price — Training
+          stays provider-set), features. No top-trainers strip, per product
+          decision, since provider profile pages don't exist yet. ===== */}
+      {phase === "intro" && serviceType === "TRAINING" && (
+        <div className="animate-fade-up">
+          {/* ===== Hero photo ===== */}
+          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+            <Image
+              src="/images/hero-dog-german-shepherd.jpg"
+              alt="Dog training session"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
+                style={{ background: "var(--heritage-red, #c0392b)", color: "white" }}
+              >
+                Good Manners Programme
+              </div>
+              <h1 className="text-3xl font-bold text-white mb-1 leading-tight">Professional Pet Training</h1>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+                Expert guidance for a harmonious life together, tailored to {activePetName ?? "your pet"}.
+              </p>
+            </div>
+          </div>
+
+          <div className="px-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:items-start">
+            {/* ===== Training Categories — informational only, no price:
+                Training stays provider-set, so price depends on which
+                trainer gets chosen on the next screen, not on category. ===== */}
+            <div className="lg:col-span-1 lg:order-last mb-6 lg:mb-0">
+              <div className="card lg:sticky lg:top-6">
+                <h2 className="font-bold text-lg mb-1">Training Categories</h2>
+                <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+                  Explore categories and find the right trainer — each trainer sets their own rates.
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { title: "Puppy Foundation", blurb: "Basic manners & socialization for a strong start." },
+                    { title: "Behavioral Correction", blurb: "Specialized focus for specific behavioral issues." },
+                    { title: "Agility & Sport", blurb: "High-energy skills, course work, and fitness." },
+                  ].map((cat) => (
+                    <div key={cat.title} className="flex items-start gap-3 rounded-xl px-3 py-3" style={{ border: "1px solid var(--border)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+                        <GraduationCap size={16} color="var(--heritage-red, #c0392b)" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{cat.title}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{cat.blurb}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPhase("details")}
+                  className="btn-primary w-full tap-scale mt-5"
+                >
+                  Find a Trainer
+                </button>
+                <p className="text-center text-[11px] mt-2" style={{ color: "var(--muted)" }}>
+                  Compare trainer profiles and pricing.
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              {/* ===== Why Choose Our Training ===== */}
+              <div className="mb-6">
+                <h2 className="font-bold text-lg mb-3">Why Choose Our Training?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    { icon: ShieldCheck, title: "Certified Trainers", desc: "Verified trainer certifications — coming soon.", color: "var(--forest, #16281f)" },
+                    { icon: Sparkles, title: "Positive Reinforcement", desc: "We only work with reward-based, positive methods.", color: "var(--gold)" },
+                    { icon: PawPrint, title: "Personalized Plans", desc: "Every dog is unique — tailored to your pet's needs.", color: "var(--terracotta)" },
+                    { icon: Camera, title: "Progress Reports", desc: "Session updates and homework — coming soon.", color: "var(--heritage-red, #c0392b)" },
+                  ].map((f) => (
+                    <div key={f.title} className="card flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
+                        <f.icon size={16} color={f.color} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{f.title}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

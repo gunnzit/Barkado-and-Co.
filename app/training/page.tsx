@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, GraduationCap } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
@@ -22,7 +22,10 @@ export default async function TrainingPage() {
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-      <main className="pb-28 max-w-lg mx-auto">
+      {/* max-w-3xl (wider than the standard max-w-lg) so the intro screen's
+          responsive two-column layout has room to appear on desktop,
+          matching the same approach used on /walk-booking. */}
+      <main className="pb-28 max-w-3xl mx-auto">
         <nav className="flex justify-between items-center px-6 pt-4">
           <LocationHeader
             headline="Book a trainer"
@@ -36,21 +39,19 @@ export default async function TrainingPage() {
           </div>
         </nav>
 
-        <div className="flex items-center gap-3 px-6 py-5">
-          <Link href="/" className="tap-scale">
+        <div className="px-6 py-5">
+          <Link href="/" className="tap-scale inline-block">
             <ArrowLeft size={20} />
           </Link>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <GraduationCap size={20} color="var(--terracotta)" /> Good Manners Programme
-          </h1>
         </div>
 
         <ServiceBookingFlow
           serviceType="TRAINING"
           activePetId={activePet?.id ?? null}
           activePetName={activePet?.name ?? null}
+          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl }))}
           hasPets={pets.length > 0}
-          showStartButton={false}
+          showStartButton={true}
           defaultAddress={user.address}
           defaultPhone={user.phone}
         />
