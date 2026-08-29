@@ -176,7 +176,14 @@ export default async function ProviderPage() {
           requests={requests as any}
           schedule={schedule as any}
           history={history as any}
-          sponsoredUntil={provider.sponsoredUntil ? provider.sponsoredUntil.toISOString() : null}
+          servicesOffered={provider.servicesOffered as any}
+          sponsoredUntil={{
+            WALKING: provider.sponsoredWalkingUntil ? provider.sponsoredWalkingUntil.toISOString() : null,
+            SITTING: provider.sponsoredSittingUntil ? provider.sponsoredSittingUntil.toISOString() : null,
+            GROOMING: provider.sponsoredGroomingUntil ? provider.sponsoredGroomingUntil.toISOString() : null,
+            TRAINING: provider.sponsoredTrainingUntil ? provider.sponsoredTrainingUntil.toISOString() : null,
+            HOMEPAGE: provider.sponsoredHomepageUntil ? provider.sponsoredHomepageUntil.toISOString() : null,
+          }}
         />
       </main>
     </div>

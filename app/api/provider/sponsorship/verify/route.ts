@@ -10,6 +10,14 @@ const schema = z.object({
   razorpay_signature: z.string(),
 });
 
+const SCOPE_FIELD: Record<string, "sponsoredWalkingUntil" | "sponsoredSittingUntil" | "sponsoredGroomingUntil" | "sponsoredTrainingUntil" | "sponsoredHomepageUntil"> = {
+  WALKING: "sponsoredWalkingUntil",
+  SITTING: "sponsoredSittingUntil",
+  GROOMING: "sponsoredGroomingUntil",
+  TRAINING: "sponsoredTrainingUntil",
+  HOMEPAGE: "sponsoredHomepageUntil",
+};
+
 export async function POST(req: Request) {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,18 +46,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, alreadyProcessed: true });
   }
 
-  // Extending an active sponsorship adds to the remaining time rather than
-  // resetting it — buying another week while 3 days are left gives you 10,
-  // not a fresh 7.
-  const base = provider.sponsoredUntil && provider.sponsoredUntil.getTime() > Date.now()
-    ? provider.sponsoredUntil
-    : new Date();
-  const newSponsoredUntil = new Date(base.getTime() + purchase.durationDays * 24 * 60 * 60 * 1000);
+  const field = SCOPE_FIELD[purchase.scope];
+  if (!field) return NextResponse.json({ error: "Unknown sponsorship scope" }, { status: 400 });
+
+  const currentValue = (provider as any)[field] as Date | null;
+  const base = currentValue && currentValue.getTime() > Date.now() ? currentValue : new Date();
+  const newUntil = new Date(base.getTime() + purchase.durationDays * 24 * 60 * 60 * 1000);
 
   await prisma.$transaction([
     prisma.sponsorshipPurchase.update({ where: { id: purchase.id }, data: { paidAt: new Date() } }),
-    prisma.provider.update({ where: { id: provider.id }, data: { sponsoredUntil: newSponsoredUntil } }),
+    prisma.provider.update({ where: { id: provider.id }, data: { [field]: newUntil } }),
   ]);
 
-  return NextResponse.json({ success: true, sponsoredUntil: newSponsoredUntil });
+  return NextResponse.json({ success: true, scope: purchase.scope, sponsoredUntil: newUntil });
 }

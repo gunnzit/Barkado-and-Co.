@@ -155,10 +155,15 @@ model Provider {
   isAvailableNow  Boolean  @default(false)
   verificationDocs        String[] @default([])
   verificationSubmittedAt DateTime?
-  // When set and in the future, this provider shows as "Sponsored" and
-  // sorts above the regular ranked list. Extending an active sponsorship
-  // adds to this date rather than replacing it (see finalizeSponsorship).
-  sponsoredUntil DateTime?
+  // Sponsorship is scoped per service category, plus a separate broader
+  // "homepage" tier — a provider can be featured in Walking without paying
+  // for Grooming too, or pay more for the premium homepage-wide tier which
+  // counts as sponsored everywhere regardless of category.
+  sponsoredWalkingUntil  DateTime?
+  sponsoredSittingUntil  DateTime?
+  sponsoredGroomingUntil DateTime?
+  sponsoredTrainingUntil DateTime?
+  sponsoredHomepageUntil DateTime?
   createdAt       DateTime @default(now())
 
   bookings     Booking[]
@@ -179,13 +184,15 @@ model ProviderAvailability {
   @@unique([providerId, dayOfWeek])
 }
 
-// A provider paying for a period of boosted visibility in the ranked list.
-// Kept as its own audit-trail model (rather than just mutating
-// Provider.sponsoredUntil directly) so there's a real payment history.
+// A provider paying for a period of boosted visibility, scoped to one
+// category (WALKING/SITTING/GROOMING/TRAINING) or the broader HOMEPAGE
+// tier. Kept as its own audit-trail model so there's a real payment
+// history, separate from the current-status fields on Provider itself.
 model SponsorshipPurchase {
   id              String   @id @default(cuid())
   providerId      String
   provider        Provider @relation(fields: [providerId], references: [id])
+  scope           String   // WALKING | SITTING | GROOMING | TRAINING | HOMEPAGE
   durationDays    Int      // 7 or 30
   amount          Int      // paise
   razorpayOrderId String?
@@ -215,14 +222,7 @@ model Booking {
   orderId      String?
   order        Order?        @relation(fields: [orderId], references: [id])
   requestExpiresAt DateTime?
-  // Who actually cancelled this booking — null unless status is CANCELLED.
-  // Distinguishing owner-initiated from provider-initiated cancellations
-  // matters: only provider-initiated ones count against their ranking, and
-  // only owner-initiated ones count toward the owner's cancellation-fee
-  // threshold.
   cancelledBy  String?
-  // Set once a cancellation fee has actually been paid for this booking's
-  // cancellation (owner-side fee flow only).
   cancellationFeePaid Boolean @default(false)
   createdAt    DateTime      @default(now())
 

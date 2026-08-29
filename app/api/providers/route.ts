@@ -96,7 +96,19 @@ export async function GET(req: Request) {
       VOLUME_WEIGHT * volumeScore +
       TENURE_WEIGHT * tenureScore;
 
-    const isSponsored = !!(rest.sponsoredUntil && rest.sponsoredUntil.getTime() > now);
+    const isSponsored = (() => {
+      const homepageActive = !!(rest.sponsoredHomepageUntil && rest.sponsoredHomepageUntil.getTime() > now);
+      if (homepageActive) return true;
+      if (!service) return false;
+      const scopeField: Record<string, Date | null> = {
+        WALKING: rest.sponsoredWalkingUntil,
+        SITTING: rest.sponsoredSittingUntil,
+        GROOMING: rest.sponsoredGroomingUntil,
+        TRAINING: rest.sponsoredTrainingUntil,
+      };
+      const categoryUntil = scopeField[service];
+      return !!(categoryUntil && categoryUntil.getTime() > now);
+    })();
 
     return {
       ...rest,
