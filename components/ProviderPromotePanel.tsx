@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Globe } from "lucide-react";
+import { Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Globe, ShieldCheck, Star, Eye } from "lucide-react";
 
 declare global {
   interface Window {
@@ -38,9 +38,15 @@ const SCOPE_META: Record<Scope, { label: string; icon: any; prices: { 7: number;
 export default function ProviderPromotePanel({
   servicesOffered,
   sponsoredUntil,
+  providerName,
+  ratingAvg,
+  completedCount,
 }: {
   servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
   sponsoredUntil: Partial<Record<Scope, string | null>>;
+  providerName: string;
+  ratingAvg: number;
+  completedCount: number;
 }) {
   const scopeOptions: Scope[] = [...servicesOffered, "HOMEPAGE"];
   const [selectedScope, setSelectedScope] = useState<Scope>(scopeOptions[0]);
@@ -97,6 +103,7 @@ export default function ProviderPromotePanel({
 
   const selectedStatus = statusFor(selectedScope);
   const selectedPrices = SCOPE_META[selectedScope].prices;
+  const isHomepage = selectedScope === "HOMEPAGE";
 
   return (
     <div className="px-6 space-y-4">
@@ -130,6 +137,34 @@ export default function ProviderPromotePanel({
             );
           })}
         </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+          <Eye size={12} /> How you'll appear to owners
+        </p>
+        <div className="card flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <p className="font-semibold text-sm">{providerName}</p>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                <ShieldCheck size={10} /> Verified
+              </span>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
+                <Sparkles size={10} /> Sponsored
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
+              <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {ratingAvg.toFixed(1)}</span>
+              <span>· {completedCount} completed</span>
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>
+          {isHomepage
+            ? "This badge will show on every service category you offer."
+            : `This is how you'll look at the top of owners' ${SCOPE_META[selectedScope].label.toLowerCase()} search results.`}
+        </p>
       </div>
 
       <div className="card">

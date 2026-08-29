@@ -64,7 +64,10 @@ export default async function ProviderPage() {
     );
   }
 
-  const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
+  const provider = await prisma.provider.findUnique({
+    where: { userId: user.id },
+    include: { _count: { select: { bookings: { where: { status: "COMPLETED" } } } } },
+  });
 
   if (!provider) {
     return (
@@ -177,6 +180,9 @@ export default async function ProviderPage() {
           schedule={schedule as any}
           history={history as any}
           servicesOffered={provider.servicesOffered as any}
+          providerName={user.name}
+          ratingAvg={provider.ratingAvg}
+          completedCount={provider._count.bookings}
           sponsoredUntil={{
             WALKING: provider.sponsoredWalkingUntil ? provider.sponsoredWalkingUntil.toISOString() : null,
             SITTING: provider.sponsoredSittingUntil ? provider.sponsoredSittingUntil.toISOString() : null,

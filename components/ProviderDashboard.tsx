@@ -206,12 +206,18 @@ export default function ProviderDashboard({
   schedule,
   history,
   servicesOffered,
+  providerName,
+  ratingAvg,
+  completedCount,
   sponsoredUntil,
 }: {
   requests: ProviderBooking[];
   schedule: ProviderBooking[];
   history: ProviderBooking[];
   servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
+  providerName: string;
+  ratingAvg: number;
+  completedCount: number;
   sponsoredUntil: Partial<Record<"WALKING" | "SITTING" | "GROOMING" | "TRAINING" | "HOMEPAGE", string | null>>;
 }) {
   const [tab, setTab] = useState<Tab>("home");
@@ -497,7 +503,15 @@ export default function ProviderDashboard({
 
         {tab === "verification" && <ProviderVerificationUpload />}
 
-        {tab === "promote" && <ProviderPromotePanel servicesOffered={servicesOffered} sponsoredUntil={sponsoredUntil} />}
+        {tab === "promote" && (
+          <ProviderPromotePanel
+            servicesOffered={servicesOffered}
+            sponsoredUntil={sponsoredUntil}
+            providerName={providerName}
+            ratingAvg={ratingAvg}
+            completedCount={completedCount}
+          />
+        )}
       </div>
 
       <style jsx>{`
