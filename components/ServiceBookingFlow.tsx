@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera } from "lucide-react";
+import Image from "next/image";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -158,114 +159,148 @@ export default function ServiceBookingFlow({
   }
 
   return (
-    <div className="px-6">
-      {/* ===== Intro (Walking only) — hero, packages, features, top walkers ===== */}
+    <div className={phase === "intro" && serviceType === "WALKING" ? "" : "px-6"}>
+      {/* ===== Intro (Walking only) — hero photo, packages, features, top walkers ===== */}
       {phase === "intro" && (
         <div className="animate-fade-up">
-          <div className="text-center py-8">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cream)" }}>
-              <PawPrint size={28} color="var(--terracotta)" />
-            </div>
-            {isFirstWalk && (
-              <span
-                className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
-                style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+          {/* ===== Hero photo ===== */}
+          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+            <Image
+              src="/images/banner-instant-walk.jpg"
+              alt="Dog on a walk"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              {isFirstWalk && (
+                <span
+                  className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
+                  style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+                >
+                  Your first walk is free
+                </span>
+              )}
+              <div
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
+                style={{ background: "rgba(255,255,255,0.15)", color: "white" }}
               >
-                Your first walk is free
-              </span>
-            )}
-            <h1 className="text-2xl font-bold mb-2">Professional Dog Walking</h1>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Adventure, exercise, and peace of mind for {activePetName ?? "your pup"}.
-            </p>
-          </div>
-
-          {/* ===== Select Package ===== */}
-          <div className="card mb-6">
-            <h2 className="font-bold text-lg mb-1">Select Package</h2>
-            <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-              Choose the best fit for {activePetName ?? "your pet"}'s energy level.
-            </p>
-            <div className="space-y-2.5">
-              {WALK_PACKAGES.map((pkg) => {
-                const selected = walkDurationMin === pkg.min;
-                return (
-                  <button
-                    key={pkg.min}
-                    onClick={() => setWalkDurationMin(pkg.min)}
-                    className="tap-scale w-full flex items-center justify-between rounded-xl px-4 py-3 text-left"
-                    style={{
-                      background: selected ? "var(--cream)" : "var(--card)",
-                      border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
-                    }}
-                  >
-                    <div>
-                      <p className="font-bold text-sm">{pkg.name}</p>
-                      <p className="text-xs" style={{ color: "var(--muted)" }}>
-                        {pkg.min} minutes · {pkg.blurb}
-                      </p>
-                    </div>
-                    <p className="font-bold text-base">₹{WALK_PRICING_PAISE[pkg.min] / 100}</p>
-                  </button>
-                );
-              })}
+                Adventure Walk
+              </div>
+              <h1 className="text-3xl font-bold text-white mb-1 leading-tight">Professional Dog Walking</h1>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+                Adventure, exercise, and peace of mind for {activePetName ?? "your pup"}.
+              </p>
             </div>
-            <button
-              onClick={() => setPhase("details")}
-              className="btn-primary w-full tap-scale mt-5"
-            >
-              Book a Walk
-            </button>
-            <p className="text-center text-[11px] mt-2" style={{ color: "var(--muted)" }}>
-              Free cancellation up to 24h before.
-            </p>
           </div>
 
-          {/* ===== Why Choose Our Walks ===== */}
-          <div className="mb-6">
-            <h2 className="font-bold text-lg mb-3">Why Choose Our Walks?</h2>
-            <div className="space-y-2.5">
-              {[
-                { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #16281f)" },
-                { icon: Camera, title: "Photo Updates", desc: "Paw-some moments delivered to your phone — coming soon.", color: "var(--terracotta)" },
-                { icon: ShieldCheck, title: "Verified Walkers", desc: "Every walker is document-verified before going live.", color: "var(--gold)" },
-                { icon: Clock, title: "Flexible Durations", desc: "30, 45, or 60-minute walks to fit your schedule.", color: "var(--heritage-red, #c0392b)" },
-              ].map((f) => (
-                <div key={f.title} className="card flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
-                    <f.icon size={16} color={f.color} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{f.title}</p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
-                  </div>
+          <div className="px-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:items-start">
+            {/* ===== Select Package — sticky on desktop ===== */}
+            <div className="lg:col-span-1 lg:order-last mb-6 lg:mb-0">
+              <div className="card lg:sticky lg:top-6">
+                <h2 className="font-bold text-lg mb-1">Select Package</h2>
+                <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+                  Choose the best fit for {activePetName ?? "your pet"}'s energy level.
+                </p>
+                <div className="space-y-2.5">
+                  {WALK_PACKAGES.map((pkg) => {
+                    const selected = walkDurationMin === pkg.min;
+                    return (
+                      <button
+                        key={pkg.min}
+                        onClick={() => setWalkDurationMin(pkg.min)}
+                        className="tap-scale w-full flex items-center justify-between rounded-xl px-4 py-3 text-left"
+                        style={{
+                          background: selected ? "var(--cream)" : "var(--card)",
+                          border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
+                        }}
+                      >
+                        <div>
+                          <p className="font-bold text-sm">{pkg.name}</p>
+                          <p className="text-xs" style={{ color: "var(--muted)" }}>
+                            {pkg.min} minutes · {pkg.blurb}
+                          </p>
+                        </div>
+                        <p className="font-bold text-base">₹{WALK_PRICING_PAISE[pkg.min] / 100}</p>
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ===== Meet Our Top Walkers ===== */}
-          {topWalkers.length > 0 && (
-            <div className="mb-4">
-              <h2 className="font-bold text-lg mb-3">Meet Our Top Walkers</h2>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                {topWalkers.map((w) => (
-                  <div key={w.id} className="card shrink-0" style={{ width: 140 }}>
-                    <img
-                      src={w.photoUrl || `https://i.pravatar.cc/150?u=${w.id}`}
-                      alt={w.user.name}
-                      className="w-14 h-14 rounded-full object-cover mx-auto mb-2"
-                      style={{ border: "1px solid var(--border)" }}
-                    />
-                    <p className="font-semibold text-xs text-center truncate">{w.user.name}</p>
-                    <p className="flex items-center justify-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
-                      <Star size={10} fill="var(--gold)" color="var(--gold)" /> {w.ratingAvg.toFixed(1)}
-                    </p>
-                  </div>
-                ))}
+                <button
+                  onClick={() => setPhase("details")}
+                  className="btn-primary w-full tap-scale mt-5"
+                >
+                  Book a Walk
+                </button>
+                <p className="text-center text-[11px] mt-2" style={{ color: "var(--muted)" }}>
+                  Free cancellation up to 24h before.
+                </p>
               </div>
             </div>
-          )}
+
+            <div className="lg:col-span-2">
+              {/* ===== Why Choose Our Walks ===== */}
+              <div className="mb-6">
+                <h2 className="font-bold text-lg mb-3">Why Choose Our Walks?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #16281f)" },
+                    { icon: Camera, title: "Photo Updates", desc: "Paw-some moments delivered to your phone — coming soon.", color: "var(--terracotta)" },
+                    { icon: ShieldCheck, title: "Verified Walkers", desc: "Every walker is document-verified before going live.", color: "var(--gold)" },
+                    { icon: Clock, title: "Flexible Durations", desc: "30, 45, or 60-minute walks to fit your schedule.", color: "var(--heritage-red, #c0392b)" },
+                  ].map((f) => (
+                    <div key={f.title} className="card flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
+                        <f.icon size={16} color={f.color} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{f.title}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ===== Meet Our Top Walkers ===== */}
+              {topWalkers.length > 0 && (
+                <div className="mb-4">
+                  <h2 className="font-bold text-lg mb-3">Meet Our Top Walkers</h2>
+                  <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                    {topWalkers.map((w) => (
+                      <div key={w.id} className="card shrink-0 text-center" style={{ width: 160 }}>
+                        <img
+                          src={w.photoUrl || `https://i.pravatar.cc/150?u=${w.id}`}
+                          alt={w.user.name}
+                          className="w-16 h-16 rounded-full object-cover mx-auto mb-2"
+                          style={{ border: "1px solid var(--border)" }}
+                        />
+                        <p className="font-semibold text-sm">{w.user.name}</p>
+                        <p className="flex items-center justify-center gap-1 text-xs mb-2" style={{ color: "var(--muted)" }}>
+                          <Star size={11} fill="var(--gold)" color="var(--gold)" /> {w.ratingAvg.toFixed(1)}
+                        </p>
+                        {/* Distance and specialty tags aren't real data yet
+                            (no provider location or specialty field exists) —
+                            shown as a plain "coming soon" note rather than
+                            faking numbers or tags. */}
+                        <p className="flex items-center justify-center gap-1 text-[11px]" style={{ color: "var(--muted)" }}>
+                          <Navigation size={10} /> Distance coming soon
+                        </p>
+                        <p className="flex items-center justify-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
+                          <Tag size={10} /> Specialties coming soon
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

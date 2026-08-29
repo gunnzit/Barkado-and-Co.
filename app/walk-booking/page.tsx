@@ -24,7 +24,11 @@ export default async function WalkBookingPage() {
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-      <main className="pb-28 max-w-lg mx-auto">
+      {/* max-w-3xl here (wider than the max-w-lg every other page uses) so
+          ServiceBookingFlow's responsive two-column layout for the Walking
+          intro screen actually has room to appear on desktop — every other
+          page keeps the standard mobile-width container untouched. */}
+      <main className="pb-28 max-w-3xl mx-auto">
         <nav className="flex justify-between items-center px-6 pt-4">
           <LocationHeader
             headline="Book a walker"
