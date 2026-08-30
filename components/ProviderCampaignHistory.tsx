@@ -15,6 +15,8 @@ type Campaign = {
   reachCount: number;
   clickCount: number;
   budgetUsedPaise: number;
+  totalBudgetCapPaise: number | null;
+  capReached: boolean;
 };
 
 const SERVICE_ICON: Record<string, any> = {
@@ -130,7 +132,12 @@ export default function ProviderCampaignHistory({ onBack }: { onBack: () => void
                   </div>
                   <div>
                     <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Wallet size={10} /> Used</p>
-                    <p className="font-bold text-sm">₹{(c.budgetUsedPaise / 100).toFixed(0)}</p>
+                    <p className="font-bold text-sm">
+                      ₹{(c.budgetUsedPaise / 100).toFixed(0)}
+                      {c.totalBudgetCapPaise != null && (
+                        <span className="font-normal" style={{ color: "var(--muted)" }}> / ₹{(c.totalBudgetCapPaise / 100).toFixed(0)}</span>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Eye size={10} /> Reach</p>
@@ -141,6 +148,11 @@ export default function ProviderCampaignHistory({ onBack }: { onBack: () => void
                     <p className="font-bold text-sm">{c.clickCount}</p>
                   </div>
                 </div>
+                {c.capReached && (
+                  <p className="text-[11px] font-semibold mt-2" style={{ color: "var(--terracotta)" }}>
+                    Budget cap reached — campaign auto-paused
+                  </p>
+                )}
               </div>
             );
           })}

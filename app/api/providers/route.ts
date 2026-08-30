@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
+import { computeBudgetUsedPaise, isCapReached } from "@/lib/campaignBudget";
 
 const providerSchema = z.object({
   bio: z.string().optional(),
@@ -64,13 +65,31 @@ export async function GET(req: Request) {
           startDate: { lte: nowDate },
           OR: [{ endDate: null }, { endDate: { gte: nowDate } }],
         },
-        select: { id: true, providerId: true },
+        select: { id: true, providerId: true, startDate: true, endDate: true, dailyBudgetPaise: true, totalBudgetCapPaise: true },
       })
     : [];
+
+  // Real budget-cap enforcement: a campaign whose Budget Used has reached
+  // its cap stops boosting immediately and gets auto-paused, checked here
+  // (lazily, on the read path) since no cron job exists to do this on a
+  // schedule.
+  const capReachedIds: string[] = [];
+  const eligibleCampaigns = activeCampaigns.filter((c) => {
+    const used = computeBudgetUsedPaise(c.startDate, c.endDate, c.dailyBudgetPaise);
+    if (isCapReached(used, c.totalBudgetCapPaise)) {
+      capReachedIds.push(c.id);
+      return false;
+    }
+    return true;
+  });
+  if (capReachedIds.length > 0) {
+    await prisma.campaign.updateMany({ where: { id: { in: capReachedIds } }, data: { status: "PAUSED" } });
+  }
+
   // One active campaign per provider for this service — if a provider
   // somehow has more than one matching campaign, only the first is used
   // for boosting/logging, keeping this simple.
-  const campaignByProvider = new Map(activeCampaigns.map((c) => [c.providerId, c.id]));
+  const campaignByProvider = new Map(eligibleCampaigns.map((c) => [c.providerId, c.id]));
 
   // Flag (not filter, per product decision) providers whose set hours don't
   // cover the requested time. A provider with no hours rows at all is

@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
+import { computeBudgetUsedPaise, isCapReached } from "@/lib/campaignBudget";
 
-const thirtyDaysAgo = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+const createCampaignSchema = z.object({
+  name: z.string().trim().min(1, "Campaign name is required"),
+  services: z.array(z.enum(["WALKING", "SITTING", "GROOMING", "TRAINING"])).min(1, "Pick at least one service"),
+  dailyBudgetPaise: z.number().int().positive(),
+  totalBudgetCapPaise: z.number().int().positive().optional(),
+  startDate: z.string(), // ISO datetime
+});
 
-// Real substitutes for the reference design's ad-performance numbers —
-// "Total Budget Used" sums real per-campaign budget consumption (elapsed
-// days × dailyBudgetPaise) across all of this provider's campaigns.
-// "Total Clicks" is a genuine count of CampaignClick rows across all
-// campaigns — never an estimate or a ratio applied to impressions.
+// List this provider's campaigns — used by Campaign History. Adds real,
+// derived fields on top of the stored data (reachCount, clickCount,
+// budgetUsedPaise — see lib/campaignBudget.ts for the shared math), and
+// lazily auto-pauses any ACTIVE campaign whose Budget Used has reached its
+// cap, same check as the search-ranking route performs.
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,32 +24,61 @@ export async function GET() {
   const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
   if (!provider) return NextResponse.json({ error: "Not a provider" }, { status: 403 });
 
-  const [profileViews, campaigns] = await Promise.all([
-    prisma.activityEvent.count({
-      where: { type: "PAGE_VIEW", path: `/providers/${provider.id}`, createdAt: { gte: thirtyDaysAgo() } },
-    }),
-    prisma.campaign.findMany({
-      where: { providerId: provider.id },
-      select: { startDate: true, endDate: true, dailyBudgetPaise: true, _count: { select: { clicks: true } } },
-    }),
-  ]);
+  const campaigns = await prisma.campaign.findMany({
+    where: { providerId: provider.id },
+    include: { _count: { select: { impressions: true, clicks: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 
-  const now = Date.now();
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  let totalBudgetUsedPaise = 0;
-  let totalClicks = 0;
-  for (const c of campaigns) {
-    const startMs = c.startDate.getTime();
-    const endMs = c.endDate ? c.endDate.getTime() : now;
-    const effectiveEndMs = Math.min(endMs, now);
-    const elapsedDays = startMs > now ? 0 : Math.max(0, Math.floor((effectiveEndMs - startMs) / DAY_MS));
-    totalBudgetUsedPaise += elapsedDays * c.dailyBudgetPaise;
-    totalClicks += c._count.clicks;
+  const capReachedIds: string[] = [];
+  const withComputed = campaigns.map((c) => {
+    const budgetUsedPaise = computeBudgetUsedPaise(c.startDate, c.endDate, c.dailyBudgetPaise);
+    const capReached = isCapReached(budgetUsedPaise, c.totalBudgetCapPaise);
+    if (capReached && c.status === "ACTIVE") capReachedIds.push(c.id);
+
+    const { _count, ...rest } = c;
+    return {
+      ...rest,
+      status: capReached && c.status === "ACTIVE" ? ("PAUSED" as const) : c.status,
+      reachCount: _count.impressions,
+      clickCount: _count.clicks,
+      budgetUsedPaise,
+      capReached,
+    };
+  });
+
+  if (capReachedIds.length > 0) {
+    await prisma.campaign.updateMany({ where: { id: { in: capReachedIds } }, data: { status: "PAUSED" } });
   }
 
-  return NextResponse.json({
-    profileViews,
-    totalSpentPaise: totalBudgetUsedPaise,
-    totalClicks,
+  return NextResponse.json(withComputed);
+}
+
+// Create a real campaign from the "New Campaign" form.
+export async function POST(req: Request) {
+  const user = await getOrCreateUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
+  if (!provider) return NextResponse.json({ error: "Not a provider" }, { status: 403 });
+
+  const body = await req.json();
+  const parsed = createCampaignSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const campaign = await prisma.campaign.create({
+    data: {
+      providerId: provider.id,
+      name: parsed.data.name,
+      services: parsed.data.services as any,
+      dailyBudgetPaise: parsed.data.dailyBudgetPaise,
+      totalBudgetCapPaise: parsed.data.totalBudgetCapPaise ?? null,
+      startDate: new Date(parsed.data.startDate),
+      status: "ACTIVE",
+    },
   });
+
+  return NextResponse.json(campaign, { status: 201 });
 }

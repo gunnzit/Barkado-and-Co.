@@ -39,6 +39,7 @@ function NewCampaignScreen({
   const [name, setName] = useState("");
   const [selectedServices, setSelectedServices] = useState<Scope[]>(offeredServices.slice(0, 1));
   const [dailyBudget, setDailyBudget] = useState(15);
+  const [totalCap, setTotalCap] = useState(""); // blank = uncapped
   const [schedule, setSchedule] = useState<"now" | "later">("now");
   const [laterStartDate, setLaterStartDate] = useState("");
   const [launching, setLaunching] = useState(false);
@@ -59,6 +60,7 @@ function NewCampaignScreen({
     setLaunching(true);
     setError("");
     const startDate = schedule === "now" ? new Date().toISOString() : new Date(laterStartDate).toISOString();
+    const capValue = totalCap.trim() ? Number(totalCap) : undefined;
     const res = await fetch("/api/provider/campaigns", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,6 +68,7 @@ function NewCampaignScreen({
         name: name.trim(),
         services: selectedServices,
         dailyBudgetPaise: dailyBudget * 100,
+        totalBudgetCapPaise: capValue ? capValue * 100 : undefined,
         startDate,
       }),
     });
@@ -174,6 +177,30 @@ function NewCampaignScreen({
               className="w-full"
               style={{ accentColor: "var(--panel-dark)" }}
             />
+          </div>
+
+          {/* Real budget cap — optional. Blank means uncapped. When set,
+              the campaign auto-pauses once real Budget Used reaches this
+              amount (checked lazily on read, no cron job). */}
+          <div className="card mt-3">
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: "var(--muted)" }}>
+              Total budget cap (optional)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm" style={{ color: "var(--muted)" }}>₹</span>
+              <input
+                type="number"
+                min={1}
+                value={totalCap}
+                onChange={(e) => setTotalCap(e.target.value)}
+                placeholder="No cap — runs until you pause it"
+                className="flex-1 bg-transparent outline-none text-sm border rounded-lg px-3 py-2"
+                style={{ borderColor: "var(--border)" }}
+              />
+            </div>
+            <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>
+              Campaign auto-pauses once Budget Used reaches this amount.
+            </p>
           </div>
         </div>
 
@@ -374,9 +401,7 @@ export default function ProviderPromotePanel({
               <Wallet size={13} /> Budget Used
             </p>
             <p className="text-2xl font-bold">{stats ? `₹${(stats.totalSpentPaise / 100).toFixed(0)}` : "—"}</p>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide inline-block mt-1" style={{ background: "var(--card)", color: "var(--muted)" }}>
-              Budget caps coming soon
-            </span>
+            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Across all campaigns</p>
           </div>
         </div>
       </div>

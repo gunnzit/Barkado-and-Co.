@@ -223,6 +223,11 @@ model Campaign {
   name            String
   services        ServiceType[]
   dailyBudgetPaise Int
+  // Optional lifetime cap. When set and Budget Used (elapsed active days ×
+  // dailyBudgetPaise) reaches it, the campaign is auto-paused — checked
+  // lazily wherever campaign data is read (no cron job exists), not on a
+  // schedule. Null = uncapped.
+  totalBudgetCapPaise Int?
   status          CampaignStatus @default(ACTIVE)
   startDate       DateTime
   endDate         DateTime?
