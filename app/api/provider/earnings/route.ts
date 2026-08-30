@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 
-const SERVICE_LABEL: Record<string, string> = {
-  WALKING: "Adventure Walk",
-  SITTING: "Home Staycation",
-  GROOMING: "Luxury Spa Session",
-  TRAINING: "Good Manners Programme",
-};
+// Always fetch fresh — this depends on live, frequently-changing per-user
+// data (real amount owed, real payout info). Without this, Next.js/Vercel
+// can cache the GET response and keep serving a stale result even after
+// real underlying data changes, which is exactly the bug this fixes.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getOrCreateUser();
@@ -23,7 +22,7 @@ export async function GET() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [todayAgg, weekAgg, monthAgg, monthGrossAgg, lifetimeAgg, allBookings, profileViews, recentCompleted] = await Promise.all([
+  const [todayAgg, weekAgg, monthAgg, monthGrossAgg, lifetimeAgg, allBookings, profileViews, recentCompleted, unclaimedBookings] = await Promise.all([
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED", startTime: { gte: startOfToday } },
       _sum: { providerPayoutPaise: true },
@@ -39,17 +38,10 @@ export async function GET() {
       _sum: { providerPayoutPaise: true },
       _count: true,
     }),
-    // Gross (pre-commission) figure for the current month — same date
-    // window as monthAgg above, just summing priceAmount instead of
-    // providerPayoutPaise, so "service fee" can be shown as the real
-    // difference between the two rather than an invented number.
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED", startTime: { gte: startOfMonth } },
       _sum: { priceAmount: true },
     }),
-    // Lifetime net total — shown as "Total Earned," never framed as a
-    // withdrawable balance, since no payout ledger exists to track what's
-    // actually been paid out versus still owed.
     prisma.booking.aggregate({
       where: { providerId: provider.id, status: "COMPLETED" },
       _sum: { providerPayoutPaise: true },
@@ -61,7 +53,6 @@ export async function GET() {
     prisma.activityEvent.count({
       where: { type: "PAGE_VIEW", path: `/providers/${provider.id}`, createdAt: { gte: thirtyDaysAgo } },
     }),
-    // Real recent transactions — actual completed bookings, not sample data.
     prisma.booking.findMany({
       where: { providerId: provider.id, status: "COMPLETED" },
       select: {
@@ -75,6 +66,12 @@ export async function GET() {
       },
       orderBy: { startTime: "desc" },
       take: 10,
+    }),
+    // Real "amount owed" — live sum of unclaimed (payoutId null) completed
+    // bookings, never a stored running balance that could drift.
+    prisma.booking.aggregate({
+      where: { providerId: provider.id, status: "COMPLETED", payoutId: null },
+      _sum: { providerPayoutPaise: true },
     }),
   ]);
 
@@ -90,6 +87,25 @@ export async function GET() {
   const monthGrossPaise = monthGrossAgg._sum.priceAmount ?? 0;
   const monthNetPaise = monthAgg._sum.providerPayoutPaise ?? 0;
 
+  const SERVICE_LABEL: Record<string, string> = {
+    WALKING: "Adventure Walk",
+    SITTING: "Home Staycation",
+    GROOMING: "Luxury Spa Session",
+    TRAINING: "Good Manners Programme",
+  };
+
+  // Masked payout-info summary — never the full bank account number.
+  let payoutInfo: any = null;
+  if (provider.payoutMethod === "BANK") {
+    payoutInfo = {
+      method: "BANK",
+      accountMasked: provider.bankAccountNumber ? `••••${provider.bankAccountNumber.slice(-4)}` : null,
+      holderName: provider.bankAccountHolderName,
+    };
+  } else if (provider.payoutMethod === "UPI") {
+    payoutInfo = { method: "UPI", vpa: provider.upiVpa };
+  }
+
   return NextResponse.json({
     today: { totalPaise: todayAgg._sum.providerPayoutPaise ?? 0, count: todayAgg._count },
     week: { totalPaise: weekAgg._sum.providerPayoutPaise ?? 0, count: weekAgg._count },
@@ -100,6 +116,8 @@ export async function GET() {
       feePaise: monthGrossPaise - monthNetPaise,
     },
     lifetimeNetPaise: lifetimeAgg._sum.providerPayoutPaise ?? 0,
+    amountOwedPaise: unclaimedBookings._sum.providerPayoutPaise ?? 0,
+    payoutInfo,
     acceptanceRate: respondedTotal > 0 ? accepted / respondedTotal : null,
     completionRate: accepted > 0 ? completed / accepted : null,
     totalBookings: total,

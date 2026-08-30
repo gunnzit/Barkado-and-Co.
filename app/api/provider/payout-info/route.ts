@@ -20,6 +20,9 @@ function maskAccountNumber(num: string) {
   return `••••${num.slice(-4)}`;
 }
 
+// Always fetch fresh — same reasoning as earnings/route.ts.
+export const dynamic = "force-dynamic";
+
 // GET returns a masked summary — never the full bank account number back
 // to the client once saved, same principle as never re-displaying a full
 // card number after checkout.
