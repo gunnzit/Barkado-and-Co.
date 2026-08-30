@@ -39,13 +39,17 @@ export type ProviderBooking = {
   priceAmount: number;
   address: string | null;
   phone: string | null;
-  pet: { name: string };
+  pet: { name: string; photoUrl?: string | null; breed?: string | null };
   owner: { name: string; ratingAvg?: number; ratingCount?: number };
   ownerReview?: { rating: number } | null;
 };
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+
+function durationMinutes(start: string, end: string) {
+  return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
 }
 
 function BookingCard({ booking, children }: { booking: ProviderBooking; children?: React.ReactNode }) {
@@ -91,6 +95,53 @@ function BookingCard({ booking, children }: { booking: ProviderBooking; children
         )}
       </div>
       {children}
+    </div>
+  );
+}
+
+// Compact horizontal row for the Home tab's Upcoming Schedule preview —
+// distinct from the fuller BookingCard used on the Schedule tab itself.
+// Pet photo/breed/duration are all real (photoUrl and breed now selected
+// in the booking query, duration computed from real startTime/endTime).
+function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
+  const time = new Date(booking.startTime);
+  const isToday = time.toDateString() === new Date().toDateString();
+  const mins = durationMinutes(booking.startTime, booking.endTime);
+  const CATEGORY_COLOR: Record<string, string> = {
+    WALKING: "var(--forest, #16281f)",
+    SITTING: "var(--terracotta)",
+    GROOMING: "var(--gold)",
+    TRAINING: "var(--heritage-red, #c0392b)",
+  };
+
+  return (
+    <div className="flex items-center gap-3 py-3">
+      <div className="text-center shrink-0" style={{ width: 44 }}>
+        <p className="text-[10px] font-bold uppercase" style={{ color: "var(--muted)" }}>{isToday ? "Today" : time.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>
+        <p className="text-sm font-bold">{time.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}</p>
+      </div>
+      <div className="w-1 rounded-full shrink-0 self-stretch" style={{ background: CATEGORY_COLOR[booking.type], opacity: 0.5 }} />
+      <img
+        src={booking.pet.photoUrl || `https://i.pravatar.cc/150?u=pet-${booking.id}`}
+        alt={booking.pet.name}
+        className="w-11 h-11 rounded-full object-cover shrink-0"
+        style={{ border: "1px solid var(--border)" }}
+      />
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm truncate">{SERVICE_LABEL[booking.type]} with {booking.pet.name}</p>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>
+          {booking.pet.breed ? `${booking.pet.breed} · ` : ""}{mins} mins
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="font-bold text-sm">₹{(booking.priceAmount / 100).toFixed(0)}</p>
+        <span
+          className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
+          style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}
+        >
+          {booking.status === "ACCEPTED" ? "Confirmed" : booking.status}
+        </span>
+      </div>
     </div>
   );
 }
@@ -243,10 +294,6 @@ export default function ProviderDashboard({
     router.refresh();
   };
 
-  // Split into what's reachable from the fixed bottom nav (5 primary
-  // destinations) versus the side drawer (everything else). Both control
-  // the same `tab` state — this is not a route change, just which UI
-  // surface exposes which tab.
   const allTabs: { key: Tab; label: string; count: number; icon: any }[] = [
     { key: "home", label: "Home", count: 0, icon: HomeIcon },
     { key: "requests", label: "Requests", count: requests.length, icon: Inbox },
@@ -267,6 +314,17 @@ export default function ProviderDashboard({
   };
 
   const currentLabel = tab === "account" ? "My Account" : allTabs.find((t) => t.key === tab)?.label ?? "Menu";
+  const firstName = providerName.split(" ")[0];
+
+  const activeSponsorships = Object.entries(sponsoredUntil).filter(
+    ([, until]) => until && new Date(until).getTime() > Date.now()
+  );
+  const isFeatured = activeSponsorships.length > 0;
+
+  const upcomingToday = schedule
+    .filter((b) => new Date(b.startTime).toDateString() === new Date().toDateString())
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  const upcomingPreview = (upcomingToday.length > 0 ? upcomingToday : schedule.slice().sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())).slice(0, 3);
 
   return (
     <div>
@@ -305,98 +363,87 @@ export default function ProviderDashboard({
       </NavDrawer>
 
       <div key={tab} className="px-6 pb-28 space-y-3 provider-tab-content">
-        {tab === "home" && (() => {
-          const todayStr = new Date().toDateString();
-          const todaysCompleted = history.filter((b) => b.status === "COMPLETED" && new Date(b.startTime).toDateString() === todayStr);
-          const todaysEarningsPaise = todaysCompleted.reduce((sum, b) => sum + b.priceAmount, 0);
-          const todaysSchedule = schedule.filter((b) => new Date(b.startTime).toDateString() === todayStr);
-          const offeredServices = Array.from(new Set([...requests, ...schedule, ...history].map((b) => b.type)));
+        {tab === "home" && (
+          <div className="space-y-5">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">Welcome back, {firstName}</h1>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>Here's what's happening with your business today.</p>
+            </div>
 
-          const activeSponsorships = Object.entries(sponsoredUntil).filter(
-            ([, until]) => until && new Date(until).getTime() > Date.now()
-          );
-          const isFeatured = activeSponsorships.length > 0;
-
-          return (
-            <div className="space-y-3">
-              <button
-                onClick={() => setTab("promote")}
-                className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up"
-                style={{
-                  animationDelay: "0ms",
-                  background: isFeatured ? "var(--panel-dark)" : "var(--card)",
-                }}
-              >
+            {requests.length > 0 && (
+              <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: isFeatured ? "rgba(255,255,255,0.15)" : "var(--cream)" }}
-                  >
-                    <Sparkles size={16} color={isFeatured ? "var(--gold)" : "var(--terracotta)"} />
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdece0" }}>
+                    <Clock size={16} color="#a5652a" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: isFeatured ? "white" : undefined }}>
-                      {isFeatured ? "You're featured" : "Get seen first"}
-                    </p>
-                    <p className="text-xs" style={{ color: isFeatured ? "rgba(255,255,255,0.7)" : "var(--muted)" }}>
-                      {isFeatured ? "Manage your featured listings" : "Promote your profile to owners"}
-                    </p>
+                    <p className="font-semibold text-sm">{requests.length} new request{requests.length === 1 ? "" : "s"}</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Waiting for your response</p>
                   </div>
                 </div>
-                <ChevronRight size={16} color={isFeatured ? "rgba(255,255,255,0.7)" : "var(--muted)"} />
+                <ChevronRight size={16} color="var(--muted)" />
               </button>
+            )}
 
-              {requests.length > 0 && (
-                <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "60ms" }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdece0" }}>
-                      <Clock size={16} color="#a5652a" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">{requests.length} new request{requests.length === 1 ? "" : "s"}</p>
-                      <p className="text-xs" style={{ color: "var(--muted)" }}>Waiting for your response</p>
-                    </div>
-                  </div>
-                  <ChevronRight size={16} color="var(--muted)" />
+            <ProviderHomeStats />
+
+            {/* ===== Upcoming Schedule — real bookings, itemized ===== */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--muted)" }}>Upcoming Schedule</p>
+                <button onClick={() => setTab("schedule")} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+                  View all
                 </button>
-              )}
-
-              <button onClick={() => setTab("earnings")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "120ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                    <IndianRupee size={16} color="var(--terracotta)" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">₹{(todaysEarningsPaise / 100).toFixed(0)} earned today</p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>{todaysCompleted.length} completed · view full earnings</p>
-                  </div>
-                </div>
-                <ChevronRight size={16} color="var(--muted)" />
-              </button>
-
-              <button onClick={() => setTab("schedule")} className="card w-full tap-scale flex items-center justify-between text-left animate-fade-up" style={{ animationDelay: "180ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                    <Clock size={16} color="var(--terracotta)" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">
-                      {todaysSchedule.length > 0 ? `${todaysSchedule.length} booking${todaysSchedule.length === 1 ? "" : "s"} today` : "Nothing scheduled today"}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      {todaysSchedule.length > 0 ? `Next: ${formatWhen(todaysSchedule[0].startTime)}` : "View your full schedule"}
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={16} color="var(--muted)" />
-              </button>
-
-              <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
-                <ProviderHomeStats />
               </div>
+              {upcomingPreview.length === 0 ? (
+                <div className="card text-center py-8">
+                  <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing scheduled yet.</p>
+                </div>
+              ) : (
+                <div className="card p-0 divide-y" style={{ borderColor: "var(--border)" }}>
+                  <div className="px-4">
+                    {upcomingPreview.map((b) => (
+                      <UpcomingScheduleRow key={b.id} booking={b} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-              {offeredServices.length > 0 && (
-                <div className="card animate-fade-up" style={{ animationDelay: "300ms" }}>
+            {/* ===== Boost Your Profile — real shortcut into the existing
+                Promote tab (scope selection, real Razorpay purchase,
+                previews). Not a fake toggle — that would lose real
+                functionality already built. ===== */}
+            <button
+              onClick={() => setTab("promote")}
+              className="w-full text-left tap-scale rounded-xl p-6 relative overflow-hidden"
+              style={{ background: "var(--panel-dark)", color: "white" }}
+            >
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <div className="relative z-10">
+                <p className="font-bold text-lg mb-1 flex items-center gap-2">
+                  <Sparkles size={18} color="var(--gold)" />
+                  {isFeatured ? "You're featured" : "Boost Your Profile"}
+                </p>
+                <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.75)" }}>
+                  {isFeatured
+                    ? "Manage your active featured listings."
+                    : "Stand out in search results and get more booking requests in your area."}
+                </p>
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.12)" }}
+                >
+                  {isFeatured ? "Manage promotion" : "Get featured"} <ChevronRight size={13} />
+                </span>
+              </div>
+            </button>
+
+            {(() => {
+              const offeredServices = Array.from(new Set([...requests, ...schedule, ...history].map((b) => b.type)));
+              if (offeredServices.length === 0) return null;
+              return (
+                <div className="card">
                   <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>You offer</p>
                   <div className="flex flex-wrap gap-2">
                     {offeredServices.map((s) => (
@@ -406,10 +453,10 @@ export default function ProviderDashboard({
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          );
-        })()}
+              );
+            })()}
+          </div>
+        )}
 
         {tab === "requests" && (
           requests.length === 0 ? (
