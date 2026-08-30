@@ -1,41 +1,203 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Globe, Eye, Plus, Megaphone, MousePointerClick, Wallet, Award, Zap } from "lucide-react";
-import ProviderListPreviewModal from "@/components/ProviderListPreviewModal";
-import ProviderHomepagePreviewModal from "@/components/ProviderHomepagePreviewModal";
+import {
+  Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Eye,
+  Plus, Megaphone, MousePointerClick, Wallet, Award, Zap, ArrowLeft, HelpCircle,
+  Check, TrendingUp, Rocket, Star,
+} from "lucide-react";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+type Scope = "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
 
-function loadRazorpayScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.Razorpay) return resolve();
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load payment widget"));
-    document.body.appendChild(script);
-  });
-}
-
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
-type Scope = "WALKING" | "SITTING" | "GROOMING" | "TRAINING" | "HOMEPAGE";
-
-const SCOPE_META: Record<Scope, { label: string; icon: any; prices: { 7: number; 30: number } }> = {
-  WALKING: { label: "Walking", icon: PawPrint, prices: { 7: 50, 30: 120 } },
-  SITTING: { label: "Sitting", icon: HomeIcon, prices: { 7: 50, 30: 120 } },
-  GROOMING: { label: "Grooming", icon: Scissors, prices: { 7: 50, 30: 120 } },
-  TRAINING: { label: "Training", icon: GraduationCap, prices: { 7: 50, 30: 120 } },
-  HOMEPAGE: { label: "Homepage (all categories)", icon: Globe, prices: { 7: 120, 30: 300 } },
+const SERVICE_META: Record<Scope, { label: string; icon: any; color: string }> = {
+  WALKING: { label: "Adventure Walking", icon: PawPrint, color: "var(--forest, #16281f)" },
+  SITTING: { label: "Home Staycation", icon: HomeIcon, color: "var(--terracotta)" },
+  GROOMING: { label: "Luxury Grooming", icon: Scissors, color: "var(--gold)" },
+  TRAINING: { label: "Professional Training", icon: GraduationCap, color: "var(--heritage-red, #c0392b)" },
 };
+
+// Purely a placeholder formula, carried over verbatim from the reference
+// design (whose own source literally commented "Fictional calculation for
+// demonstration" on this same number). Not a real prediction — there's no
+// ad-delivery system behind it yet. Safe to leave interactive for now
+// since Launch Campaign is disabled, so nobody can act on this number with
+// real money until a real estimation system replaces this.
+function estimatedReach(dailyBudget: number) {
+  return { min: Math.floor(dailyBudget * 20), max: Math.floor(dailyBudget * 33.3) };
+}
+
+function NewCampaignScreen({
+  offeredServices,
+  onBack,
+}: {
+  offeredServices: Scope[];
+  onBack: () => void;
+}) {
+  const [selectedServices, setSelectedServices] = useState<Scope[]>(offeredServices.slice(0, 1));
+  const [dailyBudget, setDailyBudget] = useState(15);
+  const [schedule, setSchedule] = useState<"now" | "later">("now");
+
+  const toggleService = (s: Scope) => {
+    setSelectedServices((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  };
+
+  const reach = estimatedReach(dailyBudget);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="tap-scale p-1.5 rounded-full" style={{ color: "var(--forest, #16281f)" }}>
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-lg font-bold">New Campaign</h1>
+        </div>
+        <HelpCircle size={20} color="var(--muted)" />
+      </div>
+
+      <div className="space-y-8">
+        {/* ===== Step 1: Services ===== */}
+        <div>
+          <h2 className="font-bold text-lg mb-1">1. Select Services to Promote</h2>
+          <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>Choose which offerings you want to highlight in this campaign.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {offeredServices.map((s) => {
+              const meta = SERVICE_META[s];
+              const Icon = meta.icon;
+              const selected = selectedServices.includes(s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => toggleService(s)}
+                  className="tap-scale rounded-xl p-4 flex flex-col items-center text-center gap-2"
+                  style={{
+                    background: selected ? `${meta.color}1A` : "var(--card)",
+                    border: `2px solid ${selected ? meta.color : "var(--border)"}`,
+                  }}
+                >
+                  <Icon size={26} color={meta.color} />
+                  <span className="text-sm font-semibold">{meta.label}</span>
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center mt-1"
+                    style={{ border: `2px solid ${selected ? meta.color : "var(--border)"}`, background: selected ? meta.color : "transparent" }}
+                  >
+                    {selected && <Check size={12} color="white" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ===== Step 2: Budget ===== */}
+        <div>
+          <div className="flex items-end justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h2 className="font-bold text-lg mb-1">2. Set Daily Budget</h2>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>Determine how much you want to spend per day.</p>
+            </div>
+            <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+              <Star size={12} fill="var(--gold)" color="var(--gold)" /> Recommended: ₹15
+            </span>
+          </div>
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium" style={{ color: "var(--muted)" }}>₹5</span>
+              <div className="flex items-center gap-1 px-3 py-2 rounded-lg" style={{ background: "var(--cream)", border: "1px solid var(--border)" }}>
+                <span className="font-bold text-lg">₹</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={50}
+                  value={dailyBudget}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!isNaN(v)) setDailyBudget(Math.min(50, Math.max(5, v)));
+                  }}
+                  className="w-14 bg-transparent text-center font-bold text-lg outline-none"
+                />
+              </div>
+              <span className="text-sm font-medium" style={{ color: "var(--muted)" }}>₹50</span>
+            </div>
+            <input
+              type="range"
+              min={5}
+              max={50}
+              value={dailyBudget}
+              onChange={(e) => setDailyBudget(Number(e.target.value))}
+              className="w-full"
+              style={{ accentColor: "var(--panel-dark)" }}
+            />
+          </div>
+        </div>
+
+        {/* ===== Step 3: Estimated Reach — placeholder math, see comment
+            on estimatedReach() above. ===== */}
+        <div>
+          <h2 className="font-bold text-lg mb-4">3. Estimated Reach</h2>
+          <div className="rounded-xl p-6 relative overflow-hidden flex items-center gap-6" style={{ background: "var(--panel-dark)", color: "white" }}>
+            <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div className="relative z-10 flex-1">
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>Estimated Daily Views</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold">{reach.min}</span>
+                <span className="text-xl" style={{ color: "rgba(255,255,255,0.5)" }}>–</span>
+                <span className="text-4xl font-bold">{reach.max}</span>
+              </div>
+              <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.75)" }}>
+                Rough estimate based on a ₹{dailyBudget} daily budget — not a guarantee.
+              </p>
+            </div>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 relative z-10" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <TrendingUp size={24} color="var(--gold)" />
+            </div>
+          </div>
+        </div>
+
+        {/* ===== Step 4: Schedule ===== */}
+        <div>
+          <h2 className="font-bold text-lg mb-4">4. Schedule</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              { key: "now", title: "Start Immediately", desc: "Campaign will go live upon approval" },
+              { key: "later", title: "Schedule for Later", desc: "Set a specific start and end date" },
+            ] as const).map((opt) => {
+              const selected = schedule === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setSchedule(opt.key)}
+                  className="tap-scale flex items-center gap-4 p-4 rounded-xl text-left"
+                  style={{ border: `1px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`, background: "var(--card)" }}
+                >
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                    style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}` }}
+                  >
+                    {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--panel-dark)" }} />}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-sm">{opt.title}</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>{opt.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <button
+          disabled
+          className="w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2"
+          style={{ background: "var(--muted)", color: "white", opacity: 0.5, cursor: "not-allowed" }}
+          title="Real campaign launches are coming soon"
+        >
+          Launch Campaign <Rocket size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function ProviderPromotePanel({
   providerId,
@@ -48,19 +210,13 @@ export default function ProviderPromotePanel({
 }: {
   providerId: string;
   servicesOffered: ("WALKING" | "SITTING" | "GROOMING" | "TRAINING")[];
-  sponsoredUntil: Partial<Record<Scope, string | null>>;
+  sponsoredUntil: Partial<Record<"WALKING" | "SITTING" | "GROOMING" | "TRAINING" | "HOMEPAGE", string | null>>;
   providerName: string;
   photoUrl: string | null;
   ratingAvg: number;
   completedCount: number;
 }) {
-  const scopeOptions: Scope[] = [...servicesOffered, "HOMEPAGE"];
-  const [selectedScope, setSelectedScope] = useState<Scope>(scopeOptions[0]);
-  const [previewScope, setPreviewScope] = useState<Scope | null>(null);
-  const [busy, setBusy] = useState<7 | 30 | null>(null);
-  const [error, setError] = useState("");
-  const router = useRouter();
-  const purchaseRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<"overview" | "new-campaign">("overview");
 
   const [stats, setStats] = useState<{ profileViews: number; totalSpentPaise: number } | null>(null);
   useEffect(() => {
@@ -70,56 +226,15 @@ export default function ProviderPromotePanel({
       .catch(() => setStats(null));
   }, []);
 
-  const statusFor = (scope: Scope) => {
-    const until = sponsoredUntil[scope];
-    return until && new Date(until).getTime() > Date.now() ? new Date(until) : null;
-  };
-
-  const buy = async (durationDays: 7 | 30) => {
-    setBusy(durationDays);
-    setError("");
-    try {
-      await loadRazorpayScript();
-      const orderRes = await fetch("/api/provider/sponsorship/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scope: selectedScope, durationDays }),
-      });
-      if (!orderRes.ok) throw new Error("order_failed");
-      const order = await orderRes.json();
-
-      const rzp = new window.Razorpay({
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: "INR",
-        order_id: order.razorpayOrderId,
-        name: "Barkado & Co.",
-        description: `Featured — ${SCOPE_META[selectedScope].label} — ${durationDays} days`,
-        handler: async (response: any) => {
-          const verifyRes = await fetch("/api/provider/sponsorship/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
-          });
-          setBusy(null);
-          if (verifyRes.ok) {
-            router.refresh();
-          } else {
-            setError("Payment succeeded but activation failed — contact support.");
-          }
-        },
-        modal: { ondismiss: () => setBusy(null) },
-      });
-      rzp.open();
-    } catch {
-      setBusy(null);
-      setError("Couldn't start payment — please try again.");
-    }
-  };
-
-  const selectedStatus = statusFor(selectedScope);
-  const selectedPrices = SCOPE_META[selectedScope].prices;
   const isTopRated = ratingAvg >= 4.5;
+
+  if (view === "new-campaign") {
+    return (
+      <div className="px-6">
+        <NewCampaignScreen offeredServices={servicesOffered} onBack={() => setView("overview")} />
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 space-y-5">
@@ -127,7 +242,7 @@ export default function ProviderPromotePanel({
         <h1 className="text-xl font-bold mb-1">Promote</h1>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>Manage your sponsored listings and grow your business.</p>
         <button
-          onClick={() => purchaseRef.current?.scrollIntoView({ behavior: "smooth" })}
+          onClick={() => setView("new-campaign")}
           className="btn-primary tap-scale flex items-center gap-2"
           style={{ background: "var(--terracotta)" }}
         >
@@ -136,9 +251,7 @@ export default function ProviderPromotePanel({
       </div>
 
       {/* ===== Campaign Performance — real numbers where they exist,
-          honest "Coming soon" where they don't. No fake reach/click
-          figures, no invented ad-budget concept (your real pricing is
-          flat-fee per listing slot, not a spend-down budget). ===== */}
+          honest "Coming soon" where they don't. ===== */}
       <div className="card">
         <p className="font-bold text-base mb-4">Campaign Performance</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -170,9 +283,7 @@ export default function ProviderPromotePanel({
         </div>
       </div>
 
-      {/* ===== Earned Badges — Top Rated is real (rating ≥ 4.5). Fast
-          Responder needs response-time tracking that doesn't exist yet,
-          shown disabled rather than dropped. ===== */}
+      {/* ===== Earned Badges ===== */}
       <div className="card">
         <p className="font-bold text-base mb-4">Earned Badges</p>
         <div className="space-y-3">
@@ -213,101 +324,6 @@ export default function ProviderPromotePanel({
           View All Badges
         </button>
       </div>
-
-      {/* ===== Real, already-working sponsorship purchase flow — untouched
-          apart from being nested under the new header/stats above. ===== */}
-      <div ref={purchaseRef} className="space-y-4 pt-1">
-        <div>
-          <p className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
-            <Megaphone size={13} /> Where do you want to be featured?
-          </p>
-          <div className="space-y-2">
-            {scopeOptions.map((scope) => {
-              const meta = SCOPE_META[scope];
-              const Icon = meta.icon;
-              const status = statusFor(scope);
-              const active = selectedScope === scope;
-              return (
-                <div
-                  key={scope}
-                  onClick={() => setSelectedScope(scope)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl tap-scale text-left cursor-pointer"
-                  style={{
-                    background: active ? "var(--panel-dark)" : "var(--card)",
-                    border: `1px solid ${active ? "var(--panel-dark)" : "var(--border)"}`,
-                  }}
-                >
-                  <Icon size={16} color={active ? "white" : "var(--terracotta)"} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold" style={{ color: active ? "white" : undefined }}>{meta.label}</p>
-                    <p className="text-[11px]" style={{ color: active ? "rgba(255,255,255,0.7)" : "var(--muted)" }}>
-                      {status ? `Featured until ${formatDate(status)}` : "Not featured"}
-                    </p>
-                  </div>
-                  {status && <Sparkles size={14} color={active ? "var(--gold)" : "var(--terracotta)"} />}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewScope(scope);
-                    }}
-                    className="tap-scale flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full shrink-0"
-                    style={{
-                      background: active ? "rgba(255,255,255,0.15)" : "var(--cream)",
-                      color: active ? "white" : "var(--terracotta)",
-                    }}
-                  >
-                    <Eye size={11} /> Preview
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="card">
-          <p className="text-xs font-semibold mb-3" style={{ color: "var(--muted)" }}>
-            {selectedStatus ? `Extend ${SCOPE_META[selectedScope].label}` : `Promote ${SCOPE_META[selectedScope].label}`}
-          </p>
-          <div className="space-y-2">
-            <button
-              onClick={() => buy(7)}
-              disabled={busy !== null}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl tap-scale"
-              style={{ background: "var(--cream)", border: "1px solid var(--border)", opacity: busy !== null ? 0.6 : 1 }}
-            >
-              <span className="text-sm font-semibold">1 week</span>
-              <span className="text-sm font-bold">{busy === 7 ? "…" : `₹${selectedPrices[7]}`}</span>
-            </button>
-            <button
-              onClick={() => buy(30)}
-              disabled={busy !== null}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl tap-scale"
-              style={{ background: "var(--cream)", border: "1px solid var(--border)", opacity: busy !== null ? 0.6 : 1 }}
-            >
-              <span className="text-sm font-semibold">1 month</span>
-              <span className="text-sm font-bold">{busy === 30 ? "…" : `₹${selectedPrices[30]}`}</span>
-            </button>
-          </div>
-          {error && <p className="text-xs mt-3" style={{ color: "var(--terracotta)" }}>{error}</p>}
-        </div>
-      </div>
-
-      {previewScope && previewScope !== "HOMEPAGE" && (
-        <ProviderListPreviewModal
-          service={previewScope}
-          providerId={providerId}
-          onClose={() => setPreviewScope(null)}
-        />
-      )}
-      {previewScope === "HOMEPAGE" && (
-        <ProviderHomepagePreviewModal
-          providerName={providerName}
-          photoUrl={photoUrl}
-          ratingAvg={ratingAvg}
-          completedCount={completedCount}
-          onClose={() => setPreviewScope(null)}
-        />
-      )}
     </div>
   );
 }
