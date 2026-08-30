@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ProviderPlansTabs from "@/components/ProviderPlansTabs";
+import ProviderGroomingPackages from "@/components/ProviderGroomingPackages";
 import { SAMPLE_ROLE_TITLES, SAMPLE_SPECIALTIES, SAMPLE_CERTIFICATIONS, sampleIndexFor } from "@/lib/trainerSampleData";
 
 function timeAgo(date: Date) {
@@ -29,10 +30,10 @@ export default async function TrainerProfilePage({
   if (!user) redirect("/sign-in");
 
   // Carried over from the Schedule & Pet screen, via URL params, so this
-  // context is ready to attach to a real booking once plan checkout is
-  // wired up. Not used for anything yet beyond display — Select Plan stays
-  // disabled below.
-  const contextPet = petId ? await prisma.pet.findUnique({ where: { id: petId }, select: { name: true } }) : null;
+  // context is ready to attach to a real booking. Grooming's Add to Cart
+  // uses petId/start/address/phone for real; Training's plan buttons are
+  // still disabled, so this context is display-only there for now.
+  const contextPet = petId ? await prisma.pet.findUnique({ where: { id: petId }, select: { name: true, size: true } }) : null;
   const contextDateLabel = start
     ? new Date(start).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : null;
@@ -41,6 +42,7 @@ export default async function TrainerProfilePage({
     where: { id },
     include: {
       user: { select: { name: true } },
+      groomingPackages: { orderBy: { createdAt: "asc" } },
       bookings: {
         select: {
           status: true,
@@ -52,10 +54,10 @@ export default async function TrainerProfilePage({
     },
   });
 
-  // Only Training providers get a real profile page right now — Walking/
-  // Sitting/Grooming provider cards stay non-clickable until this is
-  // extended to them, per product decision.
-  if (!provider || !provider.verified || !provider.servicesOffered.includes("TRAINING")) {
+  // Training or Grooming providers get a real profile page. Walking/
+  // Sitting provider cards stay non-clickable until this is extended to
+  // them, per product decision.
+  if (!provider || !provider.verified || !(provider.servicesOffered.includes("TRAINING") || provider.servicesOffered.includes("GROOMING"))) {
     notFound();
   }
 
@@ -166,11 +168,28 @@ export default async function TrainerProfilePage({
           </section>
         </div>
 
-        {/* ===== Right column: plans, reviews ===== */}
+        {/* ===== Right column: plans/packages, reviews ===== */}
         <div className="md:col-span-8 space-y-4">
-          <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
-            <ProviderPlansTabs basePricePaise={provider.pricePerTrain ?? 50000} />
-          </section>
+          {provider.servicesOffered.includes("TRAINING") && (
+            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+              <ProviderPlansTabs basePricePaise={provider.pricePerTrain ?? 50000} />
+            </section>
+          )}
+
+          {provider.servicesOffered.includes("GROOMING") && (
+            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+              <ProviderGroomingPackages
+                providerId={provider.id}
+                packages={provider.groomingPackages.map((p) => ({ id: p.id, name: p.name, pricesBySize: p.pricesBySize as any }))}
+                availableSizes={provider.groomingSizes}
+                petId={petId ?? null}
+                petSize={contextPet?.size ?? null}
+                start={start ?? null}
+                address={user.address ?? null}
+                phone={user.phone ?? null}
+              />
+            </section>
+          )}
 
           <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
             <div className="flex items-center justify-between mb-5">

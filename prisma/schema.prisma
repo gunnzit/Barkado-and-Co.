@@ -362,6 +362,12 @@ model Booking {
   maintenanceFeePaise Int?
   ownerTotalPaise     Int?
   providerPayoutPaise Int?
+  // Same grooming package/size snapshot as CartItem, carried through by
+  // finalizeRazorpayOrder when the cart item becomes a real booking — so
+  // "what was actually booked" stays visible on the provider's Schedule
+  // and the owner's history, not just a price with no detail.
+  groomingPackageName String?
+  groomingSize         PetSize?
   // Null = this booking's payout hasn't been claimed yet — it's counted
   // as "owed" to the provider. Set once a Payout is created that includes
   // it. No separate running-balance field on Provider, so there's nothing
@@ -464,6 +470,12 @@ model CartItem {
   address     String?
   phone       String?
   priceAmount Int?
+  // Snapshot of which real GroomingPackage + size was chosen — captured
+  // at add-to-cart time so it survives even if the provider later edits
+  // or deletes that package, same principle as the commission snapshot
+  // fields on Booking. Only set for GROOMING service items.
+  groomingPackageName String?
+  groomingSize         PetSize?
 
   createdAt DateTime @default(now())
 

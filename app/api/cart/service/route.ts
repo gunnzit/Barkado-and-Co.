@@ -11,32 +11,27 @@ const serviceSchema = z.object({
   endTime: z.string(),
   address: z.string(),
   phone: z.string(),
+  // Only used/required for GROOMING — real package + size, priced
+  // server-side from the provider's own saved package, never trusted
+  // from whatever the client sends.
+  groomingPackageId: z.string().optional(),
+  groomingSize: z.enum(["SMALL", "MEDIUM", "LARGE"]).optional(),
 });
 
 // Walking prices are set by the platform, not individual providers.
-// Grooming, Training, and Sitting remain provider-set.
+// Sitting and Training remain provider-set via a flat rate. Grooming is
+// priced per real package + size (see below) — no flat rate involved.
 const WALK_PRICING_PAISE: Record<number, number> = {
   30: 30000, // ₹300
   45: 32500, // ₹325
   60: 35000, // ₹350
 };
 
-function priceForService(
-  serviceType: string,
-  provider: { pricePerSitDay: number | null; pricePerGroom: number | null; pricePerTrain: number | null },
-  durationMin: number
-): number | null {
-  if (serviceType === "WALKING") {
-    // Never trust a client-supplied price for a platform-fixed service —
-    // derive it from the actual start/end duration, and reject anything
-    // that doesn't match one of the real tiers.
-    return WALK_PRICING_PAISE[durationMin] ?? null;
-  }
-  const field = {
-    SITTING: provider.pricePerSitDay,
-    GROOMING: provider.pricePerGroom,
-    TRAINING: provider.pricePerTrain,
-  }[serviceType];
+function priceForFlatService(
+  serviceType: "SITTING" | "TRAINING",
+  provider: { pricePerSitDay: number | null; pricePerTrain: number | null }
+): number {
+  const field = { SITTING: provider.pricePerSitDay, TRAINING: provider.pricePerTrain }[serviceType];
   return field ?? 0;
 }
 
@@ -62,13 +57,38 @@ export async function POST(req: Request) {
   if (!provider) return NextResponse.json({ error: "Provider not found" }, { status: 404 });
   if (!pet) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-  const priceAmount = priceForService(
-    data.serviceType,
-    provider,
-    Math.round((new Date(data.endTime).getTime() - new Date(data.startTime).getTime()) / 60000)
-  );
-  if (priceAmount === null) {
-    return NextResponse.json({ error: "Invalid walk duration — must be 30, 45, or 60 minutes" }, { status: 400 });
+  let priceAmount: number;
+  let groomingPackageName: string | null = null;
+  let groomingSize: string | null = null;
+
+  if (data.serviceType === "WALKING") {
+    // Never trust a client-supplied price for a platform-fixed service —
+    // derive it from the actual start/end duration, and reject anything
+    // that doesn't match one of the real tiers.
+    const durationMin = Math.round((new Date(data.endTime).getTime() - new Date(data.startTime).getTime()) / 60000);
+    const walkPrice = WALK_PRICING_PAISE[durationMin];
+    if (walkPrice === undefined) {
+      return NextResponse.json({ error: "Invalid walk duration — must be 30, 45, or 60 minutes" }, { status: 400 });
+    }
+    priceAmount = walkPrice;
+  } else if (data.serviceType === "GROOMING") {
+    if (!data.groomingPackageId || !data.groomingSize) {
+      return NextResponse.json({ error: "Choose a package and size." }, { status: 400 });
+    }
+    const pkg = await prisma.groomingPackage.findUnique({ where: { id: data.groomingPackageId } });
+    if (!pkg || pkg.providerId !== provider.id) {
+      return NextResponse.json({ error: "That package no longer exists." }, { status: 404 });
+    }
+    const pricesBySize = pkg.pricesBySize as Record<string, number>;
+    const sizePrice = pricesBySize[data.groomingSize];
+    if (sizePrice == null) {
+      return NextResponse.json({ error: "This package isn't available for that size." }, { status: 400 });
+    }
+    priceAmount = sizePrice;
+    groomingPackageName = pkg.name;
+    groomingSize = data.groomingSize;
+  } else {
+    priceAmount = priceForFlatService(data.serviceType, provider);
   }
 
   const item = await prisma.cartItem.create({
@@ -83,6 +103,8 @@ export async function POST(req: Request) {
       address: data.address,
       phone: data.phone,
       priceAmount,
+      groomingPackageName,
+      groomingSize: groomingSize as any,
     },
   });
 

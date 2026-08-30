@@ -65,6 +65,13 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
             maintenanceFeePaise: commission.maintenanceFeePaise,
             ownerTotalPaise: commission.ownerTotalPaise,
             providerPayoutPaise: commission.providerPayoutPaise,
+            // Real grooming package/size snapshot, carried through from the
+            // cart item — so the provider's Schedule and the owner's
+            // booking history show exactly what was booked ("Base Bath &
+            // Brush — Medium"), not just a price with no detail. Null for
+            // every other service type.
+            groomingPackageName: item.groomingPackageName,
+            groomingSize: item.groomingSize,
             address: item.address,
             phone: item.phone,
             razorpayOrderId,
