@@ -59,6 +59,18 @@ enum CampaignStatus {
   COMPLETED
 }
 
+enum PayoutMethod {
+  BANK
+  UPI
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -173,12 +185,24 @@ model Provider {
   sponsoredHomepageUntil DateTime?
   createdAt       DateTime @default(now())
 
+  // Manual payout info — providers submit either a bank account or a UPI
+  // ID (never both required); admin transfers manually for now and marks
+  // paid, until RazorpayX Payouts automation replaces the manual step
+  // later without changing this data model.
+  payoutMethod          PayoutMethod?
+  bankAccountNumber     String?
+  bankIFSC              String?
+  bankAccountHolderName String?
+  upiVpa                String?
+  payoutInfoUpdatedAt   DateTime?
+
   bookings     Booking[]
   cartItems    CartItem[]
   availability ProviderAvailability[]
   sponsorshipPurchases SponsorshipPurchase[]
   favorites    Favorite[]
   campaigns    Campaign[]
+  payouts      Payout[]
 }
 
 model ProviderAvailability {
@@ -209,13 +233,6 @@ model SponsorshipPurchase {
   createdAt       DateTime @default(now())
 }
 
-// A provider's promotion campaign — created from the "New Campaign" flow.
-// Reach/Clicks/ROI are deliberately NOT modeled here: no ad-impression or
-// click-through tracking exists anywhere in this app yet, and attributing
-// a booking to a specific campaign is a separate, much larger feature.
-// This model only stores what the provider actually configures (name,
-// which services, daily budget, timing, status) — real inputs, not
-// invented outputs.
 model Campaign {
   id              String         @id @default(cuid())
   providerId      String
@@ -223,11 +240,11 @@ model Campaign {
   name            String
   services        ServiceType[]
   dailyBudgetPaise Int
-  // Now required in practice (enforced in the API/form) since the one-time
+  // Required in practice (enforced in the API/form) since the one-time
   // Razorpay charge on launch is for exactly this amount — you can't
   // charge a fixed sum for an uncapped campaign. Budget Used (elapsed
   // active days × dailyBudgetPaise) is still checked against this to
-  // auto-pause once reached, same as before.
+  // auto-pause once reached.
   totalBudgetCapPaise Int?
   status          CampaignStatus @default(ACTIVE)
   startDate       DateTime
@@ -303,11 +320,38 @@ model Booking {
   maintenanceFeePaise Int?
   ownerTotalPaise     Int?
   providerPayoutPaise Int?
+  // Null = this booking's payout hasn't been claimed yet — it's counted
+  // as "owed" to the provider. Set once a Payout is created that includes
+  // it. No separate running-balance field on Provider, so there's nothing
+  // that can drift out of sync with reality.
+  payoutId     String?
+  payout       Payout?       @relation(fields: [payoutId], references: [id])
   createdAt    DateTime      @default(now())
 
   report      WalkReport?
   review      Review?
   ownerReview OwnerReview?
+}
+
+// A manual payout run — created from a provider's unclaimed COMPLETED
+// bookings. amountPaise is a snapshot taken at creation time (sum of the
+// claimed bookings' providerPayoutPaise), not recomputed live, so it stays
+// accurate even if commission rates change later. Admin transfers the
+// money manually (bank/UPI) outside this system for now, then marks it
+// paid with a reference number — same shape this table will keep once
+// RazorpayX Payouts replaces the manual transfer step.
+model Payout {
+  id                String       @id @default(cuid())
+  providerId        String
+  provider          Provider     @relation(fields: [providerId], references: [id])
+  amountPaise       Int
+  status            PayoutStatus @default(PENDING)
+  transferReference String?
+  paidBy            String?
+  requestedAt       DateTime     @default(now())
+  paidAt            DateTime?
+
+  bookings Booking[]
 }
 
 model WalkReport {
