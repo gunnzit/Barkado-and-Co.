@@ -15,6 +15,7 @@ import ProviderPromotePanel from "@/components/ProviderPromotePanel";
 import ProviderHomeStats from "@/components/ProviderHomeStats";
 import ProviderBottomNav, { ProviderNavTab } from "@/components/ProviderBottomNav";
 import ProviderAccountPanel from "@/components/ProviderAccountPanel";
+import ProviderScheduleView from "@/components/ProviderScheduleView";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -486,48 +487,15 @@ export default function ProviderDashboard({
         )}
 
         {tab === "schedule" && (
-          schedule.length === 0 ? (
-            <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>Nothing on your schedule yet.</p>
-          ) : (
-            schedule.map((b) => (
-              <BookingCard key={b.id} booking={b}>
-                {b.status === "ACCEPTED" && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setStatus(b.id, "IN_PROGRESS")}
-                      disabled={busyId === b.id}
-                      className="btn-primary flex-1 text-sm tap-scale"
-                    >
-                      Start
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Cancel this booking? This will count against your reliability score and can't be undone.")) {
-                          setStatus(b.id, "CANCELLED");
-                        }
-                      }}
-                      disabled={busyId === b.id}
-                      className="btn-secondary text-sm tap-scale px-4"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-                {b.status === "IN_PROGRESS" && reportOpenFor !== b.id && (
-                  <button
-                    onClick={() => (b.type === "WALKING" ? setReportOpenFor(b.id) : setStatus(b.id, "COMPLETED"))}
-                    disabled={busyId === b.id}
-                    className="btn-primary w-full text-sm tap-scale"
-                  >
-                    Complete
-                  </button>
-                )}
-                {reportOpenFor === b.id && (
-                  <WalkReportForm bookingId={b.id} onDone={() => { setReportOpenFor(null); router.refresh(); }} />
-                )}
-              </BookingCard>
-            ))
-          )
+          <ProviderScheduleView
+            schedule={schedule}
+            setStatus={setStatus}
+            busyId={busyId}
+            reportOpenFor={reportOpenFor}
+            setReportOpenFor={setReportOpenFor}
+            onGoHours={() => setTab("hours")}
+            onRefresh={() => router.refresh()}
+          />
         )}
 
         {tab === "history" && (
