@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wallet, TrendingUp, Target, Landmark, CalendarClock, Lock, Receipt, PiggyBank, Banknote } from "lucide-react";
+import { Wallet, TrendingUp, Target, Landmark, CalendarClock, Lock, Receipt, PiggyBank, Banknote, CheckCircle2 } from "lucide-react";
+import ProviderPayoutInfoForm from "@/components/ProviderPayoutInfoForm";
 
 type Transaction = {
   id: string;
@@ -12,11 +13,18 @@ type Transaction = {
   netPaise: number;
 };
 
+type PayoutInfo =
+  | { method: "BANK"; accountMasked: string | null; holderName: string | null }
+  | { method: "UPI"; vpa: string | null }
+  | null;
+
 type Earnings = {
   today: { totalPaise: number; count: number };
   week: { totalPaise: number; count: number };
   month: { totalPaise: number; count: number; grossPaise: number; feePaise: number };
   lifetimeNetPaise: number;
+  amountOwedPaise: number;
+  payoutInfo: PayoutInfo;
   acceptanceRate: number | null;
   completionRate: number | null;
   totalBookings: number;
@@ -39,36 +47,76 @@ function formatRange(startIso: string, endIso: string) {
 
 export default function ProviderEarningsPanel() {
   const [data, setData] = useState<Earnings | null>(null);
+  const [showPayoutForm, setShowPayoutForm] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [justRequested, setJustRequested] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     fetch("/api/provider/earnings")
       .then((r) => (r.ok ? r.json() : null))
       .then(setData);
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
   if (!data) return <p className="text-sm px-1" style={{ color: "var(--muted)" }}>Loading…</p>;
 
   const streakPct = Math.min(100, (data.streak.current / data.streak.goal) * 100);
+  const hasPayoutInfo = data.payoutInfo != null;
+  const canRequestPayout = hasPayoutInfo && data.amountOwedPaise > 0;
+
+  const requestPayout = async () => {
+    setRequesting(true);
+    setRequestError("");
+    const res = await fetch("/api/provider/payouts", { method: "POST" });
+    setRequesting(false);
+    if (res.ok) {
+      setJustRequested(true);
+      load();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      setRequestError(body.error || "Couldn't request payout — please try again.");
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {/* ===== Total Earned — lifetime net. Deliberately not labeled
-          "Available Balance": no payout ledger exists yet to track what's
-          actually been paid out vs. still owed, so "balance" would imply
-          something this app can't yet back up. ===== */}
+      {/* ===== Total Earned — lifetime net. Kept separate from "Amount
+          Owed" below, since they're genuinely different numbers: lifetime
+          earned vs. what's currently unclaimed and requestable. ===== */}
       <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: "rgba(201,122,86,0.08)" }} />
         <div className="relative z-10">
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--muted)" }}>Total Earned</p>
-          <h2 className="text-4xl font-bold mb-4">{rupees(data.lifetimeNetPaise)}</h2>
-          <button
-            disabled
-            className="tap-scale flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold"
-            style={{ background: "var(--muted)", color: "white", opacity: 0.5, cursor: "not-allowed" }}
-            title="Payouts are coming soon"
-          >
-            <Landmark size={16} /> Request Payout
-          </button>
+          <h2 className="text-4xl font-bold mb-1">{rupees(data.lifetimeNetPaise)}</h2>
+          <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+            <span className="font-semibold" style={{ color: "var(--forest, #16281f)" }}>{rupees(data.amountOwedPaise)}</span> owed right now
+          </p>
+
+          {justRequested ? (
+            <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--forest, #16281f)" }}>
+              <CheckCircle2 size={16} /> Payout requested — we'll be in touch.
+            </p>
+          ) : (
+            <button
+              onClick={canRequestPayout ? requestPayout : () => setShowPayoutForm(true)}
+              disabled={requesting || (!hasPayoutInfo ? false : data.amountOwedPaise <= 0)}
+              className="tap-scale flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold"
+              style={{
+                background: canRequestPayout ? "var(--panel-dark)" : "var(--muted)",
+                color: "white",
+                opacity: !hasPayoutInfo ? 1 : data.amountOwedPaise <= 0 ? 0.5 : 1,
+                cursor: !hasPayoutInfo ? "pointer" : data.amountOwedPaise <= 0 ? "not-allowed" : "pointer",
+              }}
+            >
+              <Landmark size={16} />
+              {requesting ? "Requesting…" : !hasPayoutInfo ? "Add payout details" : "Request Payout"}
+            </button>
+          )}
+          {requestError && <p className="text-xs mt-2" style={{ color: "var(--terracotta)" }}>{requestError}</p>}
         </div>
       </div>
 
@@ -118,10 +166,10 @@ export default function ProviderEarningsPanel() {
         </div>
       </div>
 
-      {/* ===== Payout Status — same structure/icons as the reference
-          design, but honest content: no real payout schedule or linked
-          account exists yet, so those rows say so plainly rather than
-          showing an invented bank account number. ===== */}
+      {/* ===== Payout Status — now real. "Next Payout Date" is described
+          honestly (no fixed schedule exists — this is a manual, on-request
+          flow by design, not a placeholder), and "Linked Account" shows
+          the provider's real saved bank/UPI info, masked. ===== */}
       <div className="card">
         <h4 className="font-bold text-sm mb-4">Payout Status</h4>
         <div className="flex items-center gap-4 mb-4">
@@ -129,37 +177,41 @@ export default function ProviderEarningsPanel() {
             <CalendarClock size={18} color="var(--muted)" />
           </div>
           <div>
-            <p className="text-[11px]" style={{ color: "var(--muted)" }}>Next Payout Date</p>
-            <p className="text-sm font-medium flex items-center gap-2">
-              Not scheduled yet
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "var(--cream)", color: "var(--muted)" }}>
-                Coming soon
-              </span>
-            </p>
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>Payout Schedule</p>
+            <p className="text-sm font-medium">No fixed date — processed manually after you request one</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
             <Banknote size={18} color="var(--muted)" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="text-[11px]" style={{ color: "var(--muted)" }}>Linked Account</p>
-            <p className="text-sm font-medium flex items-center gap-2">
-              No account linked yet
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "var(--cream)", color: "var(--muted)" }}>
-                Coming soon
-              </span>
-            </p>
+            {data.payoutInfo == null ? (
+              <p className="text-sm font-medium">No account linked yet</p>
+            ) : data.payoutInfo.method === "BANK" ? (
+              <p className="text-sm font-medium">{data.payoutInfo.holderName} · {data.payoutInfo.accountMasked}</p>
+            ) : (
+              <p className="text-sm font-medium">{data.payoutInfo.vpa}</p>
+            )}
           </div>
         </div>
         <div className="mt-4 pt-4 flex items-center justify-between text-xs" style={{ borderTop: "1px solid var(--border)" }}>
           <span className="flex items-center gap-1" style={{ color: "var(--muted)" }}>
-            <Lock size={12} /> Payouts will be secured via Razorpay
+            <Lock size={12} /> Transferred manually by our team for now
           </span>
-          <button disabled className="font-semibold" style={{ color: "var(--muted)", opacity: 0.6, cursor: "not-allowed" }} title="Coming soon">
-            Manage
+          <button onClick={() => setShowPayoutForm((v) => !v)} className="font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+            {hasPayoutInfo ? "Edit" : "Add details"}
           </button>
         </div>
+        {showPayoutForm && (
+          <ProviderPayoutInfoForm
+            onSaved={() => {
+              setShowPayoutForm(false);
+              load();
+            }}
+          />
+        )}
       </div>
 
       <div className="card">
