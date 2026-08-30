@@ -16,6 +16,7 @@ import ProviderHomeStats from "@/components/ProviderHomeStats";
 import ProviderBottomNav, { ProviderNavTab } from "@/components/ProviderBottomNav";
 import ProviderAccountPanel from "@/components/ProviderAccountPanel";
 import ProviderScheduleView from "@/components/ProviderScheduleView";
+import ProviderSidebar, { ProviderTab } from "@/components/ProviderSidebar";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -328,42 +329,49 @@ export default function ProviderDashboard({
   const upcomingPreview = (upcomingToday.length > 0 ? upcomingToday : schedule.slice().sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())).slice(0, 3);
 
   return (
-    <div>
-      <div className="px-6 mb-5 flex items-center justify-between">
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="tap-scale flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
-          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-        >
-          <Menu size={15} />
-          {currentLabel}
-        </button>
-      </div>
+    <div className="lg:flex lg:gap-6 lg:max-w-6xl lg:mx-auto lg:px-6 lg:items-start">
+      <ProviderSidebar
+        active={tab as ProviderTab}
+        onSelect={(t) => setTab(t)}
+        counts={{ requests: requests.length, schedule: schedule.length, history: history.length }}
+      />
 
-      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="More">
-        {drawerTabs.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => goTo(t.key)}
-              className="w-full flex items-center gap-3 px-4 py-3 tap-scale text-left"
-              style={{ background: active ? "var(--cream)" : "transparent" }}
-            >
-              <Icon size={16} color={active ? "var(--terracotta)" : "var(--muted)"} />
-              <span className="text-sm font-medium flex-1" style={{ color: active ? "var(--terracotta)" : "inherit" }}>{t.label}</span>
-              {t.count > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "var(--terracotta)", color: "white" }}>
-                  {t.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </NavDrawer>
+      <div className="flex-1 min-w-0">
+        <div className="px-6 mb-5 flex items-center justify-between lg:hidden">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="tap-scale flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+          >
+            <Menu size={15} />
+            {currentLabel}
+          </button>
+        </div>
 
-      <div key={tab} className="px-6 pb-28 space-y-3 provider-tab-content">
+        <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="More">
+          {drawerTabs.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => goTo(t.key)}
+                className="w-full flex items-center gap-3 px-4 py-3 tap-scale text-left"
+                style={{ background: active ? "var(--cream)" : "transparent" }}
+              >
+                <Icon size={16} color={active ? "var(--terracotta)" : "var(--muted)"} />
+                <span className="text-sm font-medium flex-1" style={{ color: active ? "var(--terracotta)" : "inherit" }}>{t.label}</span>
+                {t.count > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "var(--terracotta)", color: "white" }}>
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </NavDrawer>
+
+        <div key={tab} className="px-6 pb-28 lg:px-0 lg:pb-10 space-y-3 provider-tab-content">
         {tab === "home" && (
           <div className="space-y-5">
             <div>
@@ -388,57 +396,62 @@ export default function ProviderDashboard({
 
             <ProviderHomeStats />
 
-            {/* ===== Upcoming Schedule — real bookings, itemized ===== */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--muted)" }}>Upcoming Schedule</p>
-                <button onClick={() => setTab("schedule")} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
-                  View all
-                </button>
-              </div>
-              {upcomingPreview.length === 0 ? (
-                <div className="card text-center py-8">
-                  <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing scheduled yet.</p>
+            {/* Upcoming Schedule + Boost card sit side-by-side on desktop
+                (real extra width to use, from the sidebar layout above)
+                instead of always stacking full-width like on mobile. */}
+            <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+              {/* ===== Upcoming Schedule — real bookings, itemized ===== */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--muted)" }}>Upcoming Schedule</p>
+                  <button onClick={() => setTab("schedule")} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+                    View all
+                  </button>
                 </div>
-              ) : (
-                <div className="card p-0 divide-y" style={{ borderColor: "var(--border)" }}>
-                  <div className="px-4">
-                    {upcomingPreview.map((b) => (
-                      <UpcomingScheduleRow key={b.id} booking={b} />
-                    ))}
+                {upcomingPreview.length === 0 ? (
+                  <div className="card text-center py-8">
+                    <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing scheduled yet.</p>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* ===== Boost Your Profile — real shortcut into the existing
-                Promote tab (scope selection, real Razorpay purchase,
-                previews). Not a fake toggle — that would lose real
-                functionality already built. ===== */}
-            <button
-              onClick={() => setTab("promote")}
-              className="w-full text-left tap-scale rounded-xl p-6 relative overflow-hidden"
-              style={{ background: "var(--panel-dark)", color: "white" }}
-            >
-              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
-              <div className="relative z-10">
-                <p className="font-bold text-lg mb-1 flex items-center gap-2">
-                  <Sparkles size={18} color="var(--gold)" />
-                  {isFeatured ? "You're featured" : "Boost Your Profile"}
-                </p>
-                <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {isFeatured
-                    ? "Manage your active featured listings."
-                    : "Stand out in search results and get more booking requests in your area."}
-                </p>
-                <span
-                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full"
-                  style={{ background: "rgba(255,255,255,0.12)" }}
-                >
-                  {isFeatured ? "Manage promotion" : "Get featured"} <ChevronRight size={13} />
-                </span>
+                ) : (
+                  <div className="card p-0 divide-y" style={{ borderColor: "var(--border)" }}>
+                    <div className="px-4">
+                      {upcomingPreview.map((b) => (
+                        <UpcomingScheduleRow key={b.id} booking={b} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </button>
+
+              {/* ===== Boost Your Profile — real shortcut into the existing
+                  Promote tab (scope selection, real Razorpay purchase,
+                  previews). Not a fake toggle — that would lose real
+                  functionality already built. ===== */}
+              <button
+                onClick={() => setTab("promote")}
+                className="w-full text-left tap-scale rounded-xl p-6 relative overflow-hidden mt-3 lg:mt-0"
+                style={{ background: "var(--panel-dark)", color: "white" }}
+              >
+                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+                <div className="relative z-10">
+                  <p className="font-bold text-lg mb-1 flex items-center gap-2">
+                    <Sparkles size={18} color="var(--gold)" />
+                    {isFeatured ? "You're featured" : "Boost Your Profile"}
+                  </p>
+                  <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    {isFeatured
+                      ? "Manage your active featured listings."
+                      : "Stand out in search results and get more booking requests in your area."}
+                  </p>
+                  <span
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full"
+                    style={{ background: "rgba(255,255,255,0.12)" }}
+                  >
+                    {isFeatured ? "Manage promotion" : "Get featured"} <ChevronRight size={13} />
+                  </span>
+                </div>
+              </button>
+            </div>
 
             {(() => {
               const offeredServices = Array.from(new Set([...requests, ...schedule, ...history].map((b) => b.type)));
@@ -556,8 +569,11 @@ export default function ProviderDashboard({
           />
         )}
       </div>
+      </div>
 
-      <ProviderBottomNav active={tab as ProviderNavTab} onSelect={(t) => setTab(t)} />
+      <div className="lg:hidden">
+        <ProviderBottomNav active={tab as ProviderNavTab} onSelect={(t) => setTab(t)} />
+      </div>
 
       <style jsx>{`
         .provider-tab-content {

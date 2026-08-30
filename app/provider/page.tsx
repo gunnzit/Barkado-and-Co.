@@ -142,7 +142,11 @@ export default async function ProviderPage() {
 
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
-      <main className="pb-16 max-w-lg mx-auto">
+      {/* max-w-lg on mobile (unchanged), uncapped on desktop so
+          ProviderDashboard's own lg:flex sidebar+content split (and its
+          lg:max-w-6xl mx-auto) actually has room to take effect — this
+          outer wrapper was clamping width regardless of screen size before. */}
+      <main className="pb-16 max-w-lg lg:max-w-none mx-auto">
         <div className="flex items-center justify-between px-6 pt-4 pb-3">
           <div className="flex items-center gap-2">
             <PawPrint size={20} color="var(--forest, #16281f)" />
