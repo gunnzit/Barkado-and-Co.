@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag, Plus, Sun, CloudSun, Moon, GraduationCap } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
-import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
+import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, SAMPLE_GROOMING_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -235,7 +235,7 @@ export default function ServiceBookingFlow({
   };
 
   const addToCart = async (providerId: string) => {
-    const petId = (serviceType === "WALKING" || serviceType === "TRAINING") ? selectedPetId : activePetId;
+    const petId = (serviceType === "WALKING" || serviceType === "TRAINING" || serviceType === "GROOMING") ? selectedPetId : activePetId;
     setSubmittingId(providerId);
     setAddError(false);
     const result = await addService({
@@ -257,7 +257,7 @@ export default function ServiceBookingFlow({
   };
 
   const sharedScheduleDetailsValid = selectedPetId && selectedDateIso && selectedSlot && address && phone;
-  const usesSharedScheduleScreen = serviceType === "WALKING" || serviceType === "TRAINING";
+  const usesSharedScheduleScreen = serviceType === "WALKING" || serviceType === "TRAINING" || serviceType === "GROOMING";
   const detailsValid = usesSharedScheduleScreen
       ? sharedScheduleDetailsValid
       : start && (COPY[serviceType].needsEndDate ? end : true) && address && phone;
@@ -275,7 +275,7 @@ export default function ServiceBookingFlow({
   }
 
   return (
-    <div className={phase === "intro" && (serviceType === "WALKING" || serviceType === "TRAINING") ? "" : "px-6"}>
+    <div className={phase === "intro" && (serviceType === "WALKING" || serviceType === "TRAINING" || serviceType === "GROOMING") ? "" : "px-6"}>
       {/* ===== Intro (Walking) — hero photo, packages, features, top walkers ===== */}
       {phase === "intro" && serviceType === "WALKING" && (
         <div className="animate-fade-up">
@@ -520,9 +520,83 @@ export default function ServiceBookingFlow({
         </div>
       )}
 
-      {/* ===== Details — Walking and Training share the Schedule & Pet
-          screen (pet picker, date strip, fixed time slots); Sitting and
-          Grooming keep the original free-entry date/time form. ===== */}
+      {/* ===== Intro (Grooming) — hero photo, features, no package
+          selection (per product decision: real per-size packages live on
+          the provider's own profile page, after a provider is chosen —
+          there's no shared platform-wide package to pre-select, since
+          every groomer names and prices their own packages). ===== */}
+      {phase === "intro" && serviceType === "GROOMING" && (
+        <div className="animate-fade-up">
+          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+            <Image
+              src="/images/hero-dog-beagle.jpg"
+              alt="Dog grooming session"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
+                style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+              >
+                Luxury Spa Session
+              </div>
+              <h1 className="text-3xl font-bold text-white mb-1 leading-tight">Professional Pet Grooming</h1>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+                Breed-specific styling and spa care for {activePetName ?? "your pet"}, from verified groomers near you.
+              </p>
+            </div>
+          </div>
+
+          <div className="px-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:items-start">
+            <div className="lg:col-span-1 lg:order-last mb-6 lg:mb-0">
+              <div className="card lg:sticky lg:top-6">
+                <h2 className="font-bold text-lg mb-1">Ready to book?</h2>
+                <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+                  Pick a time, then compare real groomers and their packages near you.
+                </p>
+                <button onClick={() => setPhase("details")} className="btn-primary w-full tap-scale">
+                  Find a Groomer
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              <div className="mb-6">
+                <h2 className="font-bold text-lg mb-3">Why Choose Our Grooming?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    { icon: ShieldCheck, title: "Verified Groomers", desc: "Every groomer is document-verified before going live.", color: "var(--forest, #16281f)" },
+                    { icon: Star, title: "Breed-Specific Styling", desc: "Real groomer specialties and years of experience — see them on each profile.", color: "var(--gold)" },
+                    { icon: PawPrint, title: "Priced by Size", desc: "Transparent, per-size pricing for every package, no surprises.", color: "var(--terracotta)" },
+                    { icon: Camera, title: "Photo Updates", desc: "Before/after photos from the session — coming soon.", color: "var(--heritage-red, #c0392b)" },
+                  ].map((f) => (
+                    <div key={f.title} className="card flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
+                        <f.icon size={16} color={f.color} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{f.title}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Details — Walking, Training, and Grooming share the
+          Schedule & Pet screen (pet picker, date strip); Sitting keeps the
+          original free-entry date/time form. ===== */}
       {phase === "details" && usesSharedScheduleScreen && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-6">Schedule &amp; Pet</h1>
@@ -582,10 +656,11 @@ export default function ServiceBookingFlow({
             </div>
           </div>
 
-          {/* ===== Select Time — Walking only. Training has no single-slot
-              time concept (real plan/scheduling handled trainer-side,
-              later), so this section is skipped entirely for Training. ===== */}
-          {serviceType === "WALKING" && (
+          {/* ===== Select Time — Walking and Grooming (real, single
+              per-visit appointments). Training has no single-slot time
+              concept (real plan/scheduling handled trainer-side, later),
+              so this section is skipped entirely for Training. ===== */}
+          {(serviceType === "WALKING" || serviceType === "GROOMING") && (
             <div className="mb-6">
               <h2 className="font-bold text-sm mb-3">Select Time</h2>
               <div className="space-y-4">
@@ -634,7 +709,7 @@ export default function ServiceBookingFlow({
                 Add your address and phone number to continue
               </p>
               <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-                Your {serviceType === "TRAINING" ? "trainer" : "walker"} needs to know where and how to reach you.
+                Your {serviceType === "TRAINING" ? "trainer" : serviceType === "GROOMING" ? "groomer" : "walker"} needs to know where and how to reach you.
               </p>
               <Link href="/owner/profile" className="btn-primary inline-block text-sm">
                 Add in profile
@@ -784,12 +859,15 @@ export default function ServiceBookingFlow({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <FavoriteButton providerId={p.id} />
-                      {serviceType === "TRAINING" ? (
-                        // Training has no direct "Choose" purchase yet — it
-                        // routes to the profile page's plan selection
-                        // instead. Pet/date context carried as query params
-                        // so the profile page has what it needs once real
-                        // plan checkout is wired up.
+                      {(serviceType === "TRAINING" || serviceType === "GROOMING") ? (
+                        // Training has no direct "Choose" purchase (no real
+                        // recurring billing built yet). Grooming COULD have
+                        // a direct "Choose" in principle (packages are
+                        // real, one-time-priced), but per-size pricing
+                        // means there's no single price to choose without
+                        // first picking a size — so both route to the
+                        // profile page, where the real package/size picker
+                        // (and, for Grooming, a real Add to Cart) lives.
                         <Link
                           href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
                           onClick={() => trackCampaignClick(p.activeCampaignId)}
@@ -827,13 +905,16 @@ export default function ServiceBookingFlow({
                     </div>
                   </div>
 
-                  {/* ===== Training-only: experience + specialty tags are
-                      SAMPLE data (no real field exists yet — providers will
-                      set these themselves later). Plans price uses the
-                      provider's real pricePerTrain rate, just framed to
-                      match the "Plans from" style. "View Profile" is
-                      non-clickable — no profile page exists yet. ===== */}
-                  {serviceType === "TRAINING" && (
+                  {/* ===== Training + Grooming: experience + specialty tags
+                      are SAMPLE data (no real field exists yet — providers
+                      will set these themselves later). "Plans from" uses
+                      the provider's real flat rate field as a rough
+                      starting-price indicator — for Grooming this is now
+                      somewhat stale since real per-size packages exist
+                      (built on the profile page), but matches how Training
+                      already displays this, per product decision to keep
+                      list-card treatment consistent across both. ===== */}
+                  {(serviceType === "TRAINING" || serviceType === "GROOMING") && (
                     <>
                       <div className="mt-3 pt-3 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid var(--border)" }}>
                         <div>
@@ -843,7 +924,7 @@ export default function ServiceBookingFlow({
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "var(--muted)" }}>Specialties</p>
                           <div className="flex flex-wrap gap-1">
-                            {SAMPLE_SPECIALTIES[sampleIndexFor(p.id, SAMPLE_SPECIALTIES.length)].map((tag) => (
+                            {(serviceType === "GROOMING" ? SAMPLE_GROOMING_SPECIALTIES : SAMPLE_SPECIALTIES)[sampleIndexFor(p.id, SAMPLE_SPECIALTIES.length)].map((tag) => (
                               <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
                                 {tag}
                               </span>

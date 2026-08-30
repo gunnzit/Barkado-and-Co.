@@ -20,6 +20,13 @@ export const SAMPLE_SPECIALTIES: [string, string][] = [
   ["Obedience", "Socialization"],
 ];
 
+export const SAMPLE_GROOMING_SPECIALTIES: [string, string][] = [
+  ["Breed Styling", "Anxiety-Free"],
+  ["Skin & Coat Care", "Medicated Baths"],
+  ["Show Cuts", "De-shedding"],
+  ["Nail & Ear Care", "Sensitive Skin"],
+];
+
 export const SAMPLE_ROLE_TITLES = [
   "Certified Pet Trainer",
   "Senior Behavioral Specialist",
