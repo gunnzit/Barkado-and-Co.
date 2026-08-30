@@ -232,6 +232,24 @@ export default function ProviderBottomNav({
         .bottom-nav-item {
           position: relative;
           z-index: 1;
+          /* Replicates .bottom-nav a's declarations from globals.css
+             exactly (font-size, flex layout, gap, weight) — that rule only
+             targets <a> tags, and this component uses <button> elements
+             (since it switches tabs, not pages), so none of it was being
+             inherited. This was the real cause of the size/spacing
+             mismatch against the owner-side BottomNav. */
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.25rem;
+          font-size: 0.68rem;
+          font-weight: 600;
+          transition: color 0.2s ease;
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          font-family: inherit;
         }
       `}</style>
     </nav>

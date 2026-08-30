@@ -144,9 +144,10 @@ export default async function ProviderPage() {
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
       <main className="pb-16 max-w-lg mx-auto">
         <div className="flex items-center justify-between px-6 pt-4 pb-3">
-          <Link href="/" className="tap-scale">
-            <ArrowLeft size={18} />
-          </Link>
+          <div className="flex items-center gap-2">
+            <PawPrint size={20} color="var(--forest, #16281f)" />
+            <span className="font-bold text-lg">Barkado Pro</span>
+          </div>
           <div className="flex items-center gap-3">
             <ProviderOnlineToggle />
             <Link href="/" className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
