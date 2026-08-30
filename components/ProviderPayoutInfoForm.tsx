@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 
 export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => void }) {
   const [method, setMethod] = useState<"BANK" | "UPI">("BANK");
@@ -10,6 +11,7 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
   const [vpa, setVpa] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [verifiedBank, setVerifiedBank] = useState<{ bankName: string | null; bankBranch: string | null } | null>(null);
 
   const canSave =
     method === "BANK"
@@ -19,6 +21,7 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
   const save = async () => {
     setSaving(true);
     setError("");
+    setVerifiedBank(null);
     const body =
       method === "BANK"
         ? { payoutMethod: "BANK", bankAccountNumber: accountNumber.trim(), bankIFSC: ifsc.trim().toUpperCase(), bankAccountHolderName: holderName.trim() }
@@ -29,11 +32,15 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    const result = await res.json().catch(() => ({}));
     setSaving(false);
     if (res.ok) {
+      if (result.bankName) setVerifiedBank({ bankName: result.bankName, bankBranch: result.bankBranch });
       onSaved();
     } else {
-      setError("Couldn't save — please check your details and try again.");
+      // Real validation errors now come back here — e.g. "That IFSC code
+      // doesn't match any real bank branch" or an invalid UPI ID shape.
+      setError(result.error || "Couldn't save — please check your details and try again.");
     }
   };
 
@@ -43,7 +50,11 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
         {(["BANK", "UPI"] as const).map((m) => (
           <button
             key={m}
-            onClick={() => setMethod(m)}
+            onClick={() => {
+              setMethod(m);
+              setError("");
+              setVerifiedBank(null);
+            }}
             className="tap-scale flex-1 py-2 rounded-lg text-sm font-semibold"
             style={{
               background: method === m ? "var(--panel-dark)" : "var(--cream)",
@@ -81,6 +92,9 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
             className="w-full border rounded-lg px-3 py-2 text-sm uppercase"
             style={{ borderColor: "var(--border)" }}
           />
+          <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+            We'll check your IFSC code against real bank records when you save.
+          </p>
         </>
       ) : (
         <input
@@ -95,8 +109,14 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
 
       {error && <p className="text-xs" style={{ color: "var(--terracotta)" }}>{error}</p>}
 
+      {verifiedBank && (
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--forest, #16281f)" }}>
+          <CheckCircle2 size={13} /> Format verified — {verifiedBank.bankName}, {verifiedBank.bankBranch}
+        </p>
+      )}
+
       <button onClick={save} disabled={!canSave || saving} className="btn-primary w-full text-sm tap-scale" style={{ opacity: !canSave || saving ? 0.5 : 1 }}>
-        {saving ? "Saving…" : "Save payout details"}
+        {saving ? "Verifying & saving…" : "Save payout details"}
       </button>
     </div>
   );

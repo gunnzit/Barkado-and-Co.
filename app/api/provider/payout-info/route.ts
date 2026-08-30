@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
+import { lookupIFSC, isValidVpaFormat, isValidAccountNumberFormat } from "@/lib/verifyPayoutInfo";
 
 const payoutInfoSchema = z.discriminatedUnion("payoutMethod", [
   z.object({
@@ -25,7 +26,9 @@ export const dynamic = "force-dynamic";
 
 // GET returns a masked summary — never the full bank account number back
 // to the client once saved, same principle as never re-displaying a full
-// card number after checkout.
+// card number after checkout. For BANK, also does a live IFSC lookup so
+// the real bank/branch name shows every time this is read, not just once
+// at save time.
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,11 +41,14 @@ export async function GET() {
   }
 
   if (provider.payoutMethod === "BANK") {
+    const lookup = provider.bankIFSC ? await lookupIFSC(provider.bankIFSC) : { valid: false as const };
     return NextResponse.json({
       payoutMethod: "BANK",
       bankAccountHolderName: provider.bankAccountHolderName,
       bankAccountMasked: provider.bankAccountNumber ? maskAccountNumber(provider.bankAccountNumber) : null,
       bankIFSC: provider.bankIFSC,
+      bankName: lookup.valid ? lookup.bankName : null,
+      bankBranch: lookup.valid ? lookup.branch : null,
       updatedAt: provider.payoutInfoUpdatedAt,
     });
   }
@@ -68,6 +74,31 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data;
+
+  // Real, format-level verification before saving. This confirms a
+  // genuine bank branch exists / the UPI ID is correctly shaped — it does
+  // NOT confirm the account belongs to this specific person. That
+  // stronger check (Reverse Penny Drop) needs RazorpayX access, which
+  // isn't available yet.
+  let bankName: string | null = null;
+  let bankBranch: string | null = null;
+
+  if (data.payoutMethod === "BANK") {
+    if (!isValidAccountNumberFormat(data.bankAccountNumber)) {
+      return NextResponse.json({ error: "That doesn't look like a valid account number." }, { status: 400 });
+    }
+    const lookup = await lookupIFSC(data.bankIFSC);
+    if (!lookup.valid) {
+      return NextResponse.json({ error: "That IFSC code doesn't match any real bank branch — please double-check it." }, { status: 400 });
+    }
+    bankName = lookup.bankName;
+    bankBranch = lookup.branch;
+  } else {
+    if (!isValidVpaFormat(data.upiVpa)) {
+      return NextResponse.json({ error: "That doesn't look like a valid UPI ID (e.g. name@bank)." }, { status: 400 });
+    }
+  }
+
   await prisma.provider.update({
     where: { id: provider.id },
     data: {
@@ -80,5 +111,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, bankName, bankBranch });
 }

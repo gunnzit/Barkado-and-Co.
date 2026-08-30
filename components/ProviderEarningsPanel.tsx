@@ -14,7 +14,7 @@ type Transaction = {
 };
 
 type PayoutInfo =
-  | { method: "BANK"; accountMasked: string | null; holderName: string | null }
+  | { method: "BANK"; accountMasked: string | null; holderName: string | null; bankName?: string | null; bankBranch?: string | null }
   | { method: "UPI"; vpa: string | null }
   | null;
 
@@ -190,7 +190,14 @@ export default function ProviderEarningsPanel() {
             {data.payoutInfo == null ? (
               <p className="text-sm font-medium">No account linked yet</p>
             ) : data.payoutInfo.method === "BANK" ? (
-              <p className="text-sm font-medium">{data.payoutInfo.holderName} · {data.payoutInfo.accountMasked}</p>
+              <>
+                <p className="text-sm font-medium">{data.payoutInfo.holderName} · {data.payoutInfo.accountMasked}</p>
+                {data.payoutInfo.bankName && (
+                  <p className="text-xs flex items-center gap-1.5 mt-0.5" style={{ color: "var(--forest, #16281f)" }}>
+                    <CheckCircle2 size={12} /> Format verified — {data.payoutInfo.bankName}, {data.payoutInfo.bankBranch}
+                  </p>
+                )}
+              </>
             ) : (
               <p className="text-sm font-medium">{data.payoutInfo.vpa}</p>
             )}

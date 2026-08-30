@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
+import { lookupIFSC } from "@/lib/verifyPayoutInfo";
 
 // Always fetch fresh — this depends on live, frequently-changing per-user
 // data (real amount owed, real payout info). Without this, Next.js/Vercel
@@ -94,13 +95,18 @@ export async function GET() {
     TRAINING: "Good Manners Programme",
   };
 
-  // Masked payout-info summary — never the full bank account number.
+  // Masked payout-info summary — never the full bank account number. For
+  // BANK, includes a live IFSC lookup so the real bank/branch name shows
+  // every time this loads, not just once at save time.
   let payoutInfo: any = null;
   if (provider.payoutMethod === "BANK") {
+    const lookup = provider.bankIFSC ? await lookupIFSC(provider.bankIFSC) : { valid: false as const };
     payoutInfo = {
       method: "BANK",
       accountMasked: provider.bankAccountNumber ? `••••${provider.bankAccountNumber.slice(-4)}` : null,
       holderName: provider.bankAccountHolderName,
+      bankName: lookup.valid ? lookup.bankName : null,
+      bankBranch: lookup.valid ? lookup.branch : null,
     };
   } else if (provider.payoutMethod === "UPI") {
     payoutInfo = { method: "UPI", vpa: provider.upiVpa };
