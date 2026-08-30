@@ -10,7 +10,14 @@ const createCampaignSchema = z.object({
   startDate: z.string(), // ISO datetime
 });
 
-// List this provider's campaigns — used by Campaign History.
+// List this provider's campaigns — used by Campaign History. Adds two
+// real, derived fields on top of the stored data:
+//  - reachCount: a genuine count of CampaignImpression rows (real search
+//    appearances), not an estimate.
+//  - budgetUsedPaise: real elapsed active days × the real daily budget.
+//    Labeled "Budget Used," never "Spend" — no actual charge happens
+//    anywhere in this flow, so this must never be presented as money that
+//    changed hands.
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,19 +27,33 @@ export async function GET() {
 
   const campaigns = await prisma.campaign.findMany({
     where: { providerId: provider.id },
+    include: { _count: { select: { impressions: true } } },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(campaigns);
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const withComputed = campaigns.map((c) => {
+    const startMs = c.startDate.getTime();
+    const endMs = c.endDate ? c.endDate.getTime() : now;
+    const effectiveEndMs = Math.min(endMs, now);
+    // Not started yet (future-dated "Schedule for Later") -> zero elapsed
+    // days, zero budget used, regardless of status field.
+    const elapsedDays = startMs > now ? 0 : Math.max(0, Math.floor((effectiveEndMs - startMs) / DAY_MS));
+
+    const { _count, ...rest } = c;
+    return {
+      ...rest,
+      reachCount: _count.impressions,
+      budgetUsedPaise: elapsedDays * c.dailyBudgetPaise,
+    };
+  });
+
+  return NextResponse.json(withComputed);
 }
 
-// Create a real campaign from the "New Campaign" form. Reach/Clicks/ROI
-// are never written here — this only saves what the provider actually
-// configured. Status is always set to ACTIVE on creation, even for a
-// future-dated "Schedule for Later" start: there's no background job yet
-// to flip status based on startDate, so startDate records intent but
-// doesn't yet drive automatic status changes. Worth knowing before relying
-// on status to mean "currently running."
+// Create a real campaign from the "New Campaign" form.
 export async function POST(req: Request) {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

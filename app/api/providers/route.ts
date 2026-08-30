@@ -48,6 +48,29 @@ export async function GET(req: Request) {
   });
 
   const now = Date.now();
+  const nowDate = new Date();
+
+  // Real active campaigns matching this exact service search — used to
+  // both boost ranking and log a genuine impression per appearance. Only
+  // fetched when a service is actually specified, since campaign.services
+  // matching needs one to compare against.
+  const providerIds = providers.map((p) => p.id);
+  const activeCampaigns = service && providerIds.length > 0
+    ? await prisma.campaign.findMany({
+        where: {
+          providerId: { in: providerIds },
+          status: "ACTIVE",
+          services: { has: service as any },
+          startDate: { lte: nowDate },
+          OR: [{ endDate: null }, { endDate: { gte: nowDate } }],
+        },
+        select: { id: true, providerId: true },
+      })
+    : [];
+  // One active campaign per provider for this service — if a provider
+  // somehow has more than one matching campaign, only the first is used
+  // for boosting/logging, keeping this simple.
+  const campaignByProvider = new Map(activeCampaigns.map((c) => [c.providerId, c.id]));
 
   // Flag (not filter, per product decision) providers whose set hours don't
   // cover the requested time. A provider with no hours rows at all is
@@ -110,11 +133,17 @@ export async function GET(req: Request) {
       return !!(categoryUntil && categoryUntil.getTime() > now);
     })();
 
+    const activeCampaignId = campaignByProvider.get(rest.id) ?? null;
+
     return {
       ...rest,
       _count: { bookings: completedCount }, // preserved shape for existing frontend code
       availableAtRequestedTime,
       isSponsored,
+      // Real campaign-driven boost — separate from the paid sponsorship
+      // flag above, but both push a provider to the top of results.
+      isCampaignBoosted: !!activeCampaignId,
+      activeCampaignId,
       composite,
       // Reliability as a whole-number percentage (0–100) for display —
       // same underlying calculation already used in the ranking math above,
@@ -124,9 +153,22 @@ export async function GET(req: Request) {
   });
 
   scored.sort((a, b) => {
-    if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
+    const aBoosted = a.isSponsored || a.isCampaignBoosted;
+    const bBoosted = b.isSponsored || b.isCampaignBoosted;
+    if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
     return b.composite - a.composite;
   });
+
+  // Log one real impression per provider whose active campaign caused them
+  // to appear in this result set — a genuine count of real search
+  // appearances, not an estimate. Awaited (not fire-and-forget) so it isn't
+  // dropped if the serverless function terminates right after responding.
+  const impressionCampaignIds = scored.filter((p) => p.activeCampaignId).map((p) => p.activeCampaignId as string);
+  if (impressionCampaignIds.length > 0) {
+    await prisma.campaignImpression.createMany({
+      data: impressionCampaignIds.map((campaignId) => ({ campaignId })),
+    });
+  }
 
   return NextResponse.json(scored);
 }

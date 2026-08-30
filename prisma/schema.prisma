@@ -227,6 +227,21 @@ model Campaign {
   startDate       DateTime
   endDate         DateTime?
   createdAt       DateTime       @default(now())
+
+  impressions CampaignImpression[]
+}
+
+// One row per real appearance of a provider in search results while an
+// active campaign of theirs applied — logged the same way ActivityEvent
+// already logs real page views, no deduplication, no estimation. Reach is
+// just a count of these rows.
+model CampaignImpression {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId])
 }
 
 model Booking {

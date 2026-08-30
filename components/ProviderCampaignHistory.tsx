@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Calendar, Megaphone } from "lucide-react";
+import { ArrowLeft, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Calendar, Megaphone, Eye, Wallet } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -12,6 +12,8 @@ type Campaign = {
   startDate: string;
   endDate: string | null;
   createdAt: string;
+  reachCount: number;
+  budgetUsedPaise: number;
 };
 
 const SERVICE_ICON: Record<string, any> = {
@@ -29,11 +31,11 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
 
 const FILTERS = ["All", "Active", "Paused", "Completed"] as const;
 
-// Deliberately no "Total Spend / Total Reach / New Bookings" summary here
-// (unlike the reference design) — none of that is trackable yet (no real
-// ad-spend ledger, no impression/click data, no campaign-to-booking
-// attribution). Showing what's actually real: each campaign's own
-// configured details.
+// No aggregate "Total Spend / Total Reach / New Bookings" summary section
+// (unlike the reference design) — booking attribution to a specific
+// campaign still isn't modeled. Reach and Budget Used ARE real per-campaign
+// now (genuine impression counts and elapsed-budget math), shown on each
+// card below.
 export default function ProviderCampaignHistory({ onBack }: { onBack: () => void }) {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
@@ -120,9 +122,19 @@ export default function ProviderCampaignHistory({ onBack }: { onBack: () => void
                     );
                   })}
                 </div>
-                <div className="pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <p className="text-[11px]" style={{ color: "var(--muted)" }}>Daily Budget</p>
-                  <p className="font-bold text-sm">₹{(c.dailyBudgetPaise / 100).toFixed(0)} / day</p>
+                <div className="pt-3 grid grid-cols-3 gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div>
+                    <p className="text-[11px]" style={{ color: "var(--muted)" }}>Daily Budget</p>
+                    <p className="font-bold text-sm">₹{(c.dailyBudgetPaise / 100).toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Wallet size={10} /> Budget Used</p>
+                    <p className="font-bold text-sm">₹{(c.budgetUsedPaise / 100).toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Eye size={10} /> Reach</p>
+                    <p className="font-bold text-sm">{c.reachCount}</p>
+                  </div>
                 </div>
               </div>
             );
