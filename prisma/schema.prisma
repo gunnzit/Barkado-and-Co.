@@ -229,6 +229,7 @@ model Campaign {
   createdAt       DateTime       @default(now())
 
   impressions CampaignImpression[]
+  clicks      CampaignClick[]
 }
 
 // One row per real appearance of a provider in search results while an
@@ -236,6 +237,19 @@ model Campaign {
 // already logs real page views, no deduplication, no estimation. Reach is
 // just a count of these rows.
 model CampaignImpression {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId])
+}
+
+// One row per real tap on "Choose" / "View Plans" for a provider whose
+// active campaign caused that specific card to be boosted into view.
+// Clicks is a count of these rows — never an estimate or a ratio applied
+// to impressions.
+model CampaignClick {
   id         String   @id @default(cuid())
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])

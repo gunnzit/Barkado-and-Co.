@@ -22,7 +22,17 @@ type Provider = {
   _count: { bookings: number };
   availableAtRequestedTime: boolean | null;
   isSponsored?: boolean;
+  isCampaignBoosted?: boolean;
+  activeCampaignId?: string | null;
 };
+
+// Fire-and-forget — records a real click when an owner engages with a
+// provider card that's showing because of an active campaign. Never
+// blocks navigation/booking on the result.
+function trackCampaignClick(campaignId: string | null | undefined) {
+  if (!campaignId) return;
+  fetch(`/api/campaigns/${campaignId}/click`, { method: "POST" }).catch(() => {});
+}
 
 type PetOption = {
   id: string;
@@ -773,12 +783,20 @@ export default function ServiceBookingFlow({
                         // plan checkout is wired up.
                         <Link
                           href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
+                          onClick={() => trackCampaignClick(p.activeCampaignId)}
                           className="btn-primary text-sm tap-scale"
                         >
                           View Plans
                         </Link>
                       ) : (
-                        <button onClick={() => addToCart(p.id)} disabled={submittingId === p.id} className="btn-primary text-sm tap-scale">
+                        <button
+                          onClick={() => {
+                            trackCampaignClick(p.activeCampaignId);
+                            addToCart(p.id);
+                          }}
+                          disabled={submittingId === p.id}
+                          className="btn-primary text-sm tap-scale"
+                        >
                           {submittingId === p.id ? "…" : "Choose"}
                         </button>
                       )}
@@ -831,6 +849,7 @@ export default function ServiceBookingFlow({
                         </div>
                         <Link
                           href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
+                          onClick={() => trackCampaignClick(p.activeCampaignId)}
                           className="tap-scale text-xs font-semibold px-3 py-1.5 rounded-full"
                           style={{ border: "1px solid var(--panel-dark)", color: "var(--panel-dark)" }}
                         >

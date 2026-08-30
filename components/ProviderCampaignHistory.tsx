@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Calendar, Megaphone, Eye, Wallet } from "lucide-react";
+import { ArrowLeft, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Calendar, Megaphone, Eye, Wallet, MousePointerClick } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -13,6 +13,7 @@ type Campaign = {
   endDate: string | null;
   createdAt: string;
   reachCount: number;
+  clickCount: number;
   budgetUsedPaise: number;
 };
 
@@ -122,18 +123,22 @@ export default function ProviderCampaignHistory({ onBack }: { onBack: () => void
                     );
                   })}
                 </div>
-                <div className="pt-3 grid grid-cols-3 gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+                <div className="pt-3 grid grid-cols-4 gap-2" style={{ borderTop: "1px solid var(--border)" }}>
                   <div>
                     <p className="text-[11px]" style={{ color: "var(--muted)" }}>Daily Budget</p>
                     <p className="font-bold text-sm">₹{(c.dailyBudgetPaise / 100).toFixed(0)}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Wallet size={10} /> Budget Used</p>
+                    <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Wallet size={10} /> Used</p>
                     <p className="font-bold text-sm">₹{(c.budgetUsedPaise / 100).toFixed(0)}</p>
                   </div>
                   <div>
                     <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><Eye size={10} /> Reach</p>
                     <p className="font-bold text-sm">{c.reachCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted)" }}><MousePointerClick size={10} /> Clicks</p>
+                    <p className="font-bold text-sm">{c.clickCount}</p>
                   </div>
                 </div>
               </div>

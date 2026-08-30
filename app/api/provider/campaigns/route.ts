@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 
-const createCampaignSchema = z.object({
-  name: z.string().trim().min(1, "Campaign name is required"),
-  services: z.array(z.enum(["WALKING", "SITTING", "GROOMING", "TRAINING"])).min(1, "Pick at least one service"),
-  dailyBudgetPaise: z.number().int().positive(),
-  startDate: z.string(), // ISO datetime
-});
+const thirtyDaysAgo = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-// List this provider's campaigns — used by Campaign History. Adds two
-// real, derived fields on top of the stored data:
-//  - reachCount: a genuine count of CampaignImpression rows (real search
-//    appearances), not an estimate.
-//  - budgetUsedPaise: real elapsed active days × the real daily budget.
-//    Labeled "Budget Used," never "Spend" — no actual charge happens
-//    anywhere in this flow, so this must never be presented as money that
-//    changed hands.
+// Real substitutes for the reference design's ad-performance numbers —
+// "Total Budget Used" sums real per-campaign budget consumption (elapsed
+// days × dailyBudgetPaise) across all of this provider's campaigns.
+// "Total Clicks" is a genuine count of CampaignClick rows across all
+// campaigns — never an estimate or a ratio applied to impressions.
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,58 +16,32 @@ export async function GET() {
   const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
   if (!provider) return NextResponse.json({ error: "Not a provider" }, { status: 403 });
 
-  const campaigns = await prisma.campaign.findMany({
-    where: { providerId: provider.id },
-    include: { _count: { select: { impressions: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const [profileViews, campaigns] = await Promise.all([
+    prisma.activityEvent.count({
+      where: { type: "PAGE_VIEW", path: `/providers/${provider.id}`, createdAt: { gte: thirtyDaysAgo() } },
+    }),
+    prisma.campaign.findMany({
+      where: { providerId: provider.id },
+      select: { startDate: true, endDate: true, dailyBudgetPaise: true, _count: { select: { clicks: true } } },
+    }),
+  ]);
 
   const now = Date.now();
   const DAY_MS = 24 * 60 * 60 * 1000;
-
-  const withComputed = campaigns.map((c) => {
+  let totalBudgetUsedPaise = 0;
+  let totalClicks = 0;
+  for (const c of campaigns) {
     const startMs = c.startDate.getTime();
     const endMs = c.endDate ? c.endDate.getTime() : now;
     const effectiveEndMs = Math.min(endMs, now);
-    // Not started yet (future-dated "Schedule for Later") -> zero elapsed
-    // days, zero budget used, regardless of status field.
     const elapsedDays = startMs > now ? 0 : Math.max(0, Math.floor((effectiveEndMs - startMs) / DAY_MS));
-
-    const { _count, ...rest } = c;
-    return {
-      ...rest,
-      reachCount: _count.impressions,
-      budgetUsedPaise: elapsedDays * c.dailyBudgetPaise,
-    };
-  });
-
-  return NextResponse.json(withComputed);
-}
-
-// Create a real campaign from the "New Campaign" form.
-export async function POST(req: Request) {
-  const user = await getOrCreateUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const provider = await prisma.provider.findUnique({ where: { userId: user.id } });
-  if (!provider) return NextResponse.json({ error: "Not a provider" }, { status: 403 });
-
-  const body = await req.json();
-  const parsed = createCampaignSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    totalBudgetUsedPaise += elapsedDays * c.dailyBudgetPaise;
+    totalClicks += c._count.clicks;
   }
 
-  const campaign = await prisma.campaign.create({
-    data: {
-      providerId: provider.id,
-      name: parsed.data.name,
-      services: parsed.data.services as any,
-      dailyBudgetPaise: parsed.data.dailyBudgetPaise,
-      startDate: new Date(parsed.data.startDate),
-      status: "ACTIVE",
-    },
+  return NextResponse.json({
+    profileViews,
+    totalSpentPaise: totalBudgetUsedPaise,
+    totalClicks,
   });
-
-  return NextResponse.json(campaign, { status: 201 });
 }

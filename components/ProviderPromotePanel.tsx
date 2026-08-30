@@ -285,7 +285,7 @@ export default function ProviderPromotePanel({
   const [view, setView] = useState<"overview" | "new-campaign" | "history">("overview");
   const [justLaunched, setJustLaunched] = useState<string | null>(null);
 
-  const [stats, setStats] = useState<{ profileViews: number; totalSpentPaise: number } | null>(null);
+  const [stats, setStats] = useState<{ profileViews: number; totalSpentPaise: number; totalClicks: number } | null>(null);
   useEffect(() => {
     fetch("/api/provider/promotion-stats")
       .then((r) => (r.ok ? r.json() : null))
@@ -362,18 +362,16 @@ export default function ProviderPromotePanel({
             <p className="text-2xl font-bold">{stats ? stats.profileViews : "—"}</p>
             <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Last 30 days</p>
           </div>
-          <div className="rounded-xl p-4" style={{ background: "var(--cream)", opacity: 0.6 }}>
+          <div className="rounded-xl p-4" style={{ background: "var(--cream)" }}>
             <p className="flex items-center gap-1.5 text-[11px] font-semibold mb-2" style={{ color: "var(--muted)" }}>
               <MousePointerClick size={13} /> Clicks
             </p>
-            <p className="text-2xl font-bold">—</p>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide inline-block mt-1" style={{ background: "var(--card)", color: "var(--muted)" }}>
-              Coming soon
-            </span>
+            <p className="text-2xl font-bold">{stats ? stats.totalClicks : "—"}</p>
+            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Across all campaigns</p>
           </div>
           <div className="rounded-xl p-4" style={{ background: "var(--cream)" }}>
             <p className="flex items-center gap-1.5 text-[11px] font-semibold mb-2" style={{ color: "var(--muted)" }}>
-              <Wallet size={13} /> Total Spent
+              <Wallet size={13} /> Budget Used
             </p>
             <p className="text-2xl font-bold">{stats ? `₹${(stats.totalSpentPaise / 100).toFixed(0)}` : "—"}</p>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide inline-block mt-1" style={{ background: "var(--card)", color: "var(--muted)" }}>
