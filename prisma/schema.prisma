@@ -71,6 +71,11 @@ enum PayoutStatus {
   FAILED
 }
 
+enum PackageCadence {
+  WEEKLY
+  MONTHLY
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -168,6 +173,12 @@ model Provider {
   pricePerSitDay  Int?
   pricePerGroom   Int?
   pricePerTrain   Int?
+  // Training: which billing cadence(s) this provider offers at all — each
+  // TrainingPackage below belongs to exactly one of these. Grooming: which
+  // dog sizes this provider grooms (reuses PetSize) — a preference, not
+  // pricing itself; each GroomingPackage prices per size separately below.
+  trainingCadences PackageCadence[] @default([])
+  groomingSizes     PetSize[]        @default([])
   verified        Boolean  @default(false)
   ratingAvg       Float    @default(0)
   ratingCount     Int      @default(0)
@@ -202,7 +213,38 @@ model Provider {
   sponsorshipPurchases SponsorshipPurchase[]
   favorites    Favorite[]
   campaigns    Campaign[]
+  trainingPackages TrainingPackage[]
+  groomingPackages GroomingPackage[]
   payouts      Payout[]
+}
+
+// A named, provider-created training package (e.g. "Puppy Basics"),
+// belonging to exactly one of the provider's enabled cadences
+// (trainingCadences on Provider) — a package can't exist under a cadence
+// the provider hasn't turned on.
+model TrainingPackage {
+  id          String         @id @default(cuid())
+  providerId  String
+  provider    Provider       @relation(fields: [providerId], references: [id])
+  name        String
+  cadence     PackageCadence
+  pricePaise  Int
+  createdAt   DateTime       @default(now())
+}
+
+// A named, provider-created grooming package (e.g. "Base Bath & Brush"),
+// priced separately per dog size. pricesBySize is keyed by PetSize value
+// ("SMALL" | "MEDIUM" | "LARGE") to a paise amount — only sizes the
+// provider actually grooms (Provider.groomingSizes) should have an entry,
+// enforced in application code rather than at the schema level. Grooming
+// is per-visit only, no cadence concept (unlike Training).
+model GroomingPackage {
+  id           String   @id @default(cuid())
+  providerId   String
+  provider     Provider @relation(fields: [providerId], references: [id])
+  name         String
+  pricesBySize Json     // e.g. { "SMALL": 3500, "MEDIUM": 4500, "LARGE": 6000 } — paise
+  createdAt    DateTime @default(now())
 }
 
 model ProviderAvailability {
