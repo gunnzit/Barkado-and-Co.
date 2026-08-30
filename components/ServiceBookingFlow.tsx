@@ -869,7 +869,7 @@ export default function ServiceBookingFlow({
                         // profile page, where the real package/size picker
                         // (and, for Grooming, a real Add to Cart) lives.
                         <Link
-                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
+                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}&service=${serviceType}`}
                           onClick={() => trackCampaignClick(p.activeCampaignId)}
                           className="btn-primary text-sm tap-scale"
                         >
@@ -938,7 +938,7 @@ export default function ServiceBookingFlow({
                           <p className="font-bold text-base">₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}</p>
                         </div>
                         <Link
-                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}`}
+                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}&service=${serviceType}`}
                           onClick={() => trackCampaignClick(p.activeCampaignId)}
                           className="tap-scale text-xs font-semibold px-3 py-1.5 rounded-full"
                           style={{ border: "1px solid var(--panel-dark)", color: "var(--panel-dark)" }}

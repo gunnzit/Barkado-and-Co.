@@ -21,9 +21,9 @@ export default async function TrainerProfilePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ petId?: string; start?: string }>;
+  searchParams: Promise<{ petId?: string; start?: string; service?: string }>;
 }) {
-  const { petId, start } = await searchParams;
+  const { petId, start, service } = await searchParams;
   const { id } = await params;
 
   const user = await getOrCreateUser();
@@ -87,7 +87,9 @@ export default async function TrainerProfilePage({
         <Link href="/training" className="tap-scale p-2 rounded-full">
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="font-bold text-base">Trainer Profile</h1>
+        <h1 className="font-bold text-base">
+          {service === "GROOMING" ? "Groomer Profile" : service === "TRAINING" ? "Trainer Profile" : "Provider Profile"}
+        </h1>
         <div style={{ width: 36 }} />
       </header>
 
@@ -168,15 +170,22 @@ export default async function TrainerProfilePage({
           </section>
         </div>
 
-        {/* ===== Right column: plans/packages, reviews ===== */}
+        {/* ===== Right column: plans/packages, reviews. When we know
+            which service the visitor was actually browsing (via the
+            `service` param, set when linking here from ServiceBookingFlow),
+            show that section only — a provider offering both Training and
+            Grooming shouldn't show the wrong one first, or both stacked,
+            confusing someone who came here for one specific service. If
+            no context is known (e.g. a bookmarked/shared link), fall back
+            to showing whichever sections genuinely apply. ===== */}
         <div className="md:col-span-8 space-y-4">
-          {provider.servicesOffered.includes("TRAINING") && (
+          {(service ? service === "TRAINING" : provider.servicesOffered.includes("TRAINING")) && (
             <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
               <ProviderPlansTabs basePricePaise={provider.pricePerTrain ?? 50000} />
             </section>
           )}
 
-          {provider.servicesOffered.includes("GROOMING") && (
+          {(service ? service === "GROOMING" : provider.servicesOffered.includes("GROOMING")) && (
             <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
               <ProviderGroomingPackages
                 providerId={provider.id}
