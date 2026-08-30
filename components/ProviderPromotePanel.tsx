@@ -8,6 +8,23 @@ import {
 } from "lucide-react";
 import ProviderCampaignHistory from "@/components/ProviderCampaignHistory";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+function loadRazorpayScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve();
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load payment widget"));
+    document.body.appendChild(script);
+  });
+}
+
 type Scope = "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
 
 const SERVICE_META: Record<Scope, { label: string; icon: any; color: string }> = {
@@ -20,9 +37,7 @@ const SERVICE_META: Record<Scope, { label: string; icon: any; color: string }> =
 // Purely a placeholder formula, carried over verbatim from the reference
 // design (whose own source literally commented "Fictional calculation for
 // demonstration" on this same number). Not a real prediction — there's no
-// ad-delivery system behind it yet. Safe to leave interactive for now
-// since Launch Campaign is disabled, so nobody can act on this number with
-// real money until a real estimation system replaces this.
+// ad-delivery system behind it.
 function estimatedReach(dailyBudget: number) {
   return { min: Math.floor(dailyBudget * 20), max: Math.floor(dailyBudget * 33.3) };
 }
@@ -31,15 +46,23 @@ function NewCampaignScreen({
   offeredServices,
   onBack,
   onLaunched,
+  providerName,
+  photoUrl,
+  ratingAvg,
 }: {
   offeredServices: Scope[];
   onBack: () => void;
   onLaunched: (name: string) => void;
+  providerName: string;
+  photoUrl: string | null;
+  ratingAvg: number;
 }) {
   const [name, setName] = useState("");
   const [selectedServices, setSelectedServices] = useState<Scope[]>(offeredServices.slice(0, 1));
   const [dailyBudget, setDailyBudget] = useState(15);
-  const [totalCap, setTotalCap] = useState(""); // blank = uncapped
+  // Now required — the one-time Razorpay charge on launch is for exactly
+  // this amount, so there's nothing to charge for an uncapped campaign.
+  const [totalCap, setTotalCap] = useState("");
   const [schedule, setSchedule] = useState<"now" | "later">("now");
   const [laterStartDate, setLaterStartDate] = useState("");
   const [launching, setLaunching] = useState(false);
@@ -51,32 +74,68 @@ function NewCampaignScreen({
 
   const reach = estimatedReach(dailyBudget);
 
+  const capValue = Number(totalCap);
   const canLaunch =
     name.trim().length > 0 &&
     selectedServices.length > 0 &&
-    (schedule === "now" || laterStartDate.length > 0);
+    (schedule === "now" || laterStartDate.length > 0) &&
+    totalCap.trim().length > 0 &&
+    !isNaN(capValue) &&
+    capValue > 0;
 
+  // Real one-time payment for the full budget cap, per product decision —
+  // not a recurring daily charge (that's a separate, much larger future
+  // build). Two-step, same pattern as cart checkout: create the order and
+  // an unpaid Campaign row, open Razorpay, then verify the payment before
+  // the campaign is treated as real anywhere in the app.
   const launch = async () => {
     setLaunching(true);
     setError("");
     const startDate = schedule === "now" ? new Date().toISOString() : new Date(laterStartDate).toISOString();
-    const capValue = totalCap.trim() ? Number(totalCap) : undefined;
-    const res = await fetch("/api/provider/campaigns", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        services: selectedServices,
-        dailyBudgetPaise: dailyBudget * 100,
-        totalBudgetCapPaise: capValue ? capValue * 100 : undefined,
-        startDate,
-      }),
-    });
-    setLaunching(false);
-    if (res.ok) {
-      onLaunched(name.trim());
-    } else {
-      setError("Couldn't launch this campaign — please try again.");
+
+    try {
+      const orderRes = await fetch("/api/provider/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          services: selectedServices,
+          dailyBudgetPaise: dailyBudget * 100,
+          totalBudgetCapPaise: Math.round(capValue * 100),
+          startDate,
+        }),
+      });
+      if (!orderRes.ok) throw new Error("order_failed");
+      const order = await orderRes.json();
+
+      await loadRazorpayScript();
+
+      const rzp = new window.Razorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        order_id: order.razorpayOrderId,
+        name: "Barkado & Co.",
+        description: `Campaign — ${name.trim()}`,
+        handler: async (response: any) => {
+          const verifyRes = await fetch(`/api/provider/campaigns/${order.campaignId}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+          setLaunching(false);
+          if (verifyRes.ok) {
+            onLaunched(name.trim());
+          } else {
+            setError("Payment succeeded but activation failed — contact support.");
+          }
+        },
+        modal: { ondismiss: () => setLaunching(false) },
+      });
+      rzp.open();
+    } catch {
+      setLaunching(false);
+      setError("Couldn't start payment — please try again.");
     }
   };
 
@@ -180,11 +239,13 @@ function NewCampaignScreen({
           </div>
 
           {/* Real budget cap — optional. Blank means uncapped. When set,
-              the campaign auto-pauses once real Budget Used reaches this
-              amount (checked lazily on read, no cron job). */}
+              You'll pay this amount now via Razorpay — the campaign auto-
+              pauses once real Budget Used reaches it (checked lazily on
+              read, no cron job). This is a one-time charge, not a daily
+              bill. */}
           <div className="card mt-3">
             <label className="text-xs font-semibold mb-1.5 block" style={{ color: "var(--muted)" }}>
-              Total budget cap (optional)
+              Total Budget Cap
             </label>
             <div className="flex items-center gap-2">
               <span className="text-sm" style={{ color: "var(--muted)" }}>₹</span>
@@ -193,13 +254,13 @@ function NewCampaignScreen({
                 min={1}
                 value={totalCap}
                 onChange={(e) => setTotalCap(e.target.value)}
-                placeholder="No cap — runs until you pause it"
+                placeholder="e.g. 500"
                 className="flex-1 bg-transparent outline-none text-sm border rounded-lg px-3 py-2"
                 style={{ borderColor: "var(--border)" }}
               />
             </div>
             <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>
-              Campaign auto-pauses once Budget Used reaches this amount.
+              Charged once, upfront, via Razorpay. Campaign auto-pauses once Budget Used reaches this amount.
             </p>
           </div>
         </div>
@@ -272,6 +333,45 @@ function NewCampaignScreen({
           )}
         </div>
 
+        {/* ===== Preview — the provider's REAL name, photo, and rating,
+            with the actual "Featured" badge styling used on real search
+            results. Not a mockup redesign — an honest preview of exactly
+            what their real card will look like once this campaign is paid
+            for and active. */}
+        <div>
+          <h2 className="font-bold text-lg mb-3">Preview</h2>
+          <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+            This is how your card will look to owners once this campaign is active.
+          </p>
+          <div className="card">
+            <div className="flex items-center gap-3">
+              <img
+                src={photoUrl || `https://i.pravatar.cc/150?u=preview-${providerName}`}
+                alt={providerName}
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+                style={{ border: "1px solid var(--border)" }}
+              />
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="font-semibold text-sm">{providerName || "Your name"}</p>
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
+                    <Check size={10} /> Verified
+                  </span>
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}>
+                    <Star size={10} fill="var(--forest, #16281f)" /> Featured
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
+                  <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {ratingAvg.toFixed(1)}</span>
+                  {selectedServices.length > 0 && (
+                    <span>{selectedServices.map((s) => SERVICE_META[s].label).join(", ")}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {error && <p className="text-sm" style={{ color: "var(--terracotta)" }}>{error}</p>}
 
         <button
@@ -285,7 +385,7 @@ function NewCampaignScreen({
             cursor: !canLaunch || launching ? "not-allowed" : "pointer",
           }}
         >
-          {launching ? "Launching…" : "Launch Campaign"} <Rocket size={18} />
+          {launching ? "Processing payment…" : canLaunch ? `Pay ₹${capValue} & Launch` : "Launch Campaign"} <Rocket size={18} />
         </button>
       </div>
     </div>
@@ -332,6 +432,9 @@ export default function ProviderPromotePanel({
             setJustLaunched(name);
             setView("overview");
           }}
+          providerName={providerName}
+          photoUrl={photoUrl}
+          ratingAvg={ratingAvg}
         />
       </div>
     );

@@ -758,6 +758,15 @@ export default function ServiceBookingFlow({
                               <Sparkles size={10} /> Sponsored
                             </span>
                           )}
+                          {/* Real campaign boost — distinct from the paid
+                              "Sponsored" flag above (a different, older
+                              mechanism). Only shown when an active, PAID
+                              campaign actually matched this search. */}
+                          {p.isCampaignBoosted && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}>
+                              <Star size={10} fill="var(--forest, #16281f)" /> Featured
+                            </span>
+                          )}
                           {p.availableAtRequestedTime === false && (
                             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
                               <Clock size={10} /> Outside their hours

@@ -36,8 +36,14 @@ const PASSPORT_ITEMS = [
 ];
 
 export default async function Home() {
-  const [verifiedCount, providers, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
+  const [verifiedCount, ratedProviders, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
     prisma.provider.count({ where: { verified: true } }),
+    // Wider candidate pool (top 20 by rating) rather than every verified
+    // provider — this is a curated 3-slot trust section, not a full search
+    // results page, so a low-rated provider running a campaign still
+    // wouldn't surface here even with a boost. Real search results (the
+    // service pages) don't have this floor, since those show everyone who
+    // matches.
     prisma.provider.findMany({
       where: { verified: true },
       include: {
@@ -45,7 +51,7 @@ export default async function Home() {
         _count: { select: { bookings: { where: { status: "COMPLETED" } } } },
       },
       orderBy: { ratingAvg: "desc" },
-      take: 3,
+      take: 20,
     }),
     prisma.booking.count({ where: { status: "COMPLETED" } }),
     prisma.provider.aggregate({ where: { verified: true }, _avg: { ratingAvg: true } }),
@@ -59,6 +65,38 @@ export default async function Home() {
       orderBy: { ratingAvg: "desc" },
     }),
   ]);
+
+  // Real campaign boost — Campaign has no "Homepage" targeting option
+  // (unlike the older SponsorshipPurchase.scope field, which does), so
+  // this checks "has any active, paid campaign for any service" as the
+  // signal, and gives those providers priority within the rated pool
+  // above — same "boosted always sorts first" rule used in real search
+  // results (app/api/providers/route.ts).
+  const now = new Date();
+  const candidateIds = ratedProviders.map((p) => p.id);
+  const activeCampaigns = candidateIds.length > 0
+    ? await prisma.campaign.findMany({
+        where: {
+          providerId: { in: candidateIds },
+          status: "ACTIVE",
+          paidAt: { not: null },
+          startDate: { lte: now },
+          OR: [{ endDate: null }, { endDate: { gte: now } }],
+        },
+        select: { providerId: true },
+      })
+    : [];
+  const boostedProviderIds = new Set(activeCampaigns.map((c) => c.providerId));
+
+  const providers = [...ratedProviders]
+    .sort((a, b) => {
+      const aBoost = boostedProviderIds.has(a.id);
+      const bBoost = boostedProviderIds.has(b.id);
+      if (aBoost !== bBoost) return aBoost ? -1 : 1;
+      return b.ratingAvg - a.ratingAvg;
+    })
+    .slice(0, 3)
+    .map((p) => ({ ...p, isCampaignBoosted: boostedProviderIds.has(p.id) }));
 
   const avgRating = ratingAgg._avg.ratingAvg;
 
@@ -340,9 +378,16 @@ export default async function Home() {
                   </span>
                 </div>
                 <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>{p._count.bookings} completed</p>
-                <span className="trust-chip">
-                  <ShieldCheck size={11} /> Verified
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="trust-chip">
+                    <ShieldCheck size={11} /> Verified
+                  </span>
+                  {p.isCampaignBoosted && (
+                    <span className="trust-chip" style={{ background: "var(--gold)", color: "var(--forest)", border: "none" }}>
+                      <Star size={11} fill="var(--forest)" /> Featured
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
