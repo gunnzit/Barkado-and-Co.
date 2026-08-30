@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   Sparkles, PawPrint, Home as HomeIcon, Scissors, GraduationCap, Eye,
   Plus, Megaphone, MousePointerClick, Wallet, Award, Zap, ArrowLeft, HelpCircle,
-  Check, TrendingUp, Rocket, Star,
+  Check, TrendingUp, Rocket, Star, X, History,
 } from "lucide-react";
+import ProviderCampaignHistory from "@/components/ProviderCampaignHistory";
 
 type Scope = "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
 
@@ -29,19 +30,52 @@ function estimatedReach(dailyBudget: number) {
 function NewCampaignScreen({
   offeredServices,
   onBack,
+  onLaunched,
 }: {
   offeredServices: Scope[];
   onBack: () => void;
+  onLaunched: (name: string) => void;
 }) {
+  const [name, setName] = useState("");
   const [selectedServices, setSelectedServices] = useState<Scope[]>(offeredServices.slice(0, 1));
   const [dailyBudget, setDailyBudget] = useState(15);
   const [schedule, setSchedule] = useState<"now" | "later">("now");
+  const [laterStartDate, setLaterStartDate] = useState("");
+  const [launching, setLaunching] = useState(false);
+  const [error, setError] = useState("");
 
   const toggleService = (s: Scope) => {
     setSelectedServices((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
   const reach = estimatedReach(dailyBudget);
+
+  const canLaunch =
+    name.trim().length > 0 &&
+    selectedServices.length > 0 &&
+    (schedule === "now" || laterStartDate.length > 0);
+
+  const launch = async () => {
+    setLaunching(true);
+    setError("");
+    const startDate = schedule === "now" ? new Date().toISOString() : new Date(laterStartDate).toISOString();
+    const res = await fetch("/api/provider/campaigns", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        services: selectedServices,
+        dailyBudgetPaise: dailyBudget * 100,
+        startDate,
+      }),
+    });
+    setLaunching(false);
+    if (res.ok) {
+      onLaunched(name.trim());
+    } else {
+      setError("Couldn't launch this campaign — please try again.");
+    }
+  };
 
   return (
     <div>
@@ -53,6 +87,18 @@ function NewCampaignScreen({
           <h1 className="text-lg font-bold">New Campaign</h1>
         </div>
         <HelpCircle size={20} color="var(--muted)" />
+      </div>
+
+      <div className="mb-6">
+        <label className="text-xs font-semibold mb-1.5 block" style={{ color: "var(--muted)" }}>Campaign Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Spring Explorer Push"
+          className="w-full border rounded-xl px-4 py-3 text-sm"
+          style={{ borderColor: "var(--border)" }}
+        />
       </div>
 
       <div className="space-y-8">
@@ -184,15 +230,35 @@ function NewCampaignScreen({
               );
             })}
           </div>
+          {schedule === "later" && (
+            <div className="mt-3">
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: "var(--muted)" }}>Start date</label>
+              <input
+                type="date"
+                value={laterStartDate}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setLaterStartDate(e.target.value)}
+                className="border rounded-xl px-4 py-2.5 text-sm"
+                style={{ borderColor: "var(--border)" }}
+              />
+            </div>
+          )}
         </div>
 
+        {error && <p className="text-sm" style={{ color: "var(--terracotta)" }}>{error}</p>}
+
         <button
-          disabled
-          className="w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2"
-          style={{ background: "var(--muted)", color: "white", opacity: 0.5, cursor: "not-allowed" }}
-          title="Real campaign launches are coming soon"
+          onClick={launch}
+          disabled={!canLaunch || launching}
+          className="w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 tap-scale"
+          style={{
+            background: canLaunch ? "var(--panel-dark)" : "var(--muted)",
+            color: "white",
+            opacity: !canLaunch || launching ? 0.5 : 1,
+            cursor: !canLaunch || launching ? "not-allowed" : "pointer",
+          }}
         >
-          Launch Campaign <Rocket size={18} />
+          {launching ? "Launching…" : "Launch Campaign"} <Rocket size={18} />
         </button>
       </div>
     </div>
@@ -216,7 +282,8 @@ export default function ProviderPromotePanel({
   ratingAvg: number;
   completedCount: number;
 }) {
-  const [view, setView] = useState<"overview" | "new-campaign">("overview");
+  const [view, setView] = useState<"overview" | "new-campaign" | "history">("overview");
+  const [justLaunched, setJustLaunched] = useState<string | null>(null);
 
   const [stats, setStats] = useState<{ profileViews: number; totalSpentPaise: number } | null>(null);
   useEffect(() => {
@@ -231,23 +298,56 @@ export default function ProviderPromotePanel({
   if (view === "new-campaign") {
     return (
       <div className="px-6">
-        <NewCampaignScreen offeredServices={servicesOffered} onBack={() => setView("overview")} />
+        <NewCampaignScreen
+          offeredServices={servicesOffered}
+          onBack={() => setView("overview")}
+          onLaunched={(name) => {
+            setJustLaunched(name);
+            setView("overview");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (view === "history") {
+    return (
+      <div className="px-6">
+        <ProviderCampaignHistory onBack={() => setView("overview")} />
       </div>
     );
   }
 
   return (
     <div className="px-6 space-y-5">
+      {justLaunched && (
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: "rgba(22,40,31,0.08)", border: "1px solid var(--panel-dark)" }}>
+          <p className="text-sm font-semibold">"{justLaunched}" launched</p>
+          <button onClick={() => setJustLaunched(null)} className="tap-scale" aria-label="Dismiss">
+            <X size={16} color="var(--muted)" />
+          </button>
+        </div>
+      )}
+
       <div>
         <h1 className="text-xl font-bold mb-1">Promote</h1>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>Manage your sponsored listings and grow your business.</p>
-        <button
-          onClick={() => setView("new-campaign")}
-          className="btn-primary tap-scale flex items-center gap-2"
-          style={{ background: "var(--terracotta)" }}
-        >
-          <Plus size={18} /> New Campaign
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setView("new-campaign")}
+            className="btn-primary tap-scale flex items-center gap-2"
+            style={{ background: "var(--terracotta)" }}
+          >
+            <Plus size={18} /> New Campaign
+          </button>
+          <button
+            onClick={() => setView("history")}
+            className="tap-scale flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
+            style={{ border: "1px solid var(--border)", color: "var(--forest, #16281f)" }}
+          >
+            <History size={16} /> Campaign History
+          </button>
+        </div>
       </div>
 
       {/* ===== Campaign Performance — real numbers where they exist,

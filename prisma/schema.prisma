@@ -53,6 +53,12 @@ enum ActivityType {
   CLICK
 }
 
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -172,6 +178,7 @@ model Provider {
   availability ProviderAvailability[]
   sponsorshipPurchases SponsorshipPurchase[]
   favorites    Favorite[]
+  campaigns    Campaign[]
 }
 
 model ProviderAvailability {
@@ -200,6 +207,26 @@ model SponsorshipPurchase {
   razorpayOrderId String?
   paidAt          DateTime?
   createdAt       DateTime @default(now())
+}
+
+// A provider's promotion campaign — created from the "New Campaign" flow.
+// Reach/Clicks/ROI are deliberately NOT modeled here: no ad-impression or
+// click-through tracking exists anywhere in this app yet, and attributing
+// a booking to a specific campaign is a separate, much larger feature.
+// This model only stores what the provider actually configures (name,
+// which services, daily budget, timing, status) — real inputs, not
+// invented outputs.
+model Campaign {
+  id              String         @id @default(cuid())
+  providerId      String
+  provider        Provider       @relation(fields: [providerId], references: [id])
+  name            String
+  services        ServiceType[]
+  dailyBudgetPaise Int
+  status          CampaignStatus @default(ACTIVE)
+  startDate       DateTime
+  endDate         DateTime?
+  createdAt       DateTime       @default(now())
 }
 
 model Booking {
