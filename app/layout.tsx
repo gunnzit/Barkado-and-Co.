@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
@@ -9,9 +9,9 @@ import BottomNav from "@/components/BottomNav";
 import ActivityTracker from "@/components/ActivityTracker";
 import "./globals.css";
 
-const poppins = Poppins({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["600", "700", "800"],
   variable: "--font-heading",
   display: "swap",
 });
@@ -41,8 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // transitions (loading.tsx replaces {children}'s content, not this layout
   // itself, so BottomNav never unmounts). It self-hides via pathname check
   // on routes that have their own navigation (provider, admin, cart, etc).
+  //
+  // Heading font is Plus Jakarta Sans, matching the design system's
+  // reference mockups exactly (was Poppins until now — a mismatch flagged
+  // early in the redesign but never confirmed/fixed until this change).
   return (
-    <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body>
         <ClerkProvider>
           <SplashScreen />
