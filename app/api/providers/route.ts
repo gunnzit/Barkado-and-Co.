@@ -61,6 +61,7 @@ export async function GET(req: Request) {
         where: {
           providerId: { in: providerIds },
           status: "ACTIVE",
+          paidAt: { not: null }, // never boost an unpaid/abandoned campaign
           services: { has: service as any },
           startDate: { lte: nowDate },
           OR: [{ endDate: null }, { endDate: { gte: nowDate } }],

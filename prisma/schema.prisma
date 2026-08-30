@@ -223,15 +223,23 @@ model Campaign {
   name            String
   services        ServiceType[]
   dailyBudgetPaise Int
-  // Optional lifetime cap. When set and Budget Used (elapsed active days ×
-  // dailyBudgetPaise) reaches it, the campaign is auto-paused — checked
-  // lazily wherever campaign data is read (no cron job exists), not on a
-  // schedule. Null = uncapped.
+  // Now required in practice (enforced in the API/form) since the one-time
+  // Razorpay charge on launch is for exactly this amount — you can't
+  // charge a fixed sum for an uncapped campaign. Budget Used (elapsed
+  // active days × dailyBudgetPaise) is still checked against this to
+  // auto-pause once reached, same as before.
   totalBudgetCapPaise Int?
   status          CampaignStatus @default(ACTIVE)
   startDate       DateTime
   endDate         DateTime?
   createdAt       DateTime       @default(now())
+  // Same pattern as Booking/Order: the campaign exists in the DB as soon
+  // as checkout starts, but is only real/active once paidAt is set. Every
+  // read that matters (search boosting, History listing) filters on
+  // paidAt not null, so an abandoned or failed payment never surfaces as
+  // a working campaign.
+  razorpayOrderId String?
+  paidAt          DateTime?
 
   impressions CampaignImpression[]
   clicks      CampaignClick[]
