@@ -114,6 +114,19 @@ function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 
   return (field ?? 0) / 100;
 }
 
+// Formats a Date as a LOCAL "YYYY-MM-DDTHH:mm" string — matching the exact
+// format `start` is already built in (from selectedDateIso + selectedSlot).
+// Previously this used .toISOString() (UTC) then stripped the "Z" suffix,
+// which silently mixed UTC and local time: the resulting string's numbers
+// were UTC, but re-parsing it later (with no "Z") reads it as LOCAL time —
+// a real bug, not flakiness. For any timezone ahead of UTC (like India,
+// UTC+5:30), that mismatch shifts the computed duration by hours, which is
+// exactly why "30/45/60 minutes only" validation was failing downstream.
+function toLocalDatetimeString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 // Builds the next 7 days starting today, for the date strip.
 function buildDateStrip(): { label: string; dayNum: number; iso: string; isToday: boolean }[] {
   const days = [];
@@ -229,7 +242,7 @@ export default function ServiceBookingFlow({
     if (!COPY[serviceType].needsEndDate && start && !end) {
       const startDate = new Date(start);
       const minutes = serviceType === "WALKING" ? walkDurationMin : 30;
-      setEnd(new Date(startDate.getTime() + minutes * 60000).toISOString().slice(0, 16));
+      setEnd(toLocalDatetimeString(new Date(startDate.getTime() + minutes * 60000)));
     }
     setPhase("providers");
   };
