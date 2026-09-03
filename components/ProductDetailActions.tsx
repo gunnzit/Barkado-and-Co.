@@ -104,8 +104,11 @@ export default function ProductDetailActions({
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 p-4" style={{ background: "var(--card)", borderTop: "1px solid var(--border)", zIndex: 50 }}>
-        <div className="max-w-lg mx-auto flex items-center gap-4">
+      <div
+        className="fixed bottom-0 left-0 right-0 p-4 lg:static lg:p-0 lg:mt-4 lg:border-t-0"
+        style={{ background: "var(--card)", borderTop: "1px solid var(--border)", zIndex: 50 }}
+      >
+        <div className="max-w-lg lg:max-w-none mx-auto flex items-center gap-4 lg:bg-[var(--card)] lg:rounded-xl lg:p-4 lg:border" style={{ borderColor: "var(--border)" }}>
           <div className="shrink-0">
             <p className="font-bold text-lg">₹{price}</p>
             <p className="text-[11px]" style={{ color: "var(--muted)" }}>Inclusive of all taxes</p>
