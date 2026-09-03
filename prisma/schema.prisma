@@ -443,6 +443,15 @@ model Product {
   stock       Int      @default(100)
   active      Boolean  @default(true)
   suitableSizes PetSize[] @default([])
+  // Real, provider-editable variant OPTIONS a buyer can pick from — not
+  // separate priced/stocked SKUs (price/stock stay single, flat fields on
+  // Product itself). Plain string arrays rather than a fixed enum, since
+  // options genuinely vary per product (a collar might offer "S, M, L,
+  // XL"; a bed might offer "Small, Medium, Large" — different vocabularies,
+  // not the same fixed PetSize scale). Empty array = no selection needed
+  // for that attribute.
+  colorOptions  String[] @default([])
+  sizeOptions   String[] @default([])
   createdAt   DateTime @default(now())
 
   cartItems  CartItem[]
@@ -459,6 +468,10 @@ model CartItem {
   productId String?
   product   Product?     @relation(fields: [productId], references: [id])
   quantity  Int          @default(1)
+  // Which color/size option the buyer picked, if the product has any —
+  // null when the product has no such options, or none was needed.
+  selectedColor String?
+  selectedSize  String?
 
   serviceType ServiceType?
   providerId  String?
@@ -504,6 +517,10 @@ model OrderItem {
   product          Product @relation(fields: [productId], references: [id])
   quantity         Int
   priceAtPurchase  Int
+  // Snapshot of the chosen color/size, carried over from the cart item —
+  // survives even if the product's available options change later.
+  selectedColor    String?
+  selectedSize     String?
 }
 
 model ActivityEvent {
