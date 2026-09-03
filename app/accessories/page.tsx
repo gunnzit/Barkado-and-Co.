@@ -57,11 +57,13 @@ export default async function AccessoriesPage() {
     imageUrls: item.imageUrls,
     stock: item.stock,
     isBestseller: bestsellerIds.has(item.id),
+    colorOptions: item.colorOptions,
+    sizeOptions: item.sizeOptions,
   }));
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-    <main className="pb-28 max-w-2xl mx-auto">
+    <main className="pb-28 max-w-lg sm:max-w-4xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher avatarOnly />
         <div className="flex items-center gap-2">

@@ -45,6 +45,11 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
             productId: item.productId!,
             quantity: item.quantity,
             priceAtPurchase: item.product!.price,
+            // Real color/size selection, carried over from the cart item —
+            // survives into order history even if the product's options
+            // change later.
+            selectedColor: item.selectedColor,
+            selectedSize: item.selectedSize,
           },
         })
       ),

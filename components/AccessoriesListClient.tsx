@@ -93,7 +93,10 @@ export default function AccessoriesListClient({ products }: { products: Accessor
         {filtered.length === 0 ? (
           <p className="text-sm py-10 text-center" style={{ color: "var(--muted)" }}>No products match your search.</p>
         ) : (
-          <div className="space-y-3">
+          {/* Single column on mobile; a real 2-column grid from tablet
+              width up — this page previously looked identical at every
+              screen size, which wasn't a deliberate choice. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visible.map((item) => (
               <AccessoryCard key={item.id} item={item} />
             ))}
