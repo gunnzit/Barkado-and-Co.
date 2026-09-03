@@ -71,6 +71,13 @@ enum PayoutStatus {
   FAILED
 }
 
+enum PawPointsTransactionType {
+  EARNED             // real points earned from a real paid purchase
+  REDEEMED           // real points spent to discount a real purchase
+  EARNED_REVERSED    // clawback: the purchase that earned these points was refunded/cancelled
+  REDEEMED_REVERSED  // refund: points spent on a purchase that was later refunded/cancelled are given back
+}
+
 enum PackageCadence {
   WEEKLY
   MONTHLY
@@ -99,6 +106,7 @@ model User {
   addresses       Address[]
   activityEvents  ActivityEvent[]
   favorites       Favorite[]
+  pawPointsTransactions PawPointsTransaction[]
 }
 
 model Address {
@@ -379,6 +387,7 @@ model Booking {
   report      WalkReport?
   review      Review?
   ownerReview OwnerReview?
+  pawPointsTransactions PawPointsTransaction[]
 }
 
 // A manual payout run — created from a provider's unclaimed COMPLETED
@@ -507,6 +516,33 @@ model Order {
 
   items    OrderItem[]
   bookings Booking[]
+  pawPointsTransactions PawPointsTransaction[]
+}
+
+// One row per real points event — earning, redeeming, or reversing either
+// (a refund/cancellation claws back points earned on that purchase, and
+// gives back points that were spent on it). Balance is ALWAYS computed
+// live by summing these rows for a user, never a stored running total —
+// same principle as Payout's "amount owed," so it can never silently
+// drift from reality. `points` is always stored positive; direction is
+// implied by `type`.
+//
+// Earning rate: 1 point per ₹10 of a purchase's real BASE price (a
+// booking's priceAmount before the maintenance fee, or a product's listed
+// price) — never on the inflated total the owner actually pays.
+// Redemption rate: 1 point = ₹0.25 of real discount, and per product
+// decision, redemption is allowed to cover up to 100% of an order.
+model PawPointsTransaction {
+  id        String                   @id @default(cuid())
+  userId    String
+  user      User                     @relation(fields: [userId], references: [id])
+  type      PawPointsTransactionType
+  points    Int
+  orderId   String?
+  order     Order?                   @relation(fields: [orderId], references: [id])
+  bookingId String?
+  booking   Booking?                 @relation(fields: [bookingId], references: [id])
+  createdAt DateTime                 @default(now())
 }
 
 model OrderItem {

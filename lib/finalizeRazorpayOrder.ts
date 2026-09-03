@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { sendBookingEmail } from "./sendBookingEmail";
 import { computeServiceCommission } from "./commission";
+import { calculateEarnedPoints } from "./pawPoints";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -26,16 +27,47 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
 
   const cartItems = await prisma.cartItem.findMany({
     where: { userId: order.userId },
-    include: { product: true, provider: { include: { user: true } }, pet: true },
+    include: { product: true, provider: { include: { user: true } }, pet: true, careAddOn: true },
   });
 
   const paidAt = new Date();
+
+  // PawPoints earned across the whole order — real product line prices
+  // and real service booking base prices (priceAmount, before the
+  // maintenance fee), summed into ONE ledger row per order rather than
+  // one per line item. Simpler, and still fully traceable back to every
+  // real item via order.items / order.bookings.
+  //
+  // NOTE: this is earning only. Clawback on refund/cancellation
+  // (EARNED_REVERSED) is separate, not-yet-built work on the existing
+  // cancellation/refund flow — flagged clearly, not silently assumed done.
+  const totalEarnedPoints = cartItems.reduce((sum, item) => {
+    if (item.kind === "PRODUCT" && item.product) {
+      return sum + calculateEarnedPoints(item.product.price * item.quantity);
+    }
+    if (item.kind === "SERVICE") {
+      return sum + calculateEarnedPoints(item.priceAmount ?? 0);
+    }
+    return sum;
+  }, 0);
 
   await prisma.$transaction([
     prisma.order.update({
       where: { id: order.id },
       data: { status: "PAID", paidAt },
     }),
+    ...(totalEarnedPoints > 0
+      ? [
+          prisma.pawPointsTransaction.create({
+            data: {
+              userId: order.userId,
+              type: "EARNED",
+              points: totalEarnedPoints,
+              orderId: order.id,
+            },
+          }),
+        ]
+      : []),
     ...cartItems
       .filter((item) => item.kind === "PRODUCT" && item.product)
       .map((item) =>
@@ -87,6 +119,23 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
         });
       }),
     prisma.cartItem.deleteMany({ where: { userId: order.userId } }),
+    // A paid Care Add-On grants a real, redeemable ServiceCredit — not a
+    // Booking (no provider/pet/time was chosen at purchase time). The
+    // owner applies this credit later through the normal booking flow;
+    // that redemption logic is separate work, not built yet.
+    ...cartItems
+      .filter((item) => item.kind === "CARE_ADDON" && item.careAddOn)
+      .map((item) =>
+        prisma.serviceCredit.create({
+          data: {
+            userId: order.userId,
+            serviceType: item.careAddOn!.serviceType,
+            remainingValuePaise: item.careAddOn!.creditValuePaise,
+            sourceAddOnId: item.careAddOn!.id,
+            purchasedAt: paidAt,
+          },
+        })
+      ),
   ]);
 
   const serviceItems = cartItems.filter((item) => item.kind === "SERVICE" && item.provider && item.pet);
