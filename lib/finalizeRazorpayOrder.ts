@@ -27,7 +27,7 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
 
   const cartItems = await prisma.cartItem.findMany({
     where: { userId: order.userId },
-    include: { product: true, provider: { include: { user: true } }, pet: true, careAddOn: true },
+    include: { product: true, provider: { include: { user: true } }, pet: true },
   });
 
   const paidAt = new Date();
@@ -119,23 +119,6 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
         });
       }),
     prisma.cartItem.deleteMany({ where: { userId: order.userId } }),
-    // A paid Care Add-On grants a real, redeemable ServiceCredit — not a
-    // Booking (no provider/pet/time was chosen at purchase time). The
-    // owner applies this credit later through the normal booking flow;
-    // that redemption logic is separate work, not built yet.
-    ...cartItems
-      .filter((item) => item.kind === "CARE_ADDON" && item.careAddOn)
-      .map((item) =>
-        prisma.serviceCredit.create({
-          data: {
-            userId: order.userId,
-            serviceType: item.careAddOn!.serviceType,
-            remainingValuePaise: item.careAddOn!.creditValuePaise,
-            sourceAddOnId: item.careAddOn!.id,
-            purchasedAt: paidAt,
-          },
-        })
-      ),
   ]);
 
   const serviceItems = cartItems.filter((item) => item.kind === "SERVICE" && item.provider && item.pet);
