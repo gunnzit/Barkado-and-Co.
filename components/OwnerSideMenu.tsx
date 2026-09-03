@@ -31,21 +31,17 @@ export default function OwnerSideMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Fully hidden on provider/admin/auth — those have their own separate
-  // navigation entirely. Home is the special case: mobile Home has
-  // BottomNav to cover this, but BottomNav is hidden at desktop widths
-  // (it's a floating mobile pattern, not meant to render alongside a real
-  // desktop header) — so without this, desktop Home would have NO way to
-  // reach Wallet/Wishlist/Bookings/Profile at all. `homeOnly` renders the
-  // trigger but keeps it CSS-hidden on mobile and visible from `lg:` up,
-  // rather than a JS on/off switch, so it responds to actual viewport
-  // width rather than route alone.
-  const fullyHidden = pathname.startsWith("/provider") || pathname.startsWith("/admin") || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
+  // Purely a desktop tool now — never appears on mobile at any route
+  // (mobile always uses the bottom nav's original page set instead, full
+  // stop). Hidden on provider/admin/auth (their own separate nav), and
+  // hidden on Home specifically too, since HomeDesktopDashboard already
+  // renders a full real sidebar there — this would just be a redundant
+  // second trigger floating over it.
+  const fullyHidden = pathname === "/" || pathname.startsWith("/provider") || pathname.startsWith("/admin") || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
   if (fullyHidden) return null;
-  const homeOnly = pathname === "/";
 
   return (
-    <div className={homeOnly ? "hidden lg:block" : undefined}>
+    <div className="hidden lg:block">
       <button
         onClick={() => setOpen(true)}
         className="tap-scale flex items-center justify-center w-10 h-10 rounded-full"

@@ -139,10 +139,14 @@ export default function BottomNav() {
     snapToActive();
   };
 
-  // Only Home gets the bottom nav now — every other page uses the global
-  // side menu (OwnerSideMenu) instead, same "bottom nav vs. drawer" split
-  // already used on the provider dashboard.
-  if (pathname !== "/") return null;
+  // Original visibility rule, restored: bottom nav shows on Home and most
+  // real content pages on mobile — hidden only on the pages that have
+  // their own separate navigation (provider dashboard, admin, cart,
+  // search) or no navigation need (auth pages). This is a MOBILE-ONLY
+  // pattern (see lg:hidden on the <nav> below) — desktop never uses it,
+  // full stop, regardless of route.
+  const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up", "/accessories/"];
+  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <nav
