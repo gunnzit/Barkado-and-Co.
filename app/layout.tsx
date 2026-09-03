@@ -7,6 +7,7 @@ import { FavoritesProvider } from "@/components/FavoritesProvider";
 import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
 import ActivityTracker from "@/components/ActivityTracker";
+import PawPointsBadge from "@/components/PawPointsBadge";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -34,7 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Calling auth()/getOrCreateUser() here (even indirectly) can fight with
   // that handshake and cause a redirect loop. CartProvider and
   // FavoritesProvider both intentionally start empty and fetch their real
-  // data client-side, after mount, for the same reason.
+  // data client-side, after mount, for the same reason — PawPointsBadge
+  // follows the same pattern (renders nothing until its own client-side
+  // fetch resolves).
   //
   // BottomNav is mounted here, as a sibling to {children}, rather than
   // inside each individual page — that's what keeps it visible during route
@@ -42,9 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // itself, so BottomNav never unmounts). It self-hides via pathname check
   // on routes that have their own navigation (provider, admin, cart, etc).
   //
-  // Heading font is Plus Jakarta Sans, matching the design system's
-  // reference mockups exactly (was Poppins until now — a mismatch flagged
-  // early in the redesign but never confirmed/fixed until this change).
+  // PawPointsBadge is mounted globally the same way, rather than edited
+  // into every individual page's own header markup — a fixed floating
+  // badge, consistent with how CartPill already works.
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body>
@@ -54,6 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider initialItems={[]}>
             <FavoritesProvider>
               {children}
+              <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", right: 12, zIndex: 60 }}>
+                <PawPointsBadge />
+              </div>
               <CartPill />
               <BottomNav />
             </FavoritesProvider>

@@ -78,6 +78,12 @@ enum PawPointsTransactionType {
   REDEEMED_REVERSED  // refund: points spent on a purchase that was later refunded/cancelled are given back
 }
 
+enum PawPointsRewardType {
+  FLAT_DISCOUNT  // a real ₹ discount, optionally scoped to one service type
+  FREE_PRODUCT   // a specific real Product granted for free (a real
+                 // physical/fulfillment obligation — e.g. an engraved tag)
+}
+
 enum PackageCadence {
   WEEKLY
   MONTHLY
@@ -107,6 +113,7 @@ model User {
   activityEvents  ActivityEvent[]
   favorites       Favorite[]
   pawPointsTransactions PawPointsTransaction[]
+  pawPointsRewardRedemptions PawPointsRewardRedemption[]
 }
 
 model Address {
@@ -466,6 +473,7 @@ model Product {
   cartItems  CartItem[]
   orderItems OrderItem[]
   favorites  Favorite[]
+  pawPointsRewards PawPointsReward[]
 }
 
 model CartItem {
@@ -517,6 +525,7 @@ model Order {
   items    OrderItem[]
   bookings Booking[]
   pawPointsTransactions PawPointsTransaction[]
+  pawPointsRewardRedemptions PawPointsRewardRedemption[]
 }
 
 // One row per real points event — earning, redeeming, or reversing either
@@ -543,6 +552,49 @@ model PawPointsTransaction {
   bookingId String?
   booking   Booking?                 @relation(fields: [bookingId], references: [id])
   createdAt DateTime                 @default(now())
+}
+
+// Admin-curated redemption catalog — sits ALONGSIDE flexible point
+// redemption (points -> ₹ discount on anything), as a second, distinct
+// way to redeem: a specific real reward for a fixed point cost. Never
+// algorithmically generated — an admin explicitly defines each one, same
+// principle as the earlier ProductBundle/CareAddOn work.
+model PawPointsReward {
+  id                     String              @id @default(cuid())
+  name                   String
+  description            String?
+  costPoints             Int
+  rewardType             PawPointsRewardType
+  // FLAT_DISCOUNT fields — a real ₹ amount off, optionally scoped to one
+  // service type (null = valid on anything).
+  discountValuePaise     Int?
+  applicableServiceType  ServiceType?
+  // FREE_PRODUCT fields — a specific real product actually granted. This
+  // is a genuine fulfillment obligation (someone has to actually send the
+  // item), not just a discount.
+  productId              String?
+  product                Product?            @relation(fields: [productId], references: [id])
+  active                 Boolean             @default(true)
+  createdAt              DateTime            @default(now())
+
+  redemptions PawPointsRewardRedemption[]
+}
+
+// A user CLAIMING a specific reward — deducts real points immediately
+// (via a real PawPointsTransaction) and creates this row as a "voucher"
+// the user holds. Actually APPLYING a claimed voucher to a real purchase
+// (setting usedAt/orderId) is separate, not-yet-built work on the
+// checkout flow — same category as flexible-redemption-at-checkout.
+model PawPointsRewardRedemption {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  rewardId    String
+  reward      PawPointsReward @relation(fields: [rewardId], references: [id])
+  redeemedAt  DateTime        @default(now())
+  usedAt      DateTime?
+  orderId     String?
+  order       Order?          @relation(fields: [orderId], references: [id])
 }
 
 model OrderItem {
