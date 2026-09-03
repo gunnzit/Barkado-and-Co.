@@ -147,7 +147,7 @@ export default function BottomNav() {
   return (
     <nav
       ref={navRef}
-      className="bottom-nav bottom-nav-pill-container"
+      className="bottom-nav bottom-nav-pill-container lg:hidden"
       style={{
         bottom: "calc(32px + env(safe-area-inset-bottom))",
         zIndex: 300,
