@@ -8,6 +8,7 @@ import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
 import ActivityTracker from "@/components/ActivityTracker";
 import PawPointsBadge from "@/components/PawPointsBadge";
+import OwnerSideMenu from "@/components/OwnerSideMenu";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -48,6 +49,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // PawPointsBadge is mounted globally the same way, rather than edited
   // into every individual page's own header markup — a fixed floating
   // badge, consistent with how CartPill already works.
+  //
+  // OwnerSideMenu follows the same pattern, opposite corner (top-left) —
+  // only Home relies on BottomNav alone now; every other owner page uses
+  // this drawer trigger instead, self-hiding on Home/provider/admin/auth
+  // pages via its own pathname check.
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body>
@@ -57,6 +63,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider initialItems={[]}>
             <FavoritesProvider>
               {children}
+              <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: 12, zIndex: 60 }}>
+                <OwnerSideMenu />
+              </div>
               <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", right: 12, zIndex: 60 }}>
                 <PawPointsBadge />
               </div>
