@@ -53,7 +53,10 @@ export default async function CartPage() {
         {suggested.length > 0 && (
           <section className="px-6 mb-10">
             <h2 className="text-lg font-bold mb-4">You might also like</h2>
-            <div className="grid grid-cols-2 gap-4">
+            {/* Single-column list, matching AccessoryCard's current design
+                (a full-width row, not a grid tile) — the old grid-cols-2
+                layout would cram two list-style rows side by side. */}
+            <div className="space-y-3">
               {suggested.map((item) => (
                 <AccessoryCard
                   key={item.id}
@@ -66,6 +69,7 @@ export default async function CartPage() {
                     icon: (item.icon as any) ?? "toy",
                     compareAtPrice: item.compareAtPrice ? item.compareAtPrice / 100 : null,
                     imageUrls: item.imageUrls,
+                    stock: item.stock,
                   }}
                 />
               ))}
