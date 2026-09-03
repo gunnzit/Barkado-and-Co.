@@ -35,6 +35,9 @@ const PASSPORT_ITEMS = [
   "Favorite treats", "Insurance & emergency contact", "Care history",
 ];
 
+import HomeDesktopDashboard from "@/components/HomeDesktopDashboard";
+import { getPawPointsBalance, getRollingTierPoints, tierForPoints } from "@/lib/pawPoints";
+
 export default async function Home() {
   const [verifiedCount, ratedProviders, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
     prisma.provider.count({ where: { verified: true } }),
@@ -103,14 +106,50 @@ export default async function Home() {
   // Signed-in visitors see the homepage themed to their active pet, same as
   // every other page. Signed-out visitors get the default look.
   const user = await getOrCreateUser().catch(() => null);
-  const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id } }) : [];
+  const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { nextDueDate: true } } } }) : [];
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
   const themeClass = resolveThemeClass(activePet);
 
+  // Real data for the desktop-only dashboard (HomeDesktopDashboard) — kept
+  // separate from the mobile fetches above since it's all net-new for
+  // that view. Mobile layout and its own data fetches are completely
+  // unchanged.
+  const [pawPointsBalance, rollingTierPoints, cartCount, upcomingBooking, bestsellerIdsRaw] = user
+    ? await Promise.all([
+        getPawPointsBalance(user.id),
+        getRollingTierPoints(user.id),
+        prisma.cartItem.count({ where: { userId: user.id } }),
+        prisma.booking.findFirst({
+          where: { ownerId: user.id, status: { in: ["ACCEPTED", "IN_PROGRESS"] }, startTime: { gte: new Date() } },
+          orderBy: { startTime: "asc" },
+          include: { provider: { include: { user: { select: { name: true } } } }, pet: { select: { name: true } } },
+        }),
+        prisma.orderItem.groupBy({ by: ["productId"], _count: { productId: true }, orderBy: { _count: { productId: "desc" } }, take: 5 }),
+      ])
+    : [0, 0, 0, null, []];
+  const dashboardTier = tierForPoints(rollingTierPoints);
+  const dashboardBestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
+
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
-    <main style={{ paddingBottom: 90 }}>
+    {user && (
+      <HomeDesktopDashboard
+        userName={user.name}
+        userAddress={user.address}
+        activePet={activePet ?? null}
+        pawPointsBalance={pawPointsBalance as number}
+        rollingTierPoints={rollingTierPoints as number}
+        tier={dashboardTier}
+        cartCount={cartCount as number}
+        upcomingBooking={upcomingBooking as any}
+        products={products.map((p) => ({ id: p.id, name: p.name, price: p.price, imageUrls: p.imageUrls }))}
+        bestsellerIds={dashboardBestsellerIds}
+        providers={providers}
+        verifiedCount={verifiedCount}
+      />
+    )}
+    <main style={{ paddingBottom: 90 }} className={user ? "lg:hidden" : undefined}>
       <EmergencyButton />
       {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
       {/* ===== Nav ===== */}
