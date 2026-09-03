@@ -62,7 +62,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {similar.length > 0 && (
           <section className="px-6 mt-8">
             <h2 className="text-lg font-bold mb-4">Similar products</h2>
-            <div className="grid grid-cols-2 gap-4">
+            {/* Single-column list, matching AccessoryCard's current design
+                (a full-width row, not a grid tile) — the old grid-cols-2
+                layout would cram two list-style rows side by side. */}
+            <div className="space-y-3">
               {similar.map((p) => (
                 <AccessoryCard
                   key={p.id}
@@ -75,6 +78,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     description: p.description ?? "",
                     icon: (p.icon as any) ?? "toy",
                     imageUrls: p.imageUrls,
+                    stock: p.stock,
                   }}
                 />
               ))}
