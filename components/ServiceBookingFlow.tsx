@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Navigation, Tag, Plus, Sun, CloudSun, Moon, GraduationCap } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Plus, Sun, CloudSun, Moon, GraduationCap } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
-import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, SAMPLE_GROOMING_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
+import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, SAMPLE_GROOMING_SPECIALTIES, SAMPLE_WALKING_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -312,7 +312,7 @@ export default function ServiceBookingFlow({
                   className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
                   style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
                 >
-                  Your first walk is free
+                  10% off your first walk
                 </span>
               )}
               <div
@@ -339,6 +339,12 @@ export default function ServiceBookingFlow({
                 <div className="space-y-2.5">
                   {WALK_PACKAGES.map((pkg) => {
                     const selected = walkDurationMin === pkg.min;
+                    const fullPrice = WALK_PRICING_PAISE[pkg.min] / 100;
+                    // Real preview of the same 10% discount actually
+                    // applied server-side (see /api/cart/service) — never
+                    // the source of truth itself, just matches it so
+                    // there's no surprise at checkout.
+                    const discountedPrice = Math.round(fullPrice * 0.9);
                     return (
                       <button
                         key={pkg.min}
@@ -355,7 +361,14 @@ export default function ServiceBookingFlow({
                             {pkg.min} minutes · {pkg.blurb}
                           </p>
                         </div>
-                        <p className="font-bold text-base">₹{WALK_PRICING_PAISE[pkg.min] / 100}</p>
+                        {isFirstWalk ? (
+                          <div className="text-right">
+                            <p className="font-bold text-base">₹{discountedPrice}</p>
+                            <p className="text-[11px] line-through" style={{ color: "var(--muted)" }}>₹{fullPrice}</p>
+                          </div>
+                        ) : (
+                          <p className="font-bold text-base">₹{fullPrice}</p>
+                        )}
                       </button>
                     );
                   })}
@@ -412,17 +425,22 @@ export default function ServiceBookingFlow({
                         <p className="font-semibold text-sm">{w.user.name}</p>
                         <p className="flex items-center justify-center gap-1 text-xs mb-2" style={{ color: "var(--muted)" }}>
                           <Star size={11} fill="var(--gold)" color="var(--gold)" /> {w.ratingAvg.toFixed(1)}
+                          <span style={{ color: "var(--muted)" }}>({w._count.bookings} walks)</span>
                         </p>
-                        {/* Distance and specialty tags aren't real data yet
-                            (no provider location or specialty field exists) —
-                            shown as a plain "coming soon" note rather than
-                            faking numbers or tags. */}
-                        <p className="flex items-center justify-center gap-1 text-[11px]" style={{ color: "var(--muted)" }}>
-                          <Navigation size={10} /> Distance coming soon
-                        </p>
-                        <p className="flex items-center justify-center gap-1 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
-                          <Tag size={10} /> Specialties coming soon
-                        </p>
+                        {/* Specialty tags are SAMPLE data — same disclosed,
+                            established pattern already used for
+                            Training/Grooming (no real per-provider
+                            specialty field exists yet). Distance is
+                            dropped entirely, not shown as a placeholder —
+                            no geocoding exists, and a specific fake number
+                            would be a false claim, not a "coming soon". */}
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {SAMPLE_WALKING_SPECIALTIES[sampleIndexFor(w.id, SAMPLE_WALKING_SPECIALTIES.length)].map((tag) => (
+                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -6,10 +6,9 @@
 // trainer could show "3 years" in one place and "8+ years" in another,
 // which would look like a bug even though both are placeholders.
 //
-// None of this is real data. It exists so Training screens don't look
-// empty while the real provider-editable fields are built. This must be
-// replaced with real data before real customers rely on it to evaluate a
-// real trainer.
+// None of this is real data. It exists so screens don't look empty while
+// the real provider-editable fields are built. This must be replaced with
+// real data before real customers rely on it to evaluate a real provider.
 
 export const SAMPLE_EXPERIENCE = ["3 years", "5+ years", "8+ years", "2 years"];
 
@@ -25,6 +24,13 @@ export const SAMPLE_GROOMING_SPECIALTIES: [string, string][] = [
   ["Skin & Coat Care", "Medicated Baths"],
   ["Show Cuts", "De-shedding"],
   ["Nail & Ear Care", "Sensitive Skin"],
+];
+
+export const SAMPLE_WALKING_SPECIALTIES: [string, string][] = [
+  ["Large Dogs", "Leash Pro"],
+  ["Puppy Care", "First-Aid"],
+  ["Agility", "High-Energy Breeds"],
+  ["Senior Dogs", "Calm Pace"],
 ];
 
 export const SAMPLE_ROLE_TITLES = [

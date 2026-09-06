@@ -27,6 +27,13 @@ const WALK_PRICING_PAISE: Record<number, number> = {
   60: 35000, // ₹350
 };
 
+// Real 10% first-walk discount. "First walk" means this owner has never
+// actually PAID for a walk before (paidAt not null on a real WALKING
+// booking) — not just "never added one to cart," and not "free," per
+// product decision. Checked server-side, right before pricing, so it can
+// never be spoofed from the client.
+const FIRST_WALK_DISCOUNT_RATE = 0.9;
+
 function priceForFlatService(
   serviceType: "SITTING" | "TRAINING",
   provider: { pricePerSitDay: number | null; pricePerTrain: number | null }
@@ -70,7 +77,11 @@ export async function POST(req: Request) {
     if (walkPrice === undefined) {
       return NextResponse.json({ error: "Invalid walk duration — must be 30, 45, or 60 minutes" }, { status: 400 });
     }
-    priceAmount = walkPrice;
+
+    const priorPaidWalk = await prisma.booking.findFirst({
+      where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } },
+    });
+    priceAmount = priorPaidWalk ? walkPrice : Math.round(walkPrice * FIRST_WALK_DISCOUNT_RATE);
   } else if (data.serviceType === "GROOMING") {
     if (!data.groomingPackageId || !data.groomingSize) {
       return NextResponse.json({ error: "Choose a package and size." }, { status: 400 });
