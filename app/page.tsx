@@ -140,7 +140,16 @@ export default async function Home() {
   // directly would make TypeScript permanently narrow `user` to `null`
   // for that entire block, breaking every one of those references, not
   // just the first. Routing through this separate variable avoids that.
-  const showMarketingMain = !user;
+  let showMarketingMain = !user;
+  // (Deliberately re-assigned immediately below, not left as a pure
+  // `const` alias of `!user` — TypeScript's "aliased conditions"
+  // narrowing specifically tracks const bindings taken directly from
+  // another variable's truthiness, and continues narrowing `user`
+  // through them exactly as if `!user` had been used inline. A `let`
+  // binding isn't eligible for that optimization, which is what actually
+  // breaks the chain here — the previous const-based version compiled
+  // but still failed with the same "property does not exist on type
+  // never" error, one line further into the marketing block each time.)
 
   // ===== Real data for the MOBILE new-vs-returning split. `hasHistory`
   // is the real signal: any paid order or any booking at all, ever. =====
