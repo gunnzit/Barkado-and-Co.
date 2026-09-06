@@ -114,6 +114,11 @@ model User {
   favorites       Favorite[]
   pawPointsTransactions PawPointsTransaction[]
   pawPointsRewardRedemptions PawPointsRewardRedemption[]
+  // Set the moment the real 100-point signup bonus is granted — never
+  // re-granted once set, so this is the real, idempotent guard against
+  // awarding it twice (e.g. on every login) rather than trusting a
+  // timing assumption.
+  signupBonusGrantedAt DateTime?
 }
 
 model Address {
