@@ -51,7 +51,7 @@ export default function HomeReturningUserMobile({
   return (
     <div>
       <EmergencyButton />
-      <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} />
+      <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
       <div className="px-4 pt-2">
         <h1 className="text-xl font-bold mb-4">Welcome back, {userName.split(" ")[0]}{activePet ? ` & ${activePet.name}` : ""}</h1>

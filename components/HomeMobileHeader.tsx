@@ -1,43 +1,67 @@
-import Link from "next/link";
-import LocationHeader from "@/components/LocationHeader";
-import ThemeToggle from "@/components/ThemeToggle";
-import ProfileMenu from "@/components/ProfileMenu";
-import CuratedSearchBar from "@/components/CuratedSearchBar";
-import CategoryTabs from "@/components/CategoryTabs";
+"use client";
 
-// Shared header chrome for BOTH signed-in mobile homepage variants
-// (new-user and returning-user) — brand/address, Book Now + profile
-// access, real search, and the category icon row. This was previously
-// only inline in the single marketing page; when that got split into two
-// separate components, this header was accidentally dropped from both
-// rather than carried over. Centralizing it here means it can't silently
-// go missing from one variant again the way it did the first time.
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { Sparkles, ShoppingBag, User } from "lucide-react";
+import LocationHeader from "@/components/LocationHeader";
+import CuratedSearchBar from "@/components/CuratedSearchBar";
+
+// Matches the reference design exactly: a fixed top bar (large brand name
+// + small subtitle, then Points → Cart → Profile, in that exact order —
+// confirmed explicitly), and a SEPARATE card below it containing the real
+// location switcher and real search bar. These were previously merged
+// into one row, and the location/search were reinvented as plain links
+// instead of using the real, already-functional LocationHeader and
+// CuratedSearchBar components — fixed to reuse the real ones instead.
 export default function HomeMobileHeader({
   userAddress,
   userPhone,
+  cartCount,
+  pawPointsBalance,
 }: {
   userAddress: string | null;
   userPhone: string | null;
+  cartCount: number;
+  pawPointsBalance: number;
 }) {
+  const { user } = useUser();
+
   return (
     <>
-      <nav className="flex justify-between items-center px-4 pt-3 pb-2">
-        <LocationHeader
-          currentAddressSnippet={userAddress ? userAddress.split(",")[0] : null}
-          userPhone={userPhone}
-        />
-        <div className="flex gap-2 items-center">
-          <ThemeToggle />
-          <Link href="/owner/dashboard" className="btn-primary text-xs whitespace-nowrap">Book now</Link>
-          <ProfileMenu />
+      <header className="px-4 py-2.5 flex items-center justify-between" style={{ background: "var(--cream)" }}>
+        <div className="flex flex-col">
+          <span className="font-heading font-bold text-2xl tracking-tight" style={{ color: "var(--forest, #16281f)" }}>Barkado &amp; Co.</span>
+          <span className="text-[11px] font-medium tracking-wide" style={{ color: "var(--muted)" }}>Artisanal Canine Care</span>
         </div>
-      </nav>
+        <div className="flex items-center gap-1.5">
+          <Link href="/owner/wallet" className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold tap-scale" style={{ background: "var(--card)", color: "var(--forest, #16281f)" }}>
+            <Sparkles size={14} color="var(--gold)" />
+            {pawPointsBalance}
+          </Link>
+          <Link href="/cart" className="w-9 h-9 flex items-center justify-center rounded-full relative tap-scale" style={{ color: "var(--forest, #16281f)" }} aria-label="Shopping Cart">
+            <ShoppingBag size={22} />
+            {cartCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full flex items-center justify-center" style={{ background: "var(--terracotta)", color: "white" }}>
+                {cartCount}
+              </span>
+            )}
+          </Link>
+          <Link href="/owner/profile" className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ background: "var(--panel-dark)" }}>
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={18} color="white" />
+            )}
+          </Link>
+        </div>
+      </header>
 
-      <div className="px-4 mb-3">
+      <section className="px-4 pt-3 pb-4 rounded-b-xl" style={{ background: "var(--card)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="mb-3">
+          <LocationHeader currentAddressSnippet={userAddress ? userAddress.split(",")[0] : null} userPhone={userPhone} />
+        </div>
         <CuratedSearchBar />
-      </div>
-
-      <CategoryTabs />
+      </section>
     </>
   );
 }

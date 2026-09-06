@@ -608,6 +608,8 @@ export default async function Home() {
           activeBreed={activePet?.breed ?? undefined}
           userAddress={user.address}
           userPhone={user.phone}
+          cartCount={cartCount as number}
+          pawPointsBalance={pawPointsBalance as number}
         />
       </div>
     )}

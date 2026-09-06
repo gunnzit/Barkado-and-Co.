@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 // Global, real, live balance badge — mounted once in layout.tsx (same
 // pattern as CartPill), not per-page. Renders nothing for signed-out
 // visitors or while loading, rather than showing a fake/zero placeholder.
+// Also hidden on Home specifically — Home's own header (HomeMobileHeader)
+// now renders a real inline points badge matching the reference design
+// exactly, so this floating one would duplicate it there.
 export default function PawPointsBadge() {
+  const pathname = usePathname();
   const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
@@ -17,7 +22,7 @@ export default function PawPointsBadge() {
       .catch(() => setBalance(null));
   }, []);
 
-  if (balance === null) return null;
+  if (pathname === "/" || balance === null) return null;
 
   return (
     <Link
