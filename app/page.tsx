@@ -36,6 +36,8 @@ const PASSPORT_ITEMS = [
 ];
 
 import HomeDesktopDashboard from "@/components/HomeDesktopDashboard";
+import HomeNewUserMobile from "@/components/HomeNewUserMobile";
+import HomeReturningUserMobile from "@/components/HomeReturningUserMobile";
 import { getPawPointsBalance, getRollingTierPoints, tierForPoints } from "@/lib/pawPoints";
 
 export default async function Home() {
@@ -131,6 +133,94 @@ export default async function Home() {
   const dashboardTier = tierForPoints(rollingTierPoints);
   const dashboardBestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
 
+  // ===== Real data for the MOBILE new-vs-returning split. `hasHistory`
+  // is the real signal: any paid order or any booking at all, ever. =====
+  let hasHistory = false;
+  let cartTotalPaise = 0;
+  let buyAgainProducts: { id: string; name: string; price: number; imageUrls: string[] }[] = [];
+  let wishlistItems: { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[] }[] = [];
+  let trustedProviders: { id: string; user: { name: string }; ratingAvg: number; bookingCount: number }[] = [];
+  let lastGrooming: { startTime: Date; provider: { user: { name: string } } | null } | null = null;
+  let rebookCandidate: { type: string; provider: { id: string; user: { name: string } } | null; pet: { name: string } | null } | null = null;
+  let mostPopularServiceType: string | null = null;
+
+  if (user) {
+    const [paidOrderCount, bookingCount] = await Promise.all([
+      prisma.order.count({ where: { userId: user.id, status: "PAID" } }),
+      prisma.booking.count({ where: { ownerId: user.id } }),
+    ]);
+    hasHistory = paidOrderCount > 0 || bookingCount > 0;
+
+    if (hasHistory) {
+      const [cartItemsFull, pastOrderItems, favorites, ownerBookings, lastGroomingBooking, lastAnyBooking] = await Promise.all([
+        prisma.cartItem.findMany({ where: { userId: user.id, kind: "PRODUCT" }, include: { product: true } }),
+        prisma.orderItem.findMany({
+          where: { order: { userId: user.id } },
+          include: { product: true },
+          orderBy: { id: "desc" },
+          take: 12,
+        }),
+        prisma.favorite.findMany({ where: { userId: user.id, productId: { not: null } }, include: { product: true } }),
+        prisma.booking.findMany({ where: { ownerId: user.id }, include: { provider: { include: { user: { select: { name: true } } } } } }),
+        prisma.booking.findFirst({
+          where: { ownerId: user.id, type: "GROOMING", status: "COMPLETED" },
+          orderBy: { startTime: "desc" },
+          include: { provider: { include: { user: { select: { name: true } } } } },
+        }),
+        prisma.booking.findFirst({
+          where: { ownerId: user.id, status: "COMPLETED" },
+          orderBy: { startTime: "desc" },
+          include: { provider: { include: { user: { select: { name: true } } } }, pet: { select: { name: true } } },
+        }),
+      ]);
+
+      cartTotalPaise = cartItemsFull.reduce((sum, item) => sum + (item.product ? item.product.price * item.quantity : 0), 0);
+
+      // Real "buy again" — distinct products from past orders, most
+      // recently ordered first.
+      const seenProductIds = new Set<string>();
+      for (const item of pastOrderItems) {
+        if (!seenProductIds.has(item.productId)) {
+          seenProductIds.add(item.productId);
+          buyAgainProducts.push({ id: item.product.id, name: item.product.name, price: item.product.price, imageUrls: item.product.imageUrls });
+        }
+      }
+
+      wishlistItems = favorites.filter((f) => f.product).map((f) => ({
+        id: f.product!.id, name: f.product!.name, price: f.product!.price, compareAtPrice: f.product!.compareAtPrice, imageUrls: f.product!.imageUrls,
+      }));
+
+      // Real "trusted circle" — providers this owner has actually booked
+      // with more than once, ranked by real booking count together.
+      const providerCounts = new Map<string, { user: { name: string }; ratingAvg: number; count: number }>();
+      for (const b of ownerBookings) {
+        const existing = providerCounts.get(b.providerId);
+        if (existing) existing.count += 1;
+        else providerCounts.set(b.providerId, { user: b.provider.user, ratingAvg: b.provider.ratingAvg, count: 1 });
+      }
+      trustedProviders = Array.from(providerCounts.entries())
+        .filter(([, v]) => v.count > 1)
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([id, v]) => ({ id, user: v.user, ratingAvg: v.ratingAvg, bookingCount: v.count }));
+
+      lastGrooming = lastGroomingBooking;
+      rebookCandidate = lastAnyBooking && !upcomingBooking ? { type: lastAnyBooking.type, provider: lastAnyBooking.provider ? { id: lastAnyBooking.providerId, user: lastAnyBooking.provider.user } : null, pet: lastAnyBooking.pet } : null;
+    }
+  }
+
+  // Real "Most Popular First Visit" — computed from every owner's actual
+  // earliest booking, tallied by service type. Not a static claim.
+  const allBookingsForFirstVisit = await prisma.booking.findMany({ select: { ownerId: true, type: true, createdAt: true }, orderBy: { createdAt: "asc" } });
+  const firstBookingByOwner = new Map<string, string>();
+  for (const b of allBookingsForFirstVisit) {
+    if (!firstBookingByOwner.has(b.ownerId)) firstBookingByOwner.set(b.ownerId, b.type);
+  }
+  const firstVisitTally = new Map<string, number>();
+  for (const type of firstBookingByOwner.values()) firstVisitTally.set(type, (firstVisitTally.get(type) ?? 0) + 1);
+  if (firstVisitTally.size > 0) {
+    mostPopularServiceType = Array.from(firstVisitTally.entries()).sort((a, b) => b[1] - a[1])[0][0];
+  }
+
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
     {user && (
@@ -149,7 +239,8 @@ export default async function Home() {
         verifiedCount={verifiedCount}
       />
     )}
-    <main style={{ paddingBottom: 90 }} className={user ? "lg:hidden" : undefined}>
+    {!user && (
+    <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
       {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
       {/* ===== Nav ===== */}
@@ -474,6 +565,44 @@ export default async function Home() {
         </div>
       </footer>
     </main>
+    )}
+
+    {/* ===== Signed-in mobile — new vs. returning, gated on real order/
+        booking history. Desktop (HomeDesktopDashboard above) is
+        unaffected by this split; this is specifically the mobile
+        experience discussed. ===== */}
+    {user && !hasHistory && (
+      <div className="lg:hidden">
+        <HomeNewUserMobile
+          verifiedCount={verifiedCount}
+          avgRating={avgRating}
+          completedCount={completedAgg}
+          products={products.map((p) => ({ id: p.id, name: p.name, price: p.price, compareAtPrice: p.compareAtPrice, imageUrls: p.imageUrls }))}
+          bestsellerIds={dashboardBestsellerIds}
+          providers={providers}
+          mostPopularServiceType={mostPopularServiceType}
+          activeBreed={activePet?.breed ?? undefined}
+        />
+      </div>
+    )}
+    {user && hasHistory && (
+      <div className="lg:hidden">
+        <HomeReturningUserMobile
+          userName={user.name}
+          activePet={activePet ? { id: activePet.id, name: activePet.name } : null}
+          cartCount={cartCount as number}
+          cartTotalPaise={cartTotalPaise}
+          pawPointsBalance={pawPointsBalance as number}
+          tier={dashboardTier}
+          upcomingBooking={upcomingBooking as any}
+          rebookCandidate={rebookCandidate}
+          lastGrooming={lastGrooming}
+          buyAgainProducts={buyAgainProducts}
+          wishlistItems={wishlistItems}
+          trustedProviders={trustedProviders}
+        />
+      </div>
+    )}
     </div>
   );
 }
