@@ -5,6 +5,7 @@ import {
   RotateCcw, Clock, TrendingDown,
 } from "lucide-react";
 import EmergencyButton from "@/components/EmergencyButton";
+import HomeMobileHeader from "@/components/HomeMobileHeader";
 import { derivePassportNumber } from "@/lib/passportId";
 
 const SERVICE_LABEL: Record<string, string> = {
@@ -26,6 +27,8 @@ export default function HomeReturningUserMobile({
   buyAgainProducts,
   wishlistItems,
   trustedProviders,
+  userAddress,
+  userPhone,
 }: {
   userName: string;
   activePet: { id: string; name: string } | null;
@@ -39,6 +42,8 @@ export default function HomeReturningUserMobile({
   buyAgainProducts: { id: string; name: string; price: number; imageUrls: string[] }[];
   wishlistItems: { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[] }[];
   trustedProviders: { id: string; user: { name: string }; ratingAvg: number; bookingCount: number }[];
+  userAddress: string | null;
+  userPhone: string | null;
 }) {
   const daysSinceGrooming = lastGrooming ? Math.floor((Date.now() - lastGrooming.startTime.getTime()) / (1000 * 60 * 60 * 24)) : null;
   const passportNumber = activePet ? derivePassportNumber(activePet.id) : null;
@@ -46,6 +51,7 @@ export default function HomeReturningUserMobile({
   return (
     <div>
       <EmergencyButton />
+      <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} />
 
       <div className="px-4 pt-2">
         <h1 className="text-xl font-bold mb-4">Welcome back, {userName.split(" ")[0]}{activePet ? ` & ${activePet.name}` : ""}</h1>

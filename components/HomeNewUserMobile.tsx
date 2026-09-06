@@ -5,6 +5,7 @@ import {
   Dumbbell, Star, ShieldCheck, ChevronRight, Sparkles, ShieldQuestion,
 } from "lucide-react";
 import EmergencyButton from "@/components/EmergencyButton";
+import HomeMobileHeader from "@/components/HomeMobileHeader";
 
 const SERVICES = [
   { type: "GROOMING", title: "Luxury Spa Session", tag: "Grooming", desc: "Coat-specific bath, blow-out, nail and ear care.", icon: Scissors, price: "from ₹499", href: "/grooming" },
@@ -23,6 +24,8 @@ export default function HomeNewUserMobile({
   providers,
   mostPopularServiceType,
   activeBreed,
+  userAddress,
+  userPhone,
 }: {
   verifiedCount: number;
   avgRating: number | null;
@@ -32,10 +35,13 @@ export default function HomeNewUserMobile({
   providers: { id: string; user: { name: string }; ratingAvg: number; _count: { bookings: number } }[];
   mostPopularServiceType: string | null;
   activeBreed: string | undefined;
+  userAddress: string | null;
+  userPhone: string | null;
 }) {
   return (
     <div>
       <EmergencyButton />
+      <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} />
 
       {/* ===== Hero — tagline updated per product decision: "from birth
           to death" ecosystem framing leads for new/unproven visitors,

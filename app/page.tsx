@@ -606,6 +606,8 @@ export default async function Home() {
           providers={providers}
           mostPopularServiceType={mostPopularServiceType}
           activeBreed={activePet?.breed ?? undefined}
+          userAddress={user.address}
+          userPhone={user.phone}
         />
       </div>
     )}
@@ -624,6 +626,8 @@ export default async function Home() {
           buyAgainProducts={buyAgainProducts}
           wishlistItems={wishlistItems}
           trustedProviders={trustedProviders}
+          userAddress={user.address}
+          userPhone={user.phone}
         />
       </div>
     )}
