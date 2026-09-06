@@ -133,6 +133,15 @@ export default async function Home() {
   const dashboardTier = tierForPoints(rollingTierPoints);
   const dashboardBestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
 
+  // Separate boolean, deliberately not `!user` inline — the marketing
+  // main below still references `user?.something` throughout (it uses
+  // Clerk's own <Show when="signed-in"> for the actual runtime split,
+  // independent of this server-side `user` variable). Gating on `!user`
+  // directly would make TypeScript permanently narrow `user` to `null`
+  // for that entire block, breaking every one of those references, not
+  // just the first. Routing through this separate variable avoids that.
+  const showMarketingMain = !user;
+
   // ===== Real data for the MOBILE new-vs-returning split. `hasHistory`
   // is the real signal: any paid order or any booking at all, ever. =====
   let hasHistory = false;
@@ -239,7 +248,7 @@ export default async function Home() {
         verifiedCount={verifiedCount}
       />
     )}
-    {!user && (
+    {showMarketingMain && (
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
       {/* ===== Nav ===== */}
