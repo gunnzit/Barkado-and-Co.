@@ -19,8 +19,17 @@ export default async function WalkBookingPage() {
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = resolveThemeClass(activePet);
-  const pastWalkCount = await prisma.booking.count({ where: { ownerId: user.id, type: "WALKING" } });
-  const isFirstWalk = pastWalkCount === 0;
+
+  // Real "first walk" definition, matching the same check enforced
+  // server-side in /api/cart/service/route.ts exactly: has this owner
+  // ever actually PAID for a walk before — not just started/abandoned/
+  // cancelled one. Previously this counted ANY past Walking booking
+  // regardless of payment status, which meant the discount badge shown
+  // here could disagree with what checkout would actually charge.
+  const priorPaidWalk = await prisma.booking.findFirst({
+    where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } },
+  });
+  const isFirstWalk = !priorPaidWalk;
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
