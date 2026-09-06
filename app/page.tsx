@@ -242,7 +242,6 @@ export default async function Home() {
     {!user && (
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
-      {user && <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />}
       {/* ===== Nav ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 max-w-6xl mx-auto">
         <Show when="signed-in">
@@ -570,7 +569,14 @@ export default async function Home() {
     {/* ===== Signed-in mobile — new vs. returning, gated on real order/
         booking history. Desktop (HomeDesktopDashboard above) is
         unaffected by this split; this is specifically the mobile
-        experience discussed. ===== */}
+        experience discussed. OnboardingPrompt shown for either branch —
+        this used to live inside the old shared mobile main and was
+        nearly lost when that got split into two separate components. ===== */}
+    {user && (
+      <div className="lg:hidden px-4 pt-2">
+        <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
+      </div>
+    )}
     {user && !hasHistory && (
       <div className="lg:hidden">
         <HomeNewUserMobile
