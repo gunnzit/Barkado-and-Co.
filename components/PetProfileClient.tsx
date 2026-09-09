@@ -17,6 +17,7 @@ import {
   Pencil,
   Camera,
   Check,
+  Clock,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -24,7 +25,17 @@ import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 import { resolveThemeClass, THEME_OPTIONS } from "@/lib/breedTheme";
 
-type Vaccination = { id: string; vaccineName: string; nextDueDate: string; dateGiven: string };
+type Vaccination = {
+  id: string;
+  vaccineName: string;
+  nextDueDate: string;
+  dateGiven: string;
+  // Real per-record detail — optional since older records won't have these
+  // retroactively filled in.
+  lotNumber: string | null;
+  administeringVet: string | null;
+  clinicName: string | null;
+};
 type Booking = { id: string; type: string; status: string; startTime: string; provider: { user: { name: string } } };
 
 type Pet = {
@@ -42,8 +53,13 @@ type Pet = {
   microchipId: string | null;
   insuranceProvider: string | null;
   insurancePolicy: string | null;
+  // Real coverage amount (paise) + expiry date.
+  insuranceCoveragePaise: number | null;
+  insuranceExpiryDate: string | null;
   photoUrl: string | null;
   themeOverride: string | null;
+  // Real "last updated" timestamp, auto-managed by Prisma's @updatedAt.
+  updatedAt: string;
   vaccinations: Vaccination[];
   bookings: Booking[];
 };
@@ -52,6 +68,29 @@ function ageFromBirthday(birthday: string | null) {
   if (!birthday) return null;
   const years = (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
   return years < 1 ? `${Math.round(years * 12)} mo` : `${Math.floor(years)} yr`;
+}
+
+// Real relative-time formatting for the freshness indicator — no fake
+// "Live Sync" claim, just an honest "updated X ago" derived from the
+// real Pet.updatedAt column.
+function timeAgo(dateStr: string) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  const years = Math.floor(months / 12);
+  return `${years}y ago`;
+}
+
+function paiseToRupeeString(paise: number | null) {
+  if (paise === null || paise === undefined) return "";
+  return (paise / 100).toString();
 }
 
 const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
@@ -79,6 +118,8 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     microchipId: pet.microchipId ?? "",
     insuranceProvider: pet.insuranceProvider ?? "",
     insurancePolicy: pet.insurancePolicy ?? "",
+    insuranceCoverageRupees: paiseToRupeeString(pet.insuranceCoveragePaise),
+    insuranceExpiryDate: pet.insuranceExpiryDate ? pet.insuranceExpiryDate.slice(0, 10) : "",
   });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -101,7 +142,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       });
       if (res.ok) {
         const updated = await res.json();
-        setPet((prev) => ({ ...prev, photoUrl: updated.photoUrl }));
+        setPet((prev) => ({ ...prev, photoUrl: updated.photoUrl, updatedAt: updated.updatedAt }));
       }
       setUploadingPhoto(false);
     };
@@ -110,13 +151,16 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
   const save = async () => {
     setSaving(true);
+    const { insuranceCoverageRupees, insuranceExpiryDate, ...restForm } = form;
     const res = await fetch(`/api/pets/${pet.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
+        ...restForm,
         weightKg: form.weightKg ? parseFloat(form.weightKg) : undefined,
         birthday: form.birthday || undefined,
+        insuranceCoveragePaise: insuranceCoverageRupees ? Math.round(parseFloat(insuranceCoverageRupees) * 100) : undefined,
+        insuranceExpiryDate: insuranceExpiryDate || undefined,
       }),
     });
     if (res.ok) {
@@ -135,7 +179,10 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ themeOverride: value }),
     });
-    if (!res.ok) {
+    if (res.ok) {
+      const updated = await res.json();
+      setPet((prev) => ({ ...prev, updatedAt: updated.updatedAt }));
+    } else {
       setPet((prev) => ({ ...prev, themeOverride: initialPet.themeOverride })); // revert on failure
     }
   };
@@ -181,7 +228,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       </div>
 
       {/* ===== Identity ===== */}
-      <div className="px-6 flex items-center gap-4 mb-6">
+      <div className="px-6 flex items-center gap-4 mb-2">
         <label
           className="w-16 h-16 rounded-full flex items-center justify-center shrink-0 relative tap-scale overflow-hidden"
           style={{ background: "white", border: "1px solid var(--border)", cursor: "pointer" }}
@@ -220,6 +267,14 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           )}
           {uploadingPhoto && <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>Uploading photo…</p>}
         </div>
+      </div>
+
+      {/* ===== Real freshness indicator ===== */}
+      <div className="px-6 mb-6 flex items-center gap-1.5">
+        <Clock size={12} color="var(--muted)" />
+        <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+          Updated {timeAgo(pet.updatedAt)}
+        </p>
       </div>
 
       {/* ===== Vitals row ===== */}
@@ -309,7 +364,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             <div
               key={key}
               className="flex items-start gap-3 px-5 py-4"
-              style={i !== FIELD_META.length - 1 ? { borderBottom: "1px solid var(--border)" } : {}}
+              style={{ borderBottom: "1px solid var(--border)" }}
             >
               <Icon size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
               <div className="flex-1">
@@ -339,6 +394,47 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
               </div>
             </div>
           ))}
+
+          {/* ===== Real insurance coverage amount + expiry ===== */}
+          <div className="flex items-start gap-3 px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            <ShieldCheck size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>Coverage amount</p>
+              {editing ? (
+                <input
+                  type="number"
+                  className="w-full text-sm border rounded-lg px-2 py-1.5"
+                  style={{ borderColor: "var(--border)" }}
+                  placeholder="Coverage in ₹"
+                  value={form.insuranceCoverageRupees}
+                  onChange={(e) => setForm({ ...form, insuranceCoverageRupees: e.target.value })}
+                />
+              ) : (
+                <p className="text-sm">
+                  {pet.insuranceCoveragePaise ? `₹${(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}` : "—"}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-start gap-3 px-5 py-4">
+            <ShieldCheck size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>Policy expiry</p>
+              {editing ? (
+                <input
+                  type="date"
+                  className="w-full text-sm border rounded-lg px-2 py-1.5"
+                  style={{ borderColor: "var(--border)" }}
+                  value={form.insuranceExpiryDate}
+                  onChange={(e) => setForm({ ...form, insuranceExpiryDate: e.target.value })}
+                />
+              ) : (
+                <p className="text-sm">
+                  {pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate).toDateString() : "—"}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -351,18 +447,32 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           <p className="text-sm" style={{ color: "var(--muted)" }}>No vaccination records yet.</p>
         ) : (
           <div className="card" style={{ padding: 0 }}>
-            {pet.vaccinations.map((v, i) => (
-              <div
-                key={v.id}
-                className="flex justify-between items-center px-5 py-3.5"
-                style={i !== pet.vaccinations.length - 1 ? { borderBottom: "1px solid var(--border)" } : {}}
-              >
-                <p className="font-medium text-sm">{v.vaccineName}</p>
-                <p className="text-xs" style={{ color: "var(--muted)" }}>
-                  Due {new Date(v.nextDueDate).toDateString()}
-                </p>
-              </div>
-            ))}
+            {pet.vaccinations.map((v, i) => {
+              const detailParts = [
+                v.clinicName,
+                v.administeringVet ? `Dr. ${v.administeringVet}` : null,
+                v.lotNumber ? `Lot ${v.lotNumber}` : null,
+              ].filter(Boolean);
+              return (
+                <div
+                  key={v.id}
+                  className="px-5 py-3.5"
+                  style={i !== pet.vaccinations.length - 1 ? { borderBottom: "1px solid var(--border)" } : {}}
+                >
+                  <div className="flex justify-between items-center">
+                    <p className="font-medium text-sm">{v.vaccineName}</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>
+                      Due {new Date(v.nextDueDate).toDateString()}
+                    </p>
+                  </div>
+                  {detailParts.length > 0 && (
+                    <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>
+                      {detailParts.join(" · ")}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

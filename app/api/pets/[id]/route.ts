@@ -17,6 +17,10 @@ const updateSchema = z.object({
   microchipId: z.string().optional(),
   insuranceProvider: z.string().optional(),
   insurancePolicy: z.string().optional(),
+  // Real coverage amount (paise) + expiry — added alongside provider/policy
+  // number so the Passport's insurance section shows real coverage detail.
+  insuranceCoveragePaise: z.number().nonnegative().optional(),
+  insuranceExpiryDate: z.string().optional(), // ISO date
   photoUrl: z.string().optional(),
   themeOverride: z.string().nullable().optional(),
 });
@@ -55,13 +59,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { birthday, ...rest } = parsed.data;
+  const { birthday, insuranceExpiryDate, ...rest } = parsed.data;
 
   const pet = await prisma.pet.update({
     where: { id: resolvedParams.id },
     data: {
       ...rest,
       ...(birthday ? { birthday: new Date(birthday) } : {}),
+      ...(insuranceExpiryDate ? { insuranceExpiryDate: new Date(insuranceExpiryDate) } : {}),
     },
   });
 

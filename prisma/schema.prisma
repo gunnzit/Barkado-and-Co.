@@ -151,9 +151,17 @@ model Pet {
   microchipId       String?
   insuranceProvider String?
   insurancePolicy   String?
+  // Real coverage amount/expiry — the Passport's insurance section
+  // previously only had provider/policy number to show.
+  insuranceCoveragePaise Int?
+  insuranceExpiryDate    DateTime?
   photoUrl          String?
   themeOverride     String?
   createdAt   DateTime @default(now())
+  // Real "last updated" timestamp — backs the Passport's real freshness
+  // indicator (replacing the mockup's fake "Live Sync" claim, which
+  // implied live push infrastructure that doesn't exist).
+  updatedAt   DateTime @default(now()) @updatedAt
 
   vaccinations Vaccination[]
   bookings     Booking[]
@@ -178,6 +186,13 @@ model Vaccination {
   nextDueDate  DateTime?
   reminderSent Boolean  @default(false)
   createdAt    DateTime @default(now())
+  // Real vaccine record detail, per product decision to make the
+  // Passport's vaccine cards fully real rather than simplified. All
+  // optional since existing/historical records won't have these
+  // retroactively filled in.
+  lotNumber        String?
+  administeringVet String?
+  clinicName       String?
 }
 
 model Provider {
