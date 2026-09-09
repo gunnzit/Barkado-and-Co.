@@ -1,15 +1,13 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin, ChevronRight } from "lucide-react";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import PetSwitcher from "@/components/PetSwitcher";
-import ProfileMenu from "@/components/ProfileMenu";
-import LocationHeader from "@/components/LocationHeader";
-import ThemeToggle from "@/components/ThemeToggle";
+import ServicePageTopBar from "@/components/ServicePageTopBar";
 import ServiceBookingFlow from "@/components/ServiceBookingFlow";
+import { getPawPointsBalance } from "@/lib/pawPoints";
 
 export default async function WalkBookingPage() {
   const user = await getOrCreateUser();
@@ -22,13 +20,12 @@ export default async function WalkBookingPage() {
 
   // Real "first walk" definition, matching the same check enforced
   // server-side in /api/cart/service/route.ts exactly: has this owner
-  // ever actually PAID for a walk before — not just started/abandoned/
-  // cancelled one. Previously this counted ANY past Walking booking
-  // regardless of payment status, which meant the discount badge shown
-  // here could disagree with what checkout would actually charge.
-  const priorPaidWalk = await prisma.booking.findFirst({
-    where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } },
-  });
+  // ever actually PAID for a walk before.
+  const [priorPaidWalk, cartCount, pawPointsBalance] = await Promise.all([
+    prisma.booking.findFirst({ where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } } }),
+    prisma.cartItem.count({ where: { userId: user.id } }),
+    getPawPointsBalance(user.id),
+  ]);
   const isFirstWalk = !priorPaidWalk;
 
   return (
@@ -38,23 +35,31 @@ export default async function WalkBookingPage() {
           intro screen actually has room to appear on desktop — every other
           page keeps the standard mobile-width container untouched. */}
       <main className="pb-28 max-w-3xl mx-auto">
-        <nav className="flex justify-between items-center px-6 pt-4">
-          <LocationHeader
-            headline="Book a walker"
-            currentAddressSnippet={user.address ? user.address.split(",")[0] : null}
-            userPhone={user.phone ?? null}
-          />
-          <div className="flex gap-2 sm:gap-3 items-center">
-            <ThemeToggle />
-            <PetSwitcher avatarOnly />
-            <ProfileMenu />
-          </div>
-        </nav>
+        <ServicePageTopBar cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-        <div className="px-6 py-5">
-          <Link href="/" className="tap-scale inline-block">
-            <ArrowLeft size={20} />
-          </Link>
+        {/* Real sub-row — back arrow, title, real address, real verified-
+            provider "Nearby" indicator. No dog selector, no theme toggle,
+            per explicit product decision — this page previously had both,
+            carried over from the shared LocationHeader/PetSwitcher/
+            ThemeToggle row used elsewhere. */}
+        <div className="px-5 pb-3 pt-1 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link href="/" className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 tap-scale" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <ArrowLeft size={16} />
+            </Link>
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold tracking-tight leading-tight">Book a walker</h2>
+              {user.address && (
+                <Link href="/owner/profile" className="flex items-center gap-1 mt-0.5 text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+                  <MapPin size={11} /> {user.address.split(",")[0].toUpperCase()} <ChevronRight size={11} />
+                </Link>
+              )}
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0" style={{ background: "#e8f4ec", color: "#2f6fb0" }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: "#2f9e5f" }} />
+            Nearby
+          </span>
         </div>
 
         <ServiceBookingFlow
