@@ -34,6 +34,14 @@ import {
   Phone,
   Siren,
   PhoneCall,
+  Footprints,
+  Scissors,
+  Brain,
+  Home as HomeIcon,
+  Star,
+  Route,
+  Camera as CameraIcon,
+  History,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -50,7 +58,25 @@ type Vaccination = {
   administeringVet: string | null;
   clinicName: string | null;
 };
-type Booking = { id: string; type: string; status: string; startTime: string; provider: { user: { name: string } } };
+type WalkReport = {
+  distanceKm: number | null;
+  durationMin: number | null;
+  photos: string[];
+  notes: string | null;
+};
+type Review = {
+  rating: number;
+  comment: string | null;
+};
+type Booking = {
+  id: string;
+  type: string;
+  status: string;
+  startTime: string;
+  provider: { user: { name: string } };
+  report: WalkReport | null;
+  review: Review | null;
+};
 
 type Pet = {
   id: string;
@@ -129,6 +155,27 @@ function vaccinationStatus(v: Vaccination): VaxStatus {
   return "VALID";
 }
 
+const SERVICE_LABEL: Record<string, string> = {
+  WALKING: "Adventure Walk",
+  SITTING: "Home Staycation",
+  GROOMING: "Luxury Spa Session",
+  TRAINING: "Good Manners Session",
+};
+
+const SERVICE_STYLE: Record<string, { bg: string; fg: string; Icon: any }> = {
+  WALKING: { bg: "#16281f", fg: "#d2e8d9", Icon: Footprints },
+  SITTING: { bg: "#904c2c", fg: "#ffffff", Icon: HomeIcon },
+  GROOMING: { bg: "#ffdbcd", fg: "#360f00", Icon: Scissors },
+  TRAINING: { bg: "#ffddb3", fg: "#624000", Icon: Brain },
+};
+
+const REBOOK_HREF: Record<string, string | null> = {
+  WALKING: "/walk-booking",
+  SITTING: "/sitting",
+  GROOMING: null, // TODO: no confirmed dedicated grooming booking route yet
+  TRAINING: null, // TODO: no confirmed dedicated training booking route yet
+};
+
 const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
   { key: "allergies", label: "Allergies", icon: ShieldAlert, placeholder: "e.g. chicken, pollen" },
   { key: "medicalHistory", label: "Medical history", icon: FileText, placeholder: "Past conditions, surgeries, medications", multiline: true },
@@ -138,11 +185,14 @@ const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: strin
   { key: "insurancePolicy", label: "Insurance policy #", icon: ShieldCheck, placeholder: "Policy number" },
 ];
 
+type CareFilter = "all" | "walks" | "grooming" | "training";
+
 export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const [pet, setPet] = useState(initialPet);
   const [editing, setEditing] = useState(false);
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [careFilter, setCareFilter] = useState<CareFilter>("all");
   const [form, setForm] = useState({
     name: pet.name,
     breed: pet.breed ?? "",
@@ -276,6 +326,15 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const hasInsurance = Boolean(pet.insuranceProvider && pet.insurancePolicy);
   const insuranceExpired = pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate) < new Date() : false;
   const knownClinic = [...pet.vaccinations].reverse().find((v) => v.clinicName);
+
+  // ===== Real Care Timeline data =====
+  const completedCount = pet.bookings.filter((b) => b.status === "COMPLETED").length;
+  const filteredBookings = pet.bookings.filter((b) => {
+    if (careFilter === "all") return true;
+    if (careFilter === "walks") return b.type === "WALKING";
+    if (careFilter === "grooming") return b.type === "GROOMING";
+    return b.type === "TRAINING";
+  });
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
@@ -707,7 +766,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      <div className="px-4 pt-3 pb-2 mb-6">
+      <div className="px-4 pt-3 pb-2 mb-2">
         <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -801,6 +860,112 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
+      {/* ===== Real Care Timeline ===== */}
+      <div className="px-4 pt-3 pb-6 mb-2">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <History size={22} color="#02120a" />
+              <h3 className="font-bold text-sm text-[#02120a]">{pet.name}'s Care Timeline</h3>
+            </div>
+            <span className="text-[10px] font-bold text-[#fea67f] bg-[#02120a] px-2 py-0.5 rounded-full">{completedCount} Completed</span>
+          </div>
+
+          <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+            {([
+              { key: "all", label: "All" },
+              { key: "walks", label: "Walks" },
+              { key: "grooming", label: "Grooming" },
+              { key: "training", label: "Training" },
+            ] as { key: CareFilter; label: string }[]).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setCareFilter(f.key)}
+                className={`px-3 py-1 rounded-full text-xs shrink-0 ${
+                  careFilter === f.key
+                    ? "bg-[#02120a] text-[#fbfaee] font-bold shadow-sm"
+                    : "bg-[#efeee3] text-[#424844] font-semibold hover:text-[#02120a]"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {filteredBookings.length === 0 ? (
+            <p className="text-sm text-center py-4" style={{ color: "var(--muted)" }}>No bookings in this category yet.</p>
+          ) : (
+            <div className="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-[#efeee3]">
+              {filteredBookings.map((b) => {
+                const style = SERVICE_STYLE[b.type] ?? SERVICE_STYLE.WALKING;
+                const Icon = style.Icon;
+                const rebookHref = REBOOK_HREF[b.type];
+                return (
+                  <div key={b.id} className="flex items-start gap-3 relative z-10">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ background: style.bg, color: style.fg }}
+                    >
+                      <Icon size={16} />
+                    </div>
+                    <div className="flex-1 p-3 rounded-xl bg-[#f5f4e8] border border-[#efeee3]">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="font-bold text-xs text-[#02120a]">{SERVICE_LABEL[b.type] ?? b.type}</h4>
+                        <span className="text-[10px] font-mono text-[#424844] shrink-0">{formatDate(b.startTime)}</span>
+                      </div>
+                      <p className="text-[11px] text-[#424844] mt-0.5">
+                        With <strong>{b.provider.user.name}</strong>
+                      </p>
+
+                      {b.report && (b.report.distanceKm || b.report.photos.length > 0) && (
+                        <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px] text-[#904c2c] font-medium">
+                          {b.report.distanceKm != null && (
+                            <span className="inline-flex items-center gap-1 bg-[#efeee3] px-2 py-0.5 rounded">
+                              <Route size={13} />
+                              {b.report.distanceKm} km Tracked
+                            </span>
+                          )}
+                          {b.report.photos.length > 0 && (
+                            <span className="inline-flex items-center gap-1 bg-[#efeee3] px-2 py-0.5 rounded">
+                              <CameraIcon size={13} />
+                              {b.report.photos.length} Photos
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {b.report?.notes && (
+                        <p className="text-[10px] text-[#424844] mt-1 italic">{b.report.notes}</p>
+                      )}
+
+                      {b.review && (
+                        <div className="mt-2 flex items-center gap-1 text-[#624000] text-[11px] font-bold">
+                          <Star size={14} color="#fcba5a" fill="#fcba5a" />
+                          <span>{b.review.rating.toFixed(1)} / 5.0{b.review.comment ? ` — ${b.review.comment}` : ""}</span>
+                        </div>
+                      )}
+
+                      {(b.status !== "COMPLETED" || rebookHref) && (
+                        <div className="mt-2 pt-2 border-t border-[#efeee3] flex items-center justify-between text-xs">
+                          {b.status !== "COMPLETED" ? (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e9e9dd] text-[#424844]">{b.status}</span>
+                          ) : <span />}
+                          {rebookHref && (
+                            <Link href={rebookHref} className="px-2 py-0.5 rounded bg-[#d2e8d9] text-[#02120a] font-bold text-[10px]">
+                              Re-book
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="px-6 mb-8">
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           {FIELD_META.map(({ key, label, icon: Icon, placeholder, multiline }) => (
@@ -878,33 +1043,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="px-6">
-        <h2 className="text-lg font-bold mb-4">Care history</h2>
-        {pet.bookings.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>No bookings yet.</p>
-        ) : (
-          <div className="card" style={{ padding: 0 }}>
-            {pet.bookings.map((b, i) => (
-              <div
-                key={b.id}
-                className="flex justify-between items-center px-5 py-3.5"
-                style={i !== pet.bookings.length - 1 ? { borderBottom: "1px solid var(--border)" } : {}}
-              >
-                <div>
-                  <p className="text-sm font-medium">{b.type === "WALKING" ? "Adventure Walk" : "Home Staycation"}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
-                    with {b.provider.user.name} · {new Date(b.startTime).toDateString()}
-                  </p>
-                </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--cream)", color: "var(--chestnut)" }}>
-                  {b.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="px-6 mt-10 mb-4">

@@ -27,7 +27,11 @@ export default function PawPointsBadge() {
   // service pages here as they get the same header treatment, or this
   // duplicate-badge bug reappears on each one.
   const pagesWithOwnPointsBadge = ["/", "/walk-booking", "/training", "/grooming"];
-  if (pagesWithOwnPointsBadge.includes(pathname) || balance === null) return null;
+  // Pet Passport (/owner/pets/[id]) is a dynamic route, so it can't go in
+  // the exact-match array above — the dark dossier card already fills that
+  // corner of the screen, so the floating badge is redundant/crowded here.
+  const isPetPassportPage = pathname.startsWith("/owner/pets/");
+  if (pagesWithOwnPointsBadge.includes(pathname) || isPetPassportPage || balance === null) return null;
 
   return (
     <Link
