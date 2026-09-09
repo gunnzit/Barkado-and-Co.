@@ -18,6 +18,12 @@ import {
   Camera,
   Check,
   Clock,
+  BadgeCheck,
+  QrCode,
+  User as UserIcon,
+  Share2,
+  Download,
+  ClipboardList,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -30,8 +36,6 @@ type Vaccination = {
   vaccineName: string;
   nextDueDate: string;
   dateGiven: string;
-  // Real per-record detail — optional since older records won't have these
-  // retroactively filled in.
   lotNumber: string | null;
   administeringVet: string | null;
   clinicName: string | null;
@@ -43,6 +47,9 @@ type Pet = {
   name: string;
   breed: string | null;
   size: string;
+  gender: "MALE" | "FEMALE" | null;
+  neutered: boolean | null;
+  coatColor: string | null;
   temperament: string | null;
   notes: string | null;
   birthday: string | null;
@@ -53,13 +60,12 @@ type Pet = {
   microchipId: string | null;
   insuranceProvider: string | null;
   insurancePolicy: string | null;
-  // Real coverage amount (paise) + expiry date.
   insuranceCoveragePaise: number | null;
   insuranceExpiryDate: string | null;
   photoUrl: string | null;
   themeOverride: string | null;
-  // Real "last updated" timestamp, auto-managed by Prisma's @updatedAt.
   updatedAt: string;
+  owner: { name: string; phone: string | null };
   vaccinations: Vaccination[];
   bookings: Booking[];
 };
@@ -67,12 +73,9 @@ type Pet = {
 function ageFromBirthday(birthday: string | null) {
   if (!birthday) return null;
   const years = (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-  return years < 1 ? `${Math.round(years * 12)} mo` : `${Math.floor(years)} yr`;
+  return years < 1 ? `${Math.round(years * 12)}mo` : `${Math.floor(years)}y ${Math.round((years % 1) * 12)}m`;
 }
 
-// Real relative-time formatting for the freshness indicator — no fake
-// "Live Sync" claim, just an honest "updated X ago" derived from the
-// real Pet.updatedAt column.
 function timeAgo(dateStr: string) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diffMs / 60000);
@@ -91,6 +94,18 @@ function timeAgo(dateStr: string) {
 function paiseToRupeeString(paise: number | null) {
   if (paise === null || paise === undefined) return "";
   return (paise / 100).toString();
+}
+
+// Cosmetic only — a passport-themed flourish, not a real machine-readable
+// travel document. Deterministic so it doesn't flicker between renders.
+function buildMrzLine(pet: Pet) {
+  const nameCode = pet.name.toUpperCase().replace(/[^A-Z]/g, "").padEnd(14, "<").slice(0, 14);
+  const idCode = pet.id.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 9).padEnd(9, "<");
+  return `P<BKD${nameCode}<<${idCode}`;
+}
+
+function passportNumber(petId: string) {
+  return `#BKD-${petId.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(-6)}`;
 }
 
 const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
@@ -112,6 +127,9 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     breed: pet.breed ?? "",
     weightKg: pet.weightKg?.toString() ?? "",
     birthday: pet.birthday ? pet.birthday.slice(0, 10) : "",
+    gender: pet.gender ?? "",
+    neutered: pet.neutered === null ? "" : pet.neutered ? "true" : "false",
+    coatColor: pet.coatColor ?? "",
     allergies: pet.allergies ?? "",
     medicalHistory: pet.medicalHistory ?? "",
     favoriteTreats: pet.favoriteTreats ?? "",
@@ -151,7 +169,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
   const save = async () => {
     setSaving(true);
-    const { insuranceCoverageRupees, insuranceExpiryDate, ...restForm } = form;
+    const { insuranceCoverageRupees, insuranceExpiryDate, neutered, gender, ...restForm } = form;
     const res = await fetch(`/api/pets/${pet.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -159,6 +177,8 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         ...restForm,
         weightKg: form.weightKg ? parseFloat(form.weightKg) : undefined,
         birthday: form.birthday || undefined,
+        gender: gender || undefined,
+        neutered: neutered === "" ? undefined : neutered === "true",
         insuranceCoveragePaise: insuranceCoverageRupees ? Math.round(parseFloat(insuranceCoverageRupees) * 100) : undefined,
         insuranceExpiryDate: insuranceExpiryDate || undefined,
       }),
@@ -183,7 +203,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       const updated = await res.json();
       setPet((prev) => ({ ...prev, updatedAt: updated.updatedAt }));
     } else {
-      setPet((prev) => ({ ...prev, themeOverride: initialPet.themeOverride })); // revert on failure
+      setPet((prev) => ({ ...prev, themeOverride: initialPet.themeOverride }));
     }
   };
 
@@ -201,6 +221,33 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const age = ageFromBirthday(pet.birthday);
   const themeClass = resolveThemeClass(pet);
 
+  // ===== Real computed verification badge =====
+  // Criteria: breed, weight, birthday, insurance provider + policy filled,
+  // and at least one vaccination logged. Recomputed live from real Pet
+  // data — never a stored/hardcoded flag.
+  const isVerified = Boolean(
+    pet.breed &&
+    pet.weightKg != null &&
+    pet.birthday &&
+    pet.insuranceProvider &&
+    pet.insurancePolicy &&
+    pet.vaccinations.length > 0
+  );
+
+  const dobFormatted = pet.birthday
+    ? new Date(pet.birthday).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : null;
+  const ageDobLine = [age, dobFormatted].filter(Boolean).join(" • ") || "—";
+  const weightCoatLine = [pet.weightKg ? `${pet.weightKg} kg` : null, pet.coatColor].filter(Boolean).join(" • ") || "—";
+  const genderLabel = pet.gender ? (pet.gender === "MALE" ? "Male" : "Female") : null;
+  const neuteredLabel = pet.neutered === true ? "Neutered" : pet.neutered === false ? "Intact" : null;
+  const genderNeuteredLabel = genderLabel && neuteredLabel ? `${genderLabel} (${neuteredLabel})` : genderLabel;
+  const subtitle = [pet.breed, genderNeuteredLabel].filter(Boolean).join(" • ") || pet.size;
+  const microchipDisplay = pet.microchipId
+    ? pet.microchipId.replace(/(.{4})/g, "$1 ").trim()
+    : "Not on file";
+  const guardianDisplay = pet.owner.phone ? `${pet.owner.name} (${pet.owner.phone})` : pet.owner.name;
+
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
     <main className="pb-28 max-w-2xl mx-auto">
@@ -211,6 +258,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           <ProfileMenu />
         </div>
       </div>
+
       {/* ===== Header with clear back link ===== */}
       <div className="flex items-center justify-between px-6 py-5">
         <Link href="/owner/pets" className="flex items-center gap-2 tap-scale">
@@ -227,106 +275,195 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </button>
       </div>
 
-      {/* ===== Identity ===== */}
-      <div className="px-6 flex items-center gap-4 mb-2">
-        <label
-          className="w-16 h-16 rounded-full flex items-center justify-center shrink-0 relative tap-scale overflow-hidden"
-          style={{ background: "white", border: "1px solid var(--border)", cursor: "pointer" }}
-        >
-          {pet.photoUrl ? (
-            <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
-          ) : (
-            <PawPrint size={26} color="var(--tan)" />
-          )}
-          <div
-            className="absolute bottom-0 right-0 w-5 h-5 rounded-full flex items-center justify-center"
-            style={{ background: "var(--tan)" }}
-          >
-            <Camera size={11} color="white" />
+      {/* ===== Passport Header Status Strip ===== */}
+      <div className="px-4 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#ffdbcd] text-[#360f00] text-[11px] font-bold tracking-wider">01</span>
+          <span className="font-bold text-xs tracking-wider uppercase text-[#424844]">Authenticated Canine Dossier</span>
+        </div>
+        {/* TODO: not backed by real data — kept as a visual placeholder per product decision */}
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#e9e9dd] text-[#16281f] text-xs font-semibold shadow-sm">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+          <span>Live Sync Active</span>
+        </div>
+      </div>
+
+      {/* ===== Passport Booklet Card ===== */}
+      <div className="px-4 py-2">
+        <div className="relative overflow-hidden rounded-2xl bg-[#02120a] text-[#fbfaee] shadow-2xl border border-[#16281f]">
+          <div className="p-5 sm:p-6">
+            {/* Official Cover Bar */}
+            <div className="flex items-start justify-between relative z-10">
+              <div className="flex items-center gap-2">
+                <BadgeCheck size={20} color="#fcba5a" />
+                <div>
+                  <span className="tracking-widest text-[10px] font-bold uppercase text-[#fcba5a] block">PawPassport™ • Official Document</span>
+                  <p className="text-[11px] text-[#d2e8d9] tracking-widest uppercase font-mono mt-0.5">Barkado &amp; Co. • Republic of Canines</p>
+                </div>
+              </div>
+              <span className="inline-block px-2.5 py-1 rounded-full bg-[#16281f] text-[#fcba5a] text-[11px] font-mono font-bold tracking-wider shadow-inner border border-[#fcba5a]/20 shrink-0">
+                {passportNumber(pet.id)}
+              </span>
+            </div>
+
+            <div className="w-full h-0.5 bg-gradient-to-r from-[#fcba5a]/0 via-[#fcba5a] to-[#fcba5a]/0 my-3.5 opacity-70"></div>
+
+            {/* Portrait & Core Vitals */}
+            <div className="flex gap-4 items-center relative z-10">
+              <div className="relative shrink-0">
+                <label
+                  className="w-24 h-24 rounded-full p-1 block relative cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fcba5a, #fea67f, #904c2c)" }}
+                >
+                  {pet.photoUrl ? (
+                    <img className="w-full h-full object-cover rounded-full" src={pet.photoUrl} alt={pet.name} />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-[#16281f] flex items-center justify-center">
+                      <PawPrint size={30} color="#fcba5a" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                  <span className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#16281f] flex items-center justify-center shadow-md border border-[#fcba5a]/30">
+                    <Camera size={12} color="#fcba5a" />
+                  </span>
+                </label>
+                {uploadingPhoto && <p className="text-[9px] mt-1 text-center text-[#d2e8d9]">Uploading…</p>}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  {editing ? (
+                    <input
+                      className="text-lg font-bold rounded-lg px-2 py-1 text-[#02120a]"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    />
+                  ) : (
+                    <h2 className="font-bold text-xl text-[#fbfaee] tracking-tight truncate">{pet.name}</h2>
+                  )}
+                  {isVerified && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ffffff] text-[#02120a] text-[10px] font-bold tracking-tight shadow-sm shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      VERIFIED
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#d2e8d9] font-medium mt-0.5">{subtitle}</p>
+                <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                  <div>
+                    <span className="text-[#7c9084] block text-[9px] uppercase tracking-wider font-semibold">Age / DOB</span>
+                    <span className="font-semibold text-[#ffffff]">{ageDobLine}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#7c9084] block text-[9px] uppercase tracking-wider font-semibold">Weight &amp; Coat</span>
+                    <span className="font-semibold text-[#ffffff]">{weightCoatLine}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Microchip & Guardian Data Box */}
+            <div className="mt-3.5 pt-2.5 rounded-lg bg-[#16281f]/80 p-3 relative z-10 flex flex-col gap-2 shadow-inner border border-[#c2c8c2]/10">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5">
+                  <QrCode size={16} color="#fcba5a" />
+                  <span className="text-[10px] uppercase font-bold text-[#7c9084] tracking-wider">ISO Microchip</span>
+                </div>
+                <span className="font-mono text-xs font-semibold tracking-wider text-[#ffffff]">{microchipDisplay}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#e9e9dd]/10">
+                <div className="flex items-center gap-1.5">
+                  <UserIcon size={16} color="#fcba5a" />
+                  <span className="text-[10px] uppercase font-bold text-[#7c9084] tracking-wider">Guardian</span>
+                </div>
+                <span className="text-xs font-medium text-[#f5f4e8] truncate">{guardianDisplay}</span>
+              </div>
+            </div>
+
+            {/* Machine Readable Zone — decorative flourish only */}
+            <div className="mt-3.5 pt-2.5 pb-1 px-3 rounded bg-black/40 border border-[#fcba5a]/20 font-mono text-[9px] tracking-widest text-[#fcba5a]/90 uppercase overflow-hidden leading-relaxed">
+              <div className="truncate">{buildMrzLine(pet)}</div>
+            </div>
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoChange}
-          />
-        </label>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tan)" }}>
-            Paw Passport
-          </p>
-          {editing ? (
-            <input
-              className="text-2xl font-bold border rounded-lg px-2 py-1 mt-0.5"
-              style={{ borderColor: "var(--border)" }}
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          ) : (
-            <h1 className="text-3xl font-bold">{pet.name}</h1>
-          )}
-          {uploadingPhoto && <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>Uploading photo…</p>}
+        </div>
+      </div>
+
+      {/* ===== Interactive Passport Action Bar ===== */}
+      <div className="px-4 py-2.5">
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => alert("Share Pass is coming soon.")} // TODO: wire real public read-only share link (Batch C)
+            className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
+          >
+            <Share2 size={22} color="#904c2c" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#02120a] leading-tight">Share Pass</span>
+            <span className="text-[9px] text-[#424844] font-medium">Public link</span>
+          </button>
+          <button
+            onClick={() => alert("Travel Dossier PDF is coming soon.")} // TODO: wire real PDF export (Batch D)
+            className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
+          >
+            <Download size={22} color="#02120a" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#02120a] leading-tight">Travel Dossier</span>
+            <span className="text-[9px] text-[#424844] font-medium">Official PDF</span>
+          </button>
+          <button
+            disabled
+            className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f5f4e8] shadow-sm text-center border border-dashed border-[#737874]/30 relative"
+          >
+            <ClipboardList size={22} color="#424844" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#424844] leading-tight">Vet Summary</span>
+            <span className="text-[9px] font-bold text-[#904c2c] bg-[#ffdbcd] px-1.5 py-0.5 rounded-full mt-0.5">Coming Soon</span>
+          </button>
         </div>
       </div>
 
       {/* ===== Real freshness indicator ===== */}
-      <div className="px-6 mb-6 flex items-center gap-1.5">
+      <div className="px-6 mb-2 flex items-center gap-1.5">
         <Clock size={12} color="var(--muted)" />
         <p className="text-[11px]" style={{ color: "var(--muted)" }}>
           Updated {timeAgo(pet.updatedAt)}
         </p>
       </div>
 
-      {/* ===== Vitals row ===== */}
-      <div className="px-6 grid grid-cols-3 gap-3 mb-6">
-        <div className="card flex flex-col items-center gap-1 py-4">
-          <Cake size={18} color="var(--tan)" />
-          {editing ? (
-            <input
-              type="date"
-              className="text-xs text-center border rounded px-1 w-full"
-              style={{ borderColor: "var(--border)" }}
-              value={form.birthday}
-              onChange={(e) => setForm({ ...form, birthday: e.target.value })}
-            />
-          ) : (
-            <p className="text-sm font-semibold">{age ?? "—"}</p>
-          )}
-          <p className="text-[10px]" style={{ color: "var(--muted)" }}>Age</p>
+      {/* ===== Edit-mode: identity details not shown on the passport card face ===== */}
+      {editing && (
+        <div className="px-6 mb-6">
+          <div className="card p-4 grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Breed</label>
+              <input className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} placeholder="Breed" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Coat color</label>
+              <input className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.coatColor} onChange={(e) => setForm({ ...form, coatColor: e.target.value })} placeholder="e.g. Honey" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Weight (kg)</label>
+              <input type="number" step="0.1" className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} placeholder="kg" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Birthday</label>
+              <input type="date" className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Gender</label>
+              <select className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as any })}>
+                <option value="">—</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Neutered / Spayed</label>
+              <select className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.neutered} onChange={(e) => setForm({ ...form, neutered: e.target.value })}>
+                <option value="">—</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div className="card flex flex-col items-center gap-1 py-4">
-          <Weight size={18} color="var(--tan)" />
-          {editing ? (
-            <input
-              type="number"
-              step="0.1"
-              className="text-xs text-center border rounded px-1 w-full"
-              style={{ borderColor: "var(--border)" }}
-              value={form.weightKg}
-              onChange={(e) => setForm({ ...form, weightKg: e.target.value })}
-              placeholder="kg"
-            />
-          ) : (
-            <p className="text-sm font-semibold">{pet.weightKg ? `${pet.weightKg} kg` : "—"}</p>
-          )}
-          <p className="text-[10px]" style={{ color: "var(--muted)" }}>Weight</p>
-        </div>
-        <div className="card flex flex-col items-center gap-1 py-4">
-          <PawPrint size={18} color="var(--tan)" />
-          {editing ? (
-            <input
-              className="text-xs text-center border rounded px-1 w-full"
-              style={{ borderColor: "var(--border)" }}
-              value={form.breed}
-              onChange={(e) => setForm({ ...form, breed: e.target.value })}
-              placeholder="Breed"
-            />
-          ) : (
-            <p className="text-sm font-semibold">{pet.breed ?? pet.size}</p>
-          )}
-          <p className="text-[10px]" style={{ color: "var(--muted)" }}>Breed</p>
-        </div>
-      </div>
+      )}
 
       {/* ===== App theme for this pet ===== */}
       <div className="px-6 mb-8">
@@ -360,7 +497,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       {/* ===== Integrated passport card — one grouped list, not scattered boxes ===== */}
       <div className="px-6 mb-8">
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {FIELD_META.map(({ key, label, icon: Icon, placeholder, multiline }, i) => (
+          {FIELD_META.map(({ key, label, icon: Icon, placeholder, multiline }) => (
             <div
               key={key}
               className="flex items-start gap-3 px-5 py-4"
@@ -395,7 +532,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </div>
           ))}
 
-          {/* ===== Real insurance coverage amount + expiry ===== */}
           <div className="flex items-start gap-3 px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
             <ShieldCheck size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
             <div className="flex-1">
@@ -438,7 +574,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Vaccination history ===== */}
+      {/* ===== Vaccination history (redesign to mockup card style comes in Batch B) ===== */}
       <div className="px-6 mb-8">
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Syringe size={18} color="var(--tan)" /> Vaccinations
@@ -477,7 +613,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         )}
       </div>
 
-      {/* ===== Care history ===== */}
+      {/* ===== Care history (Care Timeline tabs redesign comes in a later batch) ===== */}
       <div className="px-6">
         <h2 className="text-lg font-bold mb-4">Care history</h2>
         {pet.bookings.length === 0 ? (

@@ -11,6 +11,7 @@ export default async function PetProfilePage({ params }: { params: Promise<{ id:
   const pet = await prisma.pet.findFirst({
     where: { id, ownerId: user.id },
     include: {
+      owner: { select: { name: true, phone: true } },
       vaccinations: { orderBy: { nextDueDate: "asc" } },
       bookings: {
         include: { provider: { include: { user: true } } },
