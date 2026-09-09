@@ -24,6 +24,7 @@ import {
   Share2,
   Download,
   ClipboardList,
+  Plus,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -96,8 +97,6 @@ function paiseToRupeeString(paise: number | null) {
   return (paise / 100).toString();
 }
 
-// Cosmetic only — a passport-themed flourish, not a real machine-readable
-// travel document. Deterministic so it doesn't flicker between renders.
 function buildMrzLine(pet: Pet) {
   const nameCode = pet.name.toUpperCase().replace(/[^A-Z]/g, "").padEnd(14, "<").slice(0, 14);
   const idCode = pet.id.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 9).padEnd(9, "<");
@@ -106,6 +105,22 @@ function buildMrzLine(pet: Pet) {
 
 function passportNumber(petId: string) {
   return `#BKD-${petId.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(-6)}`;
+}
+
+function formatDate(dateStr: string, opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" }) {
+  return new Date(dateStr).toLocaleDateString("en-GB", opts);
+}
+
+// ===== Real vaccination status, computed live from nextDueDate =====
+// No stored/hardcoded status field — VALID/DUE_SOON/OVERDUE is always
+// derived fresh from the real date, so it can never drift out of sync.
+type VaxStatus = "VALID" | "DUE_SOON" | "OVERDUE";
+function vaccinationStatus(v: Vaccination): VaxStatus {
+  if (!v.nextDueDate) return "VALID";
+  const days = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86400000);
+  if (days < 0) return "OVERDUE";
+  if (days <= 60) return "DUE_SOON";
+  return "VALID";
 }
 
 const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
@@ -221,10 +236,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const age = ageFromBirthday(pet.birthday);
   const themeClass = resolveThemeClass(pet);
 
-  // ===== Real computed verification badge =====
-  // Criteria: breed, weight, birthday, insurance provider + policy filled,
-  // and at least one vaccination logged. Recomputed live from real Pet
-  // data — never a stored/hardcoded flag.
   const isVerified = Boolean(
     pet.breed &&
     pet.weightKg != null &&
@@ -234,19 +245,24 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     pet.vaccinations.length > 0
   );
 
-  const dobFormatted = pet.birthday
-    ? new Date(pet.birthday).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : null;
+  const dobFormatted = pet.birthday ? formatDate(pet.birthday) : null;
   const ageDobLine = [age, dobFormatted].filter(Boolean).join(" • ") || "—";
   const weightCoatLine = [pet.weightKg ? `${pet.weightKg} kg` : null, pet.coatColor].filter(Boolean).join(" • ") || "—";
   const genderLabel = pet.gender ? (pet.gender === "MALE" ? "Male" : "Female") : null;
   const neuteredLabel = pet.neutered === true ? "Neutered" : pet.neutered === false ? "Intact" : null;
   const genderNeuteredLabel = genderLabel && neuteredLabel ? `${genderLabel} (${neuteredLabel})` : genderLabel;
   const subtitle = [pet.breed, genderNeuteredLabel].filter(Boolean).join(" • ") || pet.size;
-  const microchipDisplay = pet.microchipId
-    ? pet.microchipId.replace(/(.{4})/g, "$1 ").trim()
-    : "Not on file";
+  const microchipDisplay = pet.microchipId ? pet.microchipId.replace(/(.{4})/g, "$1 ").trim() : "Not on file";
   const guardianDisplay = pet.owner.phone ? `${pet.owner.name} (${pet.owner.phone})` : pet.owner.name;
+
+  // ===== Real vaccine record counts for the status pill bar =====
+  const vaxCounts = pet.vaccinations.reduce(
+    (acc, v) => {
+      acc[vaccinationStatus(v)]++;
+      return acc;
+    },
+    { VALID: 0, DUE_SOON: 0, OVERDUE: 0 } as Record<VaxStatus, number>
+  );
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
@@ -291,8 +307,20 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       {/* ===== Passport Booklet Card ===== */}
       <div className="px-4 py-2">
         <div className="relative overflow-hidden rounded-2xl bg-[#02120a] text-[#fbfaee] shadow-2xl border border-[#16281f]">
+          {/* Watermark paw crest */}
+          <div className="absolute -right-12 -top-12 w-64 h-64 opacity-5 pointer-events-none">
+            <svg className="w-full h-full text-[#ffdbcd]" fill="currentColor" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="6"></circle>
+              <path d="M100 40 C115 40 125 55 125 70 C125 85 110 95 100 95 C90 95 75 85 75 70 C75 55 85 40 100 40 Z"></path>
+              <ellipse cx="65" cy="85" rx="14" ry="22"></ellipse>
+              <ellipse cx="135" cy="85" rx="14" ry="22"></ellipse>
+              <ellipse cx="45" cy="125" rx="13" ry="18"></ellipse>
+              <ellipse cx="155" cy="125" rx="13" ry="18"></ellipse>
+              <path d="M70 145 C70 120 85 110 100 110 C115 110 130 120 130 145 C130 165 118 175 100 175 C82 175 70 165 70 145 Z"></path>
+            </svg>
+          </div>
+
           <div className="p-5 sm:p-6">
-            {/* Official Cover Bar */}
             <div className="flex items-start justify-between relative z-10">
               <div className="flex items-center gap-2">
                 <BadgeCheck size={20} color="#fcba5a" />
@@ -308,7 +336,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
             <div className="w-full h-0.5 bg-gradient-to-r from-[#fcba5a]/0 via-[#fcba5a] to-[#fcba5a]/0 my-3.5 opacity-70"></div>
 
-            {/* Portrait & Core Vitals */}
             <div className="flex gap-4 items-center relative z-10">
               <div className="relative shrink-0">
                 <label
@@ -361,7 +388,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
               </div>
             </div>
 
-            {/* Microchip & Guardian Data Box */}
             <div className="mt-3.5 pt-2.5 rounded-lg bg-[#16281f]/80 p-3 relative z-10 flex flex-col gap-2 shadow-inner border border-[#c2c8c2]/10">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5">
@@ -379,7 +405,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
               </div>
             </div>
 
-            {/* Machine Readable Zone — decorative flourish only */}
             <div className="mt-3.5 pt-2.5 pb-1 px-3 rounded bg-black/40 border border-[#fcba5a]/20 font-mono text-[9px] tracking-widest text-[#fcba5a]/90 uppercase overflow-hidden leading-relaxed">
               <div className="truncate">{buildMrzLine(pet)}</div>
             </div>
@@ -391,7 +416,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       <div className="px-4 py-2.5">
         <div className="grid grid-cols-3 gap-2">
           <button
-            onClick={() => alert("Share Pass is coming soon.")} // TODO: wire real public read-only share link (Batch C)
+            onClick={() => alert("Share Pass is coming soon.")} // TODO: wire real public read-only share link (later batch)
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
           >
             <Share2 size={22} color="#904c2c" className="mb-1" />
@@ -399,7 +424,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             <span className="text-[9px] text-[#424844] font-medium">Public link</span>
           </button>
           <button
-            onClick={() => alert("Travel Dossier PDF is coming soon.")} // TODO: wire real PDF export (Batch D)
+            onClick={() => alert("Travel Dossier PDF is coming soon.")} // TODO: wire real PDF export (later batch)
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
           >
             <Download size={22} color="#02120a" className="mb-1" />
@@ -494,6 +519,134 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
+      {/* ===== Priority Section: Vaccination & Health Records ===== */}
+      <div className="px-4 pt-3 pb-2 mb-6">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
+          <div className="flex items-center justify-between pb-3 border-b border-[#efeee3]">
+            <div className="flex items-center gap-2">
+              <Syringe size={22} color="#02120a" />
+              <div>
+                <h3 className="font-bold text-sm text-[#02120a]">Vaccination &amp; Health Records</h3>
+                <p className="text-[10px] text-[#424844]">Certified Medical Ledger</p>
+              </div>
+            </div>
+            <Link
+              href="/owner/vaccines"
+              className="px-2.5 py-1 rounded-lg bg-[#d2e8d9] text-[#02120a] text-xs font-bold flex items-center gap-1 hover:bg-[#16281f] hover:text-white transition-colors"
+            >
+              <Plus size={14} />
+              <span>Add Record</span>
+            </Link>
+          </div>
+
+          {/* Status Summary Pill Bar — real counts computed from nextDueDate */}
+          <div className="my-3 p-2.5 rounded-xl bg-[#efeee3] flex items-center justify-around text-center text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+              <span className="font-bold text-[#02120a]">{vaxCounts.VALID} Valid</span>
+            </div>
+            <div className="h-3 w-px bg-[#c2c8c2]"></div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#fcba5a]"></span>
+              <span className="font-bold text-[#352000]">{vaxCounts.DUE_SOON} Booster Due</span>
+            </div>
+            <div className="h-3 w-px bg-[#c2c8c2]"></div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#ba1a1a]"></span>
+              <span className="font-medium text-[#424844]">{vaxCounts.OVERDUE} Overdue</span>
+            </div>
+          </div>
+
+          {pet.vaccinations.length === 0 ? (
+            <p className="text-sm text-center py-4" style={{ color: "var(--muted)" }}>No vaccination records yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {pet.vaccinations.map((v) => {
+                const status = vaccinationStatus(v);
+                const detailLine = [
+                  v.lotNumber ? `Lot #${v.lotNumber}` : null,
+                  v.administeringVet ? `Dr. ${v.administeringVet}` : null,
+                ].filter(Boolean).join(" • ");
+
+                if (status === "OVERDUE") {
+                  return (
+                    <div key={v.id} className="p-3.5 rounded-xl bg-[#ffdad6] border border-[#ba1a1a]/40 flex flex-col gap-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-xs text-[#93000a]">{v.vaccineName}</h4>
+                            <span className="px-2 py-0.5 rounded bg-[#ba1a1a] text-white text-[10px] font-bold">Overdue</span>
+                          </div>
+                          {detailLine && <p className="text-[10px] text-[#93000a]/80 font-mono mt-0.5">{detailLine}</p>}
+                        </div>
+                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#ba1a1a] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
+                          Book Now
+                        </Link>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#ba1a1a]/20">
+                        <span className="text-[#93000a]/80">Was due:</span>
+                        <span className="font-bold text-[#93000a]">{formatDate(v.nextDueDate)}</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (status === "DUE_SOON") {
+                  const daysUntil = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86400000);
+                  return (
+                    <div key={v.id} className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#fcba5a]/40 flex flex-col gap-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-xs text-[#02120a]">{v.vaccineName}</h4>
+                            <span className="px-2 py-0.5 rounded bg-[#fcba5a] text-[#291800] text-[10px] font-bold">Due in {daysUntil}d</span>
+                          </div>
+                          {detailLine && <p className="text-[10px] text-[#424844] font-mono mt-0.5">{detailLine}</p>}
+                        </div>
+                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#904c2c] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
+                          Book Booster
+                        </Link>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#efeee3]">
+                        <span className="text-[#424844]">Scheduled window:</span>
+                        <span className="font-bold text-[#352000]">{formatDate(v.nextDueDate, { month: "long", year: "numeric" })}</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={v.id} className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#efeee3] flex flex-col gap-2.5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-bold text-xs text-[#02120a]">{v.vaccineName}</h4>
+                          <span className="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-800 text-[10px] font-bold border border-emerald-600/20">Valid</span>
+                        </div>
+                        {detailLine && <p className="text-[10px] text-[#424844] font-mono mt-0.5">{detailLine}</p>}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-[#efeee3]">
+                      <div>
+                        <span className="text-[9px] uppercase font-semibold text-[#424844] block">Administered</span>
+                        <span className="font-bold text-[#02120a]">{formatDate(v.dateGiven)}</span>
+                      </div>
+                      {v.nextDueDate && (
+                        <div>
+                          <span className="text-[9px] uppercase font-semibold text-[#424844] block">Expires</span>
+                          <span className="font-bold text-emerald-700">{formatDate(v.nextDueDate)}</span>
+                        </div>
+                      )}
+                    </div>
+                    {v.clinicName && <p className="text-[10px] text-[#424844] italic">{v.clinicName}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ===== Integrated passport card — one grouped list, not scattered boxes ===== */}
       <div className="px-6 mb-8">
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -572,45 +725,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ===== Vaccination history (redesign to mockup card style comes in Batch B) ===== */}
-      <div className="px-6 mb-8">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Syringe size={18} color="var(--tan)" /> Vaccinations
-        </h2>
-        {pet.vaccinations.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>No vaccination records yet.</p>
-        ) : (
-          <div className="card" style={{ padding: 0 }}>
-            {pet.vaccinations.map((v, i) => {
-              const detailParts = [
-                v.clinicName,
-                v.administeringVet ? `Dr. ${v.administeringVet}` : null,
-                v.lotNumber ? `Lot ${v.lotNumber}` : null,
-              ].filter(Boolean);
-              return (
-                <div
-                  key={v.id}
-                  className="px-5 py-3.5"
-                  style={i !== pet.vaccinations.length - 1 ? { borderBottom: "1px solid var(--border)" } : {}}
-                >
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium text-sm">{v.vaccineName}</p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      Due {new Date(v.nextDueDate).toDateString()}
-                    </p>
-                  </div>
-                  {detailParts.length > 0 && (
-                    <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>
-                      {detailParts.join(" · ")}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ===== Care history (Care Timeline tabs redesign comes in a later batch) ===== */}
