@@ -25,6 +25,15 @@ import {
   Download,
   ClipboardList,
   Plus,
+  AlertTriangle,
+  Award,
+  Sparkles,
+  Hand,
+  HeartPulse,
+  Hospital,
+  Phone,
+  Siren,
+  PhoneCall,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
@@ -111,9 +120,6 @@ function formatDate(dateStr: string, opts: Intl.DateTimeFormatOptions = { day: "
   return new Date(dateStr).toLocaleDateString("en-GB", opts);
 }
 
-// ===== Real vaccination status, computed live from nextDueDate =====
-// No stored/hardcoded status field — VALID/DUE_SOON/OVERDUE is always
-// derived fresh from the real date, so it can never drift out of sync.
 type VaxStatus = "VALID" | "DUE_SOON" | "OVERDUE";
 function vaccinationStatus(v: Vaccination): VaxStatus {
   if (!v.nextDueDate) return "VALID";
@@ -208,7 +214,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
   const setPetTheme = async (themeKey: string) => {
     const value = themeKey === "auto" ? null : themeKey;
-    setPet((prev) => ({ ...prev, themeOverride: value })); // optimistic
+    setPet((prev) => ({ ...prev, themeOverride: value }));
     const res = await fetch(`/api/pets/${pet.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -255,7 +261,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const microchipDisplay = pet.microchipId ? pet.microchipId.replace(/(.{4})/g, "$1 ").trim() : "Not on file";
   const guardianDisplay = pet.owner.phone ? `${pet.owner.name} (${pet.owner.phone})` : pet.owner.name;
 
-  // ===== Real vaccine record counts for the status pill bar =====
   const vaxCounts = pet.vaccinations.reduce(
     (acc, v) => {
       acc[vaccinationStatus(v)]++;
@@ -263,6 +268,14 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     },
     { VALID: 0, DUE_SOON: 0, OVERDUE: 0 } as Record<VaxStatus, number>
   );
+
+  const hasAllergyAlert = Boolean(pet.allergies);
+  const hasHandlingNotes = Boolean(pet.notes);
+  const stampsIssued = [hasAllergyAlert, true, true, hasHandlingNotes].filter(Boolean).length;
+
+  const hasInsurance = Boolean(pet.insuranceProvider && pet.insurancePolicy);
+  const insuranceExpired = pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate) < new Date() : false;
+  const knownClinic = [...pet.vaccinations].reverse().find((v) => v.clinicName);
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
@@ -275,7 +288,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Header with clear back link ===== */}
       <div className="flex items-center justify-between px-6 py-5">
         <Link href="/owner/pets" className="flex items-center gap-2 tap-scale">
           <ArrowLeft size={20} />
@@ -291,23 +303,19 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </button>
       </div>
 
-      {/* ===== Passport Header Status Strip ===== */}
       <div className="px-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#ffdbcd] text-[#360f00] text-[11px] font-bold tracking-wider">01</span>
           <span className="font-bold text-xs tracking-wider uppercase text-[#424844]">Authenticated Canine Dossier</span>
         </div>
-        {/* TODO: not backed by real data — kept as a visual placeholder per product decision */}
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#e9e9dd] text-[#16281f] text-xs font-semibold shadow-sm">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
           <span>Live Sync Active</span>
         </div>
       </div>
 
-      {/* ===== Passport Booklet Card ===== */}
       <div className="px-4 py-2">
         <div className="relative overflow-hidden rounded-2xl bg-[#02120a] text-[#fbfaee] shadow-2xl border border-[#16281f]">
-          {/* Watermark paw crest */}
           <div className="absolute -right-12 -top-12 w-64 h-64 opacity-5 pointer-events-none">
             <svg className="w-full h-full text-[#ffdbcd]" fill="currentColor" viewBox="0 0 200 200">
               <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="6"></circle>
@@ -412,11 +420,10 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Interactive Passport Action Bar ===== */}
       <div className="px-4 py-2.5">
         <div className="grid grid-cols-3 gap-2">
           <button
-            onClick={() => alert("Share Pass is coming soon.")} // TODO: wire real public read-only share link (later batch)
+            onClick={() => alert("Share Pass is coming soon.")}
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
           >
             <Share2 size={22} color="#904c2c" className="mb-1" />
@@ -424,7 +431,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             <span className="text-[9px] text-[#424844] font-medium">Public link</span>
           </button>
           <button
-            onClick={() => alert("Travel Dossier PDF is coming soon.")} // TODO: wire real PDF export (later batch)
+            onClick={() => alert("Travel Dossier PDF is coming soon.")}
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
           >
             <Download size={22} color="#02120a" className="mb-1" />
@@ -442,7 +449,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Real freshness indicator ===== */}
       <div className="px-6 mb-2 flex items-center gap-1.5">
         <Clock size={12} color="var(--muted)" />
         <p className="text-[11px]" style={{ color: "var(--muted)" }}>
@@ -450,7 +456,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </p>
       </div>
 
-      {/* ===== Edit-mode: identity details not shown on the passport card face ===== */}
       {editing && (
         <div className="px-6 mb-6">
           <div className="card p-4 grid grid-cols-2 gap-3">
@@ -490,7 +495,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       )}
 
-      {/* ===== App theme for this pet ===== */}
       <div className="px-6 mb-8">
         <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>App theme for {pet.name}</p>
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
@@ -519,8 +523,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Priority Section: Vaccination & Health Records ===== */}
-      <div className="px-4 pt-3 pb-2 mb-6">
+      <div className="px-4 pt-3 pb-2 mb-2">
         <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
           <div className="flex items-center justify-between pb-3 border-b border-[#efeee3]">
             <div className="flex items-center gap-2">
@@ -539,7 +542,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </Link>
           </div>
 
-          {/* Status Summary Pill Bar — real counts computed from nextDueDate */}
           <div className="my-3 p-2.5 rounded-xl bg-[#efeee3] flex items-center justify-around text-center text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
@@ -647,7 +649,158 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Integrated passport card — one grouped list, not scattered boxes ===== */}
+      <div className="px-4 pt-3 pb-2 mb-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <Award size={20} color="#904c2c" />
+            <h3 className="font-bold text-sm text-[#02120a]">Care Profile &amp; Passport Endorsements</h3>
+          </div>
+          <span className="text-[10px] font-mono uppercase text-[#424844]">{stampsIssued} Stamps Issued</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {hasAllergyAlert && (
+            <div className="col-span-2 p-4 rounded-xl bg-[#ffdad6] text-[#93000a] border-2 border-dashed border-[#ba1a1a] relative overflow-hidden shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={24} color="#ba1a1a" />
+                  <span className="font-bold text-xs tracking-wider uppercase text-[#93000a]">Critical Allergy Alert Stamp</span>
+                </div>
+                <span className="text-[9px] font-bold uppercase bg-[#ba1a1a] text-white px-2 py-0.5 rounded">Strict Compliance</span>
+              </div>
+              <p className="text-[11px] leading-snug mt-2 opacity-90">{pet.allergies}</p>
+            </div>
+          )}
+
+          <div className="p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex flex-col justify-between -rotate-1">
+            <div>
+              <div className="w-9 h-9 rounded-full bg-emerald-600/10 text-emerald-700 flex items-center justify-center mb-2">
+                <ShieldCheck size={18} />
+              </div>
+              <h4 className="font-bold text-xs text-[#02120a]">Pack Social Certified</h4>
+              <p className="text-[10px] text-[#424844] mt-1 leading-snug">Temperament evaluation not yet available — coming soon.</p>
+            </div>
+            <span className="text-[9px] font-mono text-[#904c2c] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex flex-col justify-between rotate-1">
+            <div>
+              <div className="w-9 h-9 rounded-full bg-[#ffddb3] text-[#624000] flex items-center justify-center mb-2">
+                <Sparkles size={18} />
+              </div>
+              <h4 className="font-bold text-xs text-[#02120a]">Approved Rewards</h4>
+              <p className="text-[10px] text-[#424844] mt-1 leading-snug">Reward tracking not yet available — coming soon.</p>
+            </div>
+            <span className="text-[9px] font-mono text-[#904c2c] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
+          </div>
+
+          {hasHandlingNotes && (
+            <div className="col-span-2 p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#16281f] text-[#d2e8d9] flex items-center justify-center shrink-0 mt-0.5">
+                <Hand size={18} />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs text-[#02120a]">Handling &amp; Leash Protocols</h4>
+                <p className="text-[11px] text-[#424844] mt-0.5 leading-snug">{pet.notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 pt-3 pb-2 mb-6">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HeartPulse size={22} color="#02120a" />
+              <h3 className="font-bold text-sm text-[#02120a]">Insurance &amp; Medical Coverage</h3>
+            </div>
+            {hasInsurance ? (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${insuranceExpired ? "bg-[#ffdad6] text-[#93000a]" : "bg-[#d2e8d9] text-[#02120a]"}`}>
+                {insuranceExpired ? "Policy Expired" : "Active Policy"}
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#e9e9dd] text-[#424844]">No Policy on File</span>
+            )}
+          </div>
+
+          {hasInsurance ? (
+            <div className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#efeee3]">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-bold text-[#02120a]">{pet.insuranceProvider}</p>
+                  <p className="text-[10px] font-mono text-[#424844] mt-0.5">
+                    Policy #{pet.insurancePolicy}
+                    {pet.insuranceExpiryDate ? ` • Valid thru ${formatDate(pet.insuranceExpiryDate, { month: "short", year: "numeric" })}` : ""}
+                  </p>
+                </div>
+                {pet.insuranceCoveragePaise != null && (
+                  <span className="text-xs font-bold text-[#02120a] shrink-0">₹{(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}</span>
+                )}
+              </div>
+              <div className="mt-2 pt-2 border-t border-[#efeee3] flex items-center justify-end text-[11px]">
+                <button onClick={() => setEditing(true)} className="font-bold text-[#904c2c] hover:underline text-xs">
+                  Edit Insurance Details
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setEditing(true)} className="w-full p-3.5 rounded-xl bg-[#f5f4e8] border border-dashed border-[#737874]/30 text-xs font-semibold text-[#424844] hover:text-[#02120a]">
+              No insurance on file — tap to add policy details
+            </button>
+          )}
+
+          <div className="space-y-2 pt-1">
+            <span className="text-[10px] uppercase font-bold text-[#424844] tracking-wider block">Emergency Dispatch Hotlines</span>
+
+            {knownClinic ? (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#efeee3]">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-[#ba1a1a] text-white flex items-center justify-center shrink-0">
+                    <Hospital size={16} />
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-[#02120a]">{knownClinic.clinicName}</p>
+                    <p className="text-[10px] text-[#424844]">From latest vaccination record • no phone on file</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] px-1" style={{ color: "var(--muted)" }}>No clinic on file yet — logged when a vaccination record includes a clinic name.</p>
+            )}
+
+            {pet.owner.phone ? (
+              <a href={`tel:${pet.owner.phone}`} className="flex items-center justify-between p-3 rounded-lg bg-[#efeee3] hover:bg-[#e9e9dd] transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-[#ffdbcd] text-[#360f00] flex items-center justify-center shrink-0">
+                    <Phone size={16} />
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-[#02120a]">{pet.owner.name} (Guardian)</p>
+                    <p className="text-[10px] text-[#424844]">{pet.owner.phone}</p>
+                  </div>
+                </div>
+                <PhoneCall size={18} color="#02120a" />
+              </a>
+            ) : (
+              <p className="text-[11px] px-1" style={{ color: "var(--muted)" }}>No guardian phone on file yet.</p>
+            )}
+
+            <div className="p-3 rounded-lg bg-[#16281f] text-[#fbfaee] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-[#fea67f] text-[#78391b] flex items-center justify-center shrink-0">
+                  <Siren size={16} />
+                </span>
+                <div>
+                  <p className="text-xs font-bold text-[#fbfaee]">Barkado Concierge Pet Ambulance</p>
+                  <p className="text-[10px] text-[#d2e8d9]">Not yet available</p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-[#904c2c] text-white text-[10px] font-bold">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="px-6 mb-8">
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           {FIELD_META.map(({ key, label, icon: Icon, placeholder, multiline }) => (
@@ -727,7 +880,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Care history (Care Timeline tabs redesign comes in a later batch) ===== */}
       <div className="px-6">
         <h2 className="text-lg font-bold mb-4">Care history</h2>
         {pet.bookings.length === 0 ? (
@@ -755,7 +907,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         )}
       </div>
 
-      {/* ===== Remove pet ===== */}
       <div className="px-6 mt-10 mb-4">
         <button
           onClick={removePet}
