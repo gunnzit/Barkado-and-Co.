@@ -42,7 +42,7 @@ export default function OwnerSideMenu() {
   // — currently just Walking. Those pages have no hamburger in the
   // reference design at all; add other service pages here as they get
   // the same header treatment.
-  const pagesWithOwnHeader = ["/walk-booking"];
+  const pagesWithOwnHeader = ["/walk-booking", "/training", "/grooming"];
   const fullyHidden = pathname === "/" || pagesWithOwnHeader.includes(pathname) || pathname.startsWith("/provider") || pathname.startsWith("/admin") || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
   if (fullyHidden) return null;
 
