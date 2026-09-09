@@ -37,7 +37,13 @@ export default function OwnerSideMenu() {
   // hidden on Home specifically too, since HomeDesktopDashboard already
   // renders a full real sidebar there — this would just be a redundant
   // second trigger floating over it.
-  const fullyHidden = pathname === "/" || pathname.startsWith("/provider") || pathname.startsWith("/admin") || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
+  // Fully hidden on provider/admin/auth (separate nav systems), and on
+  // any page that now has its own real back-arrow header (ServicePageTopBar)
+  // — currently just Walking. Those pages have no hamburger in the
+  // reference design at all; add other service pages here as they get
+  // the same header treatment.
+  const pagesWithOwnHeader = ["/walk-booking"];
+  const fullyHidden = pathname === "/" || pagesWithOwnHeader.includes(pathname) || pathname.startsWith("/provider") || pathname.startsWith("/admin") || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
   if (fullyHidden) return null;
 
   return (

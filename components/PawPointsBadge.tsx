@@ -22,7 +22,12 @@ export default function PawPointsBadge() {
       .catch(() => setBalance(null));
   }, []);
 
-  if (pathname === "/" || balance === null) return null;
+  // Hidden on Home and on any page that now renders its own real inline
+  // points badge (ServicePageTopBar) — currently just Walking; add other
+  // service pages here as they get the same header treatment, or this
+  // duplicate-badge bug reappears on each one.
+  const pagesWithOwnPointsBadge = ["/", "/walk-booking"];
+  if (pagesWithOwnPointsBadge.includes(pathname) || balance === null) return null;
 
   return (
     <Link
