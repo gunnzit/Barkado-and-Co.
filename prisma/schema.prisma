@@ -187,16 +187,25 @@ model Pet {
   vetHospitalLicense String?
   attendingVetName   String?
   vetEmergencyPhone  String?
+  // Real plain-text home access info for the Add Pet Step 3 "Home Access
+  // & Drop-off" section — no encrypted-code/smart-lock claims, just
+  // notes a walker/sitter reads.
+  homeAccessAddress String?
+  homeAccessNotes   String?
+  // Set once, when the owner finishes Step 3 — a real completion marker,
+  // replacing the mockup's fake "immutable ledger token" language.
+  passportCompletedAt DateTime?
   createdAt   DateTime @default(now())
   // Real "last updated" timestamp — backs the Passport's real freshness
   // indicator (replacing the mockup's fake "Live Sync" claim, which
   // implied live push infrastructure that doesn't exist).
   updatedAt   DateTime @updatedAt
 
-  vaccinations Vaccination[]
-  medications  Medication[]
-  bookings     Booking[]
-  cartItems    CartItem[]
+  vaccinations      Vaccination[]
+  medications       Medication[]
+  emergencyContacts EmergencyContact[]
+  bookings          Booking[]
+  cartItems         CartItem[]
 }
 
 model HeroPhoto {
@@ -239,6 +248,20 @@ model Medication {
   schedule     String?  // e.g. "Daily 8:30 AM"
   instructions String?
   active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+// Real emergency contacts for a pet — just people to call, not an
+// "authorization" system. The pet's own owner is already available via
+// Pet.owner and isn't duplicated here; this is for additional contacts
+// (co-owners, family, a trusted neighbor) an owner wants listed.
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  petId        String
+  pet          Pet      @relation(fields: [petId], references: [id])
+  name         String
+  phone        String
+  relationship String?
   createdAt    DateTime @default(now())
 }
 
