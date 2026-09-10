@@ -186,7 +186,7 @@ export default function AddPetStep1() {
     setSaving(null);
     if (res.ok) {
       const pet = await res.json();
-      router.push(isDraft ? "/owner/pets" : `/owner/pets/${pet.id}`);
+      router.push(isDraft ? "/owner/pets" : `/owner/pets/${pet.id}/step-2`);
     } else {
       alert("Something went wrong saving. Please try again.");
     }
@@ -329,8 +329,8 @@ export default function AddPetStep1() {
             <button type="button" onClick={() => submit(true)} disabled={saving !== null} className="btn-secondary flex-1 text-sm">
               {saving === "draft" ? "Saving…" : "Save Draft"}
             </button>
-            <button type="button" onClick={() => submit(false)} disabled={saving !== null} className="btn-primary flex-1 text-sm">
-              {uploading ? "Uploading photo…" : saving === "create" ? "Creating…" : "Create PawPassport™"}
+             <button type="button" onClick={() => submit(false)} disabled={saving !== null} className="btn-primary flex-1 text-sm">
+              {uploading ? "Uploading photo…" : saving === "create" ? "Continuing…" : "Continue to Step 2 →"}
             </button>
           </div>
         </div>

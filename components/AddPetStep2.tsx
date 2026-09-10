@@ -328,9 +328,10 @@ export default function AddPetStep2({ pet: initialPet }: { pet: Pet }) {
 
         <div className="flex gap-3">
           <button onClick={() => router.push("/owner/pets")} className="btn-secondary flex-1 text-sm">← Back</button>
-          {/* Step 3 doesn't exist yet — landing on the real Passport page,
-              same fallback pattern as Step 1 used before Step 2 existed. */}
-          <button onClick={() => router.push(`/owner/pets/${pet.id}`)} className="btn-primary flex-1 text-sm">Continue →</button>
+          {/* Step 3 doesn't exist yet — landing on the real Passport page
+              for now. "Create PawPassport™" belongs on Step 3's own final
+              button once it's built, not here. */}
+          <button onClick={() => router.push(`/owner/pets/${pet.id}`)} className="btn-primary flex-1 text-sm">Continue to Step 3 →</button>
         </div>
       </main>
     </div>
