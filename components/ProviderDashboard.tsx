@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Menu, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Clock, MapPin, Phone, Check, X,
   Navigation, IndianRupee, ChevronRight, Inbox, Calendar, History as HistoryIcon, Wallet, Settings, ShieldCheck, Star, Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 import ProviderAvailabilityEditor from "@/components/ProviderAvailabilityEditor";
 import ProviderServicesEditor from "@/components/ProviderServicesEditor";
@@ -41,10 +42,24 @@ export type ProviderBooking = {
   priceAmount: number;
   address: string | null;
   phone: string | null;
-  pet: { name: string; photoUrl?: string | null; breed?: string | null };
+  pet: {
+    name: string;
+    photoUrl?: string | null;
+    breed?: string | null;
+    // Real dietary info — allergyTags is the new structured field (Add
+    // Pet flow), allergies is the legacy free-text field some older
+    // pets still only have. Combine both wherever this is displayed so
+    // nothing falls through the migration gap.
+    allergyTags?: string[];
+    allergies?: string | null;
+  };
   owner: { name: string; ratingAvg?: number; ratingCount?: number };
   ownerReview?: { rating: number } | null;
 };
+
+function dietaryItems(pet: ProviderBooking["pet"]) {
+  return [...(pet.allergyTags ?? []), ...(pet.allergies ? [pet.allergies] : [])];
+}
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
@@ -56,6 +71,7 @@ function durationMinutes(start: string, end: string) {
 
 function BookingCard({ booking, children }: { booking: ProviderBooking; children?: React.ReactNode }) {
   const Icon = SERVICE_ICON[booking.type];
+  const diet = dietaryItems(booking.pet);
   return (
     <div className="card">
       <div className="flex items-start gap-3 mb-3">
@@ -95,6 +111,11 @@ function BookingCard({ booking, children }: { booking: ProviderBooking; children
             <Phone size={12} /> {booking.phone}
           </p>
         )}
+        {diet.length > 0 && (
+          <p className="text-xs flex items-start gap-1.5 font-semibold" style={{ color: "#93000a" }}>
+            <AlertTriangle size={12} className="mt-0.5 shrink-0" /> {diet.join(", ")}
+          </p>
+        )}
       </div>
       {children}
     </div>
@@ -109,6 +130,7 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
   const time = new Date(booking.startTime);
   const isToday = time.toDateString() === new Date().toDateString();
   const mins = durationMinutes(booking.startTime, booking.endTime);
+  const hasDietaryAlert = dietaryItems(booking.pet).length > 0;
   const CATEGORY_COLOR: Record<string, string> = {
     WALKING: "var(--forest, #16281f)",
     SITTING: "var(--terracotta)",
@@ -130,7 +152,10 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
         style={{ border: "1px solid var(--border)" }}
       />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{SERVICE_LABEL[booking.type]} with {booking.pet.name}</p>
+        <p className="font-semibold text-sm truncate flex items-center gap-1.5">
+          {SERVICE_LABEL[booking.type]} with {booking.pet.name}
+          {hasDietaryAlert && <AlertTriangle size={12} color="#93000a" className="shrink-0" title="Dietary restrictions on file" />}
+        </p>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
           {booking.pet.breed ? `${booking.pet.breed} · ` : ""}{mins} mins
         </p>

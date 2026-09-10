@@ -47,7 +47,6 @@ import BottomNav from "@/components/BottomNav";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
-import { resolveThemeClass, THEME_OPTIONS } from "@/lib/breedTheme";
 
 type Vaccination = {
   id: string;
@@ -99,7 +98,6 @@ type Pet = {
   insuranceCoveragePaise: number | null;
   insuranceExpiryDate: string | null;
   photoUrl: string | null;
-  themeOverride: string | null;
   updatedAt: string;
   owner: { name: string; phone: string | null };
   vaccinations: Vaccination[];
@@ -172,8 +170,8 @@ const SERVICE_STYLE: Record<string, { bg: string; fg: string; Icon: any }> = {
 const REBOOK_HREF: Record<string, string | null> = {
   WALKING: "/walk-booking",
   SITTING: "/sitting",
-  GROOMING: null, // TODO: no confirmed dedicated grooming booking route yet
-  TRAINING: null, // TODO: no confirmed dedicated training booking route yet
+  GROOMING: null,
+  TRAINING: null,
 };
 
 const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
@@ -262,22 +260,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
     setSaving(false);
   };
 
-  const setPetTheme = async (themeKey: string) => {
-    const value = themeKey === "auto" ? null : themeKey;
-    setPet((prev) => ({ ...prev, themeOverride: value }));
-    const res = await fetch(`/api/pets/${pet.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ themeOverride: value }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
-      setPet((prev) => ({ ...prev, updatedAt: updated.updatedAt }));
-    } else {
-      setPet((prev) => ({ ...prev, themeOverride: initialPet.themeOverride }));
-    }
-  };
-
   const removePet = async () => {
     if (!confirm(`Remove ${pet.name}? This can't be undone.`)) return;
     setDeleting(true);
@@ -290,7 +272,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   };
 
   const age = ageFromBirthday(pet.birthday);
-  const themeClass = resolveThemeClass(pet);
 
   const isVerified = Boolean(
     pet.breed &&
@@ -327,7 +308,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const insuranceExpired = pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate) < new Date() : false;
   const knownClinic = [...pet.vaccinations].reverse().find((v) => v.clinicName);
 
-  // ===== Real Care Timeline data =====
   const completedCount = pet.bookings.filter((b) => b.status === "COMPLETED").length;
   const filteredBookings = pet.bookings.filter((b) => {
     if (careFilter === "all") return true;
@@ -337,7 +317,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   });
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
+    <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
     <main className="pb-28 max-w-2xl mx-auto">
       <div className="px-6 pt-4 flex items-center justify-between">
         <PetSwitcher />
@@ -553,34 +533,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           </div>
         </div>
       )}
-
-      <div className="px-6 mb-8">
-        <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>App theme for {pet.name}</p>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-          {THEME_OPTIONS.map((opt) => {
-            const isActive = (pet.themeOverride ?? "auto") === opt.key;
-            return (
-              <button
-                key={opt.key}
-                onClick={() => setPetTheme(opt.key)}
-                className="tap-scale flex flex-col items-center gap-1.5 shrink-0"
-                style={{ width: 64 }}
-              >
-                <span
-                  className="w-10 h-10 rounded-full block"
-                  style={{
-                    background: opt.swatch,
-                    boxShadow: isActive ? "0 0 0 2.5px var(--card), 0 0 0 4.5px var(--terracotta)" : "none",
-                  }}
-                />
-                <span className="text-[10px] text-center leading-tight" style={{ color: isActive ? "var(--terracotta)" : "var(--muted)", fontWeight: isActive ? 700 : 500 }}>
-                  {opt.label === "Auto (match breed)" ? "Auto" : opt.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="px-4 pt-3 pb-2 mb-2">
         <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
@@ -860,7 +812,6 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* ===== Real Care Timeline ===== */}
       <div className="px-4 pt-3 pb-6 mb-2">
         <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
           <div className="flex items-center justify-between mb-3">
