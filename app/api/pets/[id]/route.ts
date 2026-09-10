@@ -6,23 +6,34 @@ import { getOrCreateUser } from "@/lib/auth";
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   breed: z.string().optional(),
-  size: z.enum(["SMALL", "MEDIUM", "LARGE"]).optional(),
+  size: z.enum(["SMALL", "MEDIUM", "LARGE", "GIANT"]).optional(),
+  species: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE"]).optional(),
+  neutered: z.boolean().optional(),
+  coatColor: z.string().optional(),
   temperament: z.string().optional(),
+  temperamentTags: z.array(z.string()).optional(),
   notes: z.string().optional(),
   birthday: z.string().optional(), // ISO date
   weightKg: z.number().positive().optional(),
   allergies: z.string().optional(),
+  allergyTags: z.array(z.string()).optional(),
   medicalHistory: z.string().optional(),
   favoriteTreats: z.string().optional(),
   microchipId: z.string().optional(),
   insuranceProvider: z.string().optional(),
   insurancePolicy: z.string().optional(),
-  // Real coverage amount (paise) + expiry — added alongside provider/policy
-  // number so the Passport's insurance section shows real coverage detail.
   insuranceCoveragePaise: z.number().nonnegative().optional(),
   insuranceExpiryDate: z.string().optional(), // ISO date
   photoUrl: z.string().optional(),
   themeOverride: z.string().nullable().optional(),
+  // Primary veterinary hospital — real fields for the Add Pet Step 2
+  // "Primary Veterinary Hospital" section.
+  vetHospitalName: z.string().optional(),
+  vetHospitalAddress: z.string().optional(),
+  vetHospitalLicense: z.string().optional(),
+  attendingVetName: z.string().optional(),
+  vetEmergencyPhone: z.string().optional(),
 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +45,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     where: { id: resolvedParams.id, ownerId: user.id },
     include: {
       vaccinations: { orderBy: { nextDueDate: "asc" } },
+      medications: { where: { active: true }, orderBy: { createdAt: "desc" } },
       bookings: {
         include: { provider: { include: { user: true } } },
         orderBy: { startTime: "desc" },
