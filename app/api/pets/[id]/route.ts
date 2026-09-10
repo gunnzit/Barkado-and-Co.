@@ -27,13 +27,15 @@ const updateSchema = z.object({
   insuranceExpiryDate: z.string().optional(), // ISO date
   photoUrl: z.string().optional(),
   themeOverride: z.string().nullable().optional(),
-  // Primary veterinary hospital — real fields for the Add Pet Step 2
-  // "Primary Veterinary Hospital" section.
   vetHospitalName: z.string().optional(),
   vetHospitalAddress: z.string().optional(),
   vetHospitalLicense: z.string().optional(),
   attendingVetName: z.string().optional(),
   vetEmergencyPhone: z.string().optional(),
+  // Real Step 3 fields.
+  homeAccessAddress: z.string().optional(),
+  homeAccessNotes: z.string().optional(),
+  passportCompletedAt: z.boolean().optional(), // true -> set to now() server-side
 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -44,8 +46,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const pet = await prisma.pet.findFirst({
     where: { id: resolvedParams.id, ownerId: user.id },
     include: {
+      owner: { select: { name: true, phone: true } },
       vaccinations: { orderBy: { nextDueDate: "asc" } },
       medications: { where: { active: true }, orderBy: { createdAt: "desc" } },
+      emergencyContacts: { orderBy: { createdAt: "asc" } },
       bookings: {
         include: { provider: { include: { user: true } } },
         orderBy: { startTime: "desc" },
@@ -71,7 +75,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { birthday, insuranceExpiryDate, ...rest } = parsed.data;
+  const { birthday, insuranceExpiryDate, passportCompletedAt, ...rest } = parsed.data;
 
   const pet = await prisma.pet.update({
     where: { id: resolvedParams.id },
@@ -79,6 +83,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...rest,
       ...(birthday ? { birthday: new Date(birthday) } : {}),
       ...(insuranceExpiryDate ? { insuranceExpiryDate: new Date(insuranceExpiryDate) } : {}),
+      ...(passportCompletedAt ? { passportCompletedAt: new Date() } : {}),
     },
   });
 
