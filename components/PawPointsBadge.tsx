@@ -8,9 +8,6 @@ import { Sparkles } from "lucide-react";
 // Global, real, live balance badge — mounted once in layout.tsx (same
 // pattern as CartPill), not per-page. Renders nothing for signed-out
 // visitors or while loading, rather than showing a fake/zero placeholder.
-// Also hidden on Home specifically — Home's own header (HomeMobileHeader)
-// now renders a real inline points badge matching the reference design
-// exactly, so this floating one would duplicate it there.
 export default function PawPointsBadge() {
   const pathname = usePathname();
   const [balance, setBalance] = useState<number | null>(null);
@@ -22,14 +19,11 @@ export default function PawPointsBadge() {
       .catch(() => setBalance(null));
   }, []);
 
-  // Hidden on Home and on any page that now renders its own real inline
-  // points badge (ServicePageTopBar) — currently just Walking; add other
-  // service pages here as they get the same header treatment, or this
-  // duplicate-badge bug reappears on each one.
-  const pagesWithOwnPointsBadge = ["/", "/walk-booking", "/training", "/grooming"];
-  // Pet Passport (/owner/pets/[id]) is a dynamic route, so it can't go in
-  // the exact-match array above — the dark dossier card already fills that
-  // corner of the screen, so the floating badge is redundant/crowded here.
+  // Hidden on any page that renders its own real inline points badge —
+  // Home (HomeMobileHeader), Walking, Training, Grooming, and now the
+  // Profile page's own top bar. Add other pages here as they get the
+  // same header treatment, or this duplicate-badge bug reappears.
+  const pagesWithOwnPointsBadge = ["/", "/walk-booking", "/training", "/grooming", "/owner/profile"];
   const isPetPassportPage = pathname.startsWith("/owner/pets/");
   if (pagesWithOwnPointsBadge.includes(pathname) || isPetPassportPage || balance === null) return null;
 

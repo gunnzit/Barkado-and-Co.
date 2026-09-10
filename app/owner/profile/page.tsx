@@ -6,13 +6,10 @@ import Link from "next/link";
 import { UserButton, SignOutButton } from "@clerk/nextjs";
 import {
   PawPrint, Calendar, Heart, Sparkles, PawPrint as ProviderIcon, ChevronRight, Wallet,
-  MapPin, Hospital, CreditCard, Bell, Phone, LogOut, ShieldCheck, Syringe,
+  MapPin, Hospital, CreditCard, Bell, Phone, LogOut, ShieldCheck, Syringe, ShoppingBag, Camera,
 } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
 import { getPawPointsBalance } from "@/lib/pawPoints";
 
-// Reused from the Passport/Step-2 logic — no stored status field, always
-// derived fresh from the real date.
 type VaxLike = { nextDueDate: Date | null };
 function vaccinationStatus(v: VaxLike): "VALID" | "DUE_SOON" | "OVERDUE" {
   if (!v.nextDueDate) return "VALID";
@@ -102,35 +99,50 @@ export default async function OwnerProfile() {
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
       <main className="pb-24 lg:pb-12 max-w-lg lg:max-w-4xl mx-auto px-5 pt-6 lg:pt-10">
-        <div className="flex items-center justify-between mb-6 lg:hidden">
-          <div className="flex items-center gap-3">
-            <UserButton />
-            <div>
-              <p className="font-bold text-lg">{user.name}</p>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>{user.email}</p>
+        {/* ===== Top bar — logo/wordmark left, real points/bell/cart right ===== */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "#02120a" }}>
+              <PawPrint size={15} color="#fcba5a" />
             </div>
+            <span className="font-bold text-base">Barkado &amp; Co.</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono" style={{ color: "var(--muted)" }}>{passportNumber(user.id)}</span>
-            <ThemeToggle />
+            <Link
+              href="/owner/wallet"
+              className="tap-scale flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+              style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+            >
+              <Sparkles size={13} color="var(--gold)" />
+              {pawPointsBalance.toLocaleString("en-IN")} <span className="font-medium" style={{ color: "var(--muted)" }}>pts</span>
+            </Link>
+            <Link href="/owner/notifications" className="tap-scale w-9 h-9 rounded-full flex items-center justify-center" style={{ border: "1px solid var(--border)" }}>
+              <Bell size={16} color="var(--muted)" />
+            </Link>
+            {/* TODO: cart badge count — needs CartProvider's real item count, not wired yet */}
+            <Link href="/cart" className="tap-scale w-9 h-9 rounded-full flex items-center justify-center relative" style={{ border: "1px solid var(--border)" }}>
+              <ShoppingBag size={16} color="var(--muted)" />
+            </Link>
           </div>
         </div>
 
-        <div className="lg:flex lg:gap-8 lg:items-start">
-          <div className="hidden lg:block lg:w-72 lg:shrink-0 lg:sticky lg:top-10">
-            <div className="card text-center py-8">
-              <div className="flex justify-center mb-4">
-                <UserButton />
-              </div>
-              <p className="font-bold text-lg">{user.name}</p>
-              <p className="text-sm mb-1" style={{ color: "var(--muted)" }}>{user.email}</p>
-              <p className="text-[10px] font-mono mb-4" style={{ color: "var(--muted)" }}>{passportNumber(user.id)}</p>
-              <div className="flex justify-center">
-                <ThemeToggle />
-              </div>
+        {/* ===== User identity card ===== */}
+        <div className="card flex items-center gap-3 mb-4">
+          <div className="relative shrink-0">
+            <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "#16281f" }}>
+              <UserButton
+                appearance={{ elements: { userButtonAvatarBox: "w-14 h-14" } }}
+              />
             </div>
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-lg truncate">{user.name}</p>
+            <p className="text-sm truncate" style={{ color: "var(--muted)" }}>{user.email}</p>
+          </div>
+          <span className="text-[10px] font-mono shrink-0" style={{ color: "var(--muted)" }}>{passportNumber(user.id)}</span>
+        </div>
 
+        <div className="lg:flex lg:gap-8 lg:items-start">
           <div className="flex-1 min-w-0">
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
@@ -176,7 +188,10 @@ export default async function OwnerProfile() {
               </Link>
             )}
 
-            <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--muted)" }}>Pets &amp; Care Vault</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "var(--muted)" }}>Pets &amp; Care Vault</p>
+              <p className="text-[10px] font-bold" style={{ color: "var(--terracotta)" }}>{pets.length} Profile{pets.length === 1 ? "" : "s"} Active</p>
+            </div>
             <div className="space-y-2 mb-6">
               {careLinks.map((link) => {
                 const Icon = link.icon;
@@ -252,8 +267,6 @@ export default async function OwnerProfile() {
                 );
               })}
 
-              {/* Payment methods — honest: no saved instruments exist, just
-                  a statement of how checkout actually works. Not a link. */}
               <div className="card flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
                   <CreditCard size={18} color="var(--terracotta)" />
@@ -264,7 +277,6 @@ export default async function OwnerProfile() {
                 </div>
               </div>
 
-              {/* Customer Support — placeholder phone number for now */}
               <a href={`tel:${SUPPORT_PHONE.replace(/\s/g, "")}`} className="card flex items-center gap-3 tap-scale">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
                   <Phone size={18} color="var(--terracotta)" />
