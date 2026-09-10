@@ -118,7 +118,15 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
 
       <div className="lg:flex lg:gap-8 lg:items-start">
         <form onSubmit={addPet} className="card mb-8 lg:mb-0 lg:w-96 lg:shrink-0 lg:sticky lg:top-10 space-y-3">
-          <h2 className="font-bold">Add a pet</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold">Add a pet</h2>
+            {/* Real entry point into the fuller Add Pet wizard (species,
+                sex/neutered, size incl. Giant, dietary/temperament tags) —
+                this quick form stays for anyone who just wants the basics. */}
+            <Link href="/owner/pets/new" className="text-xs font-semibold tap-scale" style={{ color: "var(--tan-dark, var(--tan))" }}>
+              Full intake →
+            </Link>
+          </div>
 
           {/* Photo upload */}
           <div className="flex items-center gap-4">
@@ -172,6 +180,7 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
             <option value="SMALL">Small</option>
             <option value="MEDIUM">Medium</option>
             <option value="LARGE">Large</option>
+            <option value="GIANT">Giant</option>
           </select>
           <textarea
             className={inputClass}
