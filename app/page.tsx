@@ -7,14 +7,9 @@ import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import EmergencyButton from "@/components/EmergencyButton";
 import OnboardingPrompt from "@/components/OnboardingPrompt";
-import LocationHeader from "@/components/LocationHeader";
-import CategoryTabs from "@/components/CategoryTabs";
-import CuratedSearchBar from "@/components/CuratedSearchBar";
 import UpcomingEvents from "@/components/UpcomingEvents";
-import ThemeToggle from "@/components/ThemeToggle";
 import ScrollReveal from "@/components/ScrollReveal";
-import HeroImageRotator from "@/components/HeroImageRotator";
-import ProfileMenu from "@/components/ProfileMenu";
+import MarketingHero from "@/components/MarketingHero";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion, Sparkles,
@@ -51,12 +46,6 @@ import { getPawPointsBalance, getRollingTierPoints, tierForPoints } from "@/lib/
 export default async function Home() {
   const [verifiedCount, ratedProviders, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
     prisma.provider.count({ where: { verified: true } }),
-    // Wider candidate pool (top 20 by rating) rather than every verified
-    // provider — this is a curated 3-slot trust section, not a full search
-    // results page, so a low-rated provider running a campaign still
-    // wouldn't surface here even with a boost. Real search results (the
-    // service pages) don't have this floor, since those show everyone who
-    // matches.
     prisma.provider.findMany({
       where: { verified: true },
       include: {
@@ -69,9 +58,6 @@ export default async function Home() {
     prisma.booking.count({ where: { status: "COMPLETED" } }),
     prisma.provider.aggregate({ where: { verified: true }, _avg: { ratingAvg: true } }),
     prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" } }),
-    // Real homepage-tier sponsorship placement — null if nobody currently
-    // has an active Homepage sponsorship, in which case nothing renders.
-    // Highest-rated wins if more than one provider is sponsored at once.
     prisma.provider.findFirst({
       where: { verified: true, sponsoredHomepageUntil: { gt: new Date() } },
       include: { user: { select: { name: true } }, _count: { select: { bookings: { where: { status: "COMPLETED" } } } } },
@@ -79,12 +65,6 @@ export default async function Home() {
     }),
   ]);
 
-  // Real campaign boost — Campaign has no "Homepage" targeting option
-  // (unlike the older SponsorshipPurchase.scope field, which does), so
-  // this checks "has any active, paid campaign for any service" as the
-  // signal, and gives those providers priority within the rated pool
-  // above — same "boosted always sorts first" rule used in real search
-  // results (app/api/providers/route.ts).
   const now = new Date();
   const candidateIds = ratedProviders.map((p) => p.id);
   const activeCampaigns = candidateIds.length > 0
@@ -113,18 +93,12 @@ export default async function Home() {
 
   const avgRating = ratingAgg._avg.ratingAvg;
 
-  // Signed-in visitors see the homepage themed to their active pet, same as
-  // every other page. Signed-out visitors get the default look.
   const user = await getOrCreateUser().catch(() => null);
   const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { nextDueDate: true } } } }) : [];
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
   const themeClass = resolveThemeClass(activePet);
 
-  // Real data for the desktop-only dashboard (HomeDesktopDashboard) — kept
-  // separate from the mobile fetches above since it's all net-new for
-  // that view. Mobile layout and its own data fetches are completely
-  // unchanged.
   const [pawPointsBalance, rollingTierPoints, cartCount, upcomingBooking, bestsellerIdsRaw] = user
     ? await Promise.all([
         getPawPointsBalance(user.id),
@@ -141,17 +115,8 @@ export default async function Home() {
   const dashboardTier = tierForPoints(rollingTierPoints);
   const dashboardBestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
 
-  // Separate boolean, deliberately not `!user` inline — the marketing
-  // main below still references `user?.something` throughout (it uses
-  // Clerk's own <Show when="signed-in"> for the actual runtime split,
-  // independent of this server-side `user` variable). Gating on `!user`
-  // directly would make TypeScript permanently narrow `user` to `null`
-  // for that entire block, breaking every one of those references, not
-  // just the first. Routing through this separate variable avoids that.
   let showMarketingMain = !user;
 
-  // ===== Real data for the MOBILE new-vs-returning split. `hasHistory`
-  // is the real signal: any paid order or any booking at all, ever. =====
   let hasHistory = false;
   let cartTotalPaise = 0;
   let buyAgainProducts: { id: string; name: string; price: number; imageUrls: string[] }[] = [];
@@ -254,73 +219,14 @@ export default async function Home() {
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
 
-      {/* ===== Top bar ===== */}
-      <nav className="flex justify-between items-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 max-w-6xl mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--forest)" }}>
-            <PawPrint size={15} color="var(--gold)" />
-          </div>
-          <span className="font-bold text-base">Barkado &amp; Co.</span>
-        </div>
-        <div className="flex gap-2 sm:gap-3 items-center">
-          <ThemeToggle />
-          <Show when="signed-out">
-            <Link href="/sign-in" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Sign in</Link>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/owner/dashboard" className="btn-primary text-xs sm:text-sm whitespace-nowrap">Book now</Link>
-            <ProfileMenu />
-          </Show>
-        </div>
-      </nav>
+      <MarketingHero
+        verifiedCount={verifiedCount}
+        avgRating={avgRating}
+        completedAgg={completedAgg}
+        activeBreed={activePet?.breed ?? undefined}
+      />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-3">
-        <CuratedSearchBar />
-      </div>
-
-      <CategoryTabs />
-
-      {/* ===== Hero ===== */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-3 grid md:grid-cols-2 gap-4 md:gap-10 items-center">
-        <div className="animate-fade-up">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            {verifiedCount > 0 && (
-              <span className="trust-chip">
-                <ShieldCheck size={12} /> {verifiedCount} verified provider{verifiedCount === 1 ? "" : "s"}
-              </span>
-            )}
-            <span className="trust-chip">Free for your first 2 cancellations</span>
-            <Link href="/provider" className="trust-chip tap-scale" style={{ color: "var(--terracotta)" }}>
-              Earn as a provider →
-            </Link>
-          </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1.5 leading-tight">
-            Everything your dog needs,
-            <br />
-            from birth to death.
-            <br />
-            <span style={{ color: "var(--terracotta)" }}>One ecosystem.</span>
-          </h1>
-          <p className="text-xs sm:text-sm mb-3 max-w-md" style={{ color: "var(--muted)" }}>
-            Walks, vaccines, staycations & more — booked in taps, remembered forever.
-          </p>
-          <div className="flex gap-2.5 mb-3">
-            <Link href="/book" className="btn-primary text-sm whitespace-nowrap">Book First Service</Link>
-            <Link href="/owner/pets" className="btn-secondary text-sm whitespace-nowrap">Create Free Paw Passport</Link>
-          </div>
-          {avgRating !== null && avgRating > 0 && (
-            <p className="text-sm flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
-              <Star size={14} fill="var(--gold)" color="var(--gold)" />
-              {avgRating.toFixed(2)} average
-              {completedAgg > 0 && ` · ${completedAgg} bookings completed`}
-              {" · "}Verified handlers
-            </p>
-          )}
-        </div>
-        <HeroImageRotator activeBreed={activePet?.breed} />
-      </section>
-
-      {/* ===== Offers ===== */}
+      {/* ===== Offers — real, functioning ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
@@ -374,9 +280,7 @@ export default async function Home() {
       </section>
       </ScrollReveal>
 
-      {/* ===== Signature offerings — real "Most Popular First Visit" badge,
-          computed from actual first-booking tallies above, not a static
-          claim. ===== */}
+      {/* ===== Purposeful Living — real "Most Popular First Visit" badge ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
           <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Purposeful living</p>
@@ -504,12 +408,10 @@ export default async function Home() {
       </section>
       </ScrollReveal>
 
-      {/* ===== Trust Beats Discounts — real signals (verified, rating,
-          completed count) plus a few placeholder verification badges.
-          TODO: Background Checked / Vet First-Aid Certified / Insured &
-          Bonded are NOT backed by any real verification process yet —
-          see NOT_BUILT.md. Shown as visual placeholders only, not
-          asserted claims about any specific provider. ===== */}
+      {/* ===== Trust Beats Discounts — real signals plus placeholder
+          verification badges. TODO: Insured & Bonded / First-Aid
+          Certified are NOT backed by any real verification yet — see
+          NOT_BUILT.md. ===== */}
       {providers.length > 0 && (
         <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
@@ -534,7 +436,6 @@ export default async function Home() {
                       <Star size={11} fill="var(--forest)" /> Featured
                     </span>
                   )}
-                  {/* Placeholders — not real yet, see NOT_BUILT.md */}
                   <span className="trust-chip" style={{ opacity: 0.5 }} title="Coming soon">
                     <ShieldPlus size={11} /> Insured &amp; Bonded
                   </span>
@@ -549,7 +450,7 @@ export default async function Home() {
       </ScrollReveal>
       )}
 
-      {/* ===== Final CTA — real established tagline, honest copy ===== */}
+      {/* ===== Final CTA ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--panel-dark)" }}>
