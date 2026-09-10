@@ -154,7 +154,11 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm truncate flex items-center gap-1.5">
           {SERVICE_LABEL[booking.type]} with {booking.pet.name}
-          {hasDietaryAlert && <AlertTriangle size={12} color="#93000a" className="shrink-0" title="Dietary restrictions on file" />}
+          {hasDietaryAlert && (
+  <span title="Dietary restrictions on file" className="shrink-0">
+    <AlertTriangle size={12} color="#93000a" />
+  </span>
+)}
         </p>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
           {booking.pet.breed ? `${booking.pet.breed} · ` : ""}{mins} mins
@@ -611,4 +615,4 @@ export default function ProviderDashboard({
       `}</style>
     </div>
   );
-}
+} 
