@@ -253,17 +253,17 @@ export default function AddPetStep1() {
             </label>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+           <div className="grid grid-cols-2 gap-3 items-start">
             <div>
               <label className="text-xs" style={{ color: "var(--muted)" }}>Birthday</label>
               <input type="date" className={inputClass} style={inputStyle} value={birthday} onChange={(e) => setBirthday(e.target.value)} />
               {ageLabel && <p className="text-xs mt-1" style={{ color: "var(--terracotta)" }}>{ageLabel}</p>}
             </div>
-            <div>
+           <div>
               <label className="text-xs" style={{ color: "var(--muted)" }}>Weight</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 items-center">
                 <input type="number" step="0.1" className={inputClass} style={inputStyle} value={displayWeight} onChange={(e) => handleWeightInput(e.target.value)} placeholder={weightUnit} />
-                <button type="button" onClick={() => setWeightUnit(weightUnit === "kg" ? "lbs" : "kg")} className="px-2.5 rounded-lg text-xs font-semibold shrink-0" style={{ border: "1px solid var(--border)", color: "var(--muted)" }}>
+                <button type="button" onClick={() => setWeightUnit(weightUnit === "kg" ? "lbs" : "kg")} className="px-2.5 py-2 rounded-lg text-xs font-semibold shrink-0" style={{ border: "1px solid var(--border)", color: "var(--muted)" }}>
                   {weightUnit}
                 </button>
               </div>

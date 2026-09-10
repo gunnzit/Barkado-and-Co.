@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, ArrowLeft, Camera, Pencil, Check, X } from "lucide-react";
+import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,29 +16,8 @@ type Pet = {
   vaccinations: { id: string; vaccineName: string; nextDueDate: string }[];
 };
 
-const EMPTY_FORM = {
-  name: "",
-  breed: "",
-  size: "MEDIUM",
-  temperament: "",
-  notes: "",
-  birthday: "",
-  weightKg: "",
-  allergies: "",
-  medicalHistory: "",
-  favoriteTreats: "",
-  microchipId: "",
-  insuranceProvider: "",
-  insurancePolicy: "",
-};
-
 export default function PetsClient({ initialThemeClass = "" }: { initialThemeClass?: string }) {
   const [pets, setPets] = useState<Pet[]>([]);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [showMore, setShowMore] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   const loadPets = async () => {
     const res = await fetch("/api/pets");
@@ -49,59 +28,10 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
     loadPets();
   }, []);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-  };
-
-  const addPet = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let photoUrl: string | undefined;
-
-    if (photoFile) {
-      setUploading(true);
-      const fd = new FormData();
-      fd.append("file", photoFile);
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
-      if (uploadRes.ok) {
-        const data = await uploadRes.json();
-        photoUrl = data.url;
-      }
-      setUploading(false);
-    }
-
-    const res = await fetch("/api/pets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        photoUrl,
-        weightKg: form.weightKg ? parseFloat(form.weightKg) : undefined,
-        birthday: form.birthday || undefined,
-      }),
-    });
-    if (res.ok) {
-      setForm(EMPTY_FORM);
-      setShowMore(false);
-      setPhotoFile(null);
-      setPhotoPreview(null);
-      loadPets();
-    }
-  };
-
-  const inputClass = "w-full border rounded-lg px-3 py-2 text-sm";
-  const inputStyle = { borderColor: "var(--border)" };
   const themeClass = initialThemeClass;
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-    {/* max-w-lg on mobile (single column, unchanged); a real two-column
-        split from desktop up — the Add-a-pet form sticky on the left,
-        pet list on the right. Previously identical at every screen
-        width, single column with the form always on top. */}
     <main className="max-w-lg lg:max-w-4xl mx-auto px-6 py-10 pb-28">
       <div className="flex items-center justify-between mb-4">
         <PetSwitcher />
@@ -117,117 +47,22 @@ export default function PetsClient({ initialThemeClass = "" }: { initialThemeCla
       <h1 className="text-2xl font-bold mb-6">Your pets</h1>
 
       <div className="lg:flex lg:gap-8 lg:items-start">
-        <form onSubmit={addPet} className="card mb-8 lg:mb-0 lg:w-96 lg:shrink-0 lg:sticky lg:top-10 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold">Add a pet</h2>
-            {/* Real entry point into the fuller Add Pet wizard (species,
-                sex/neutered, size incl. Giant, dietary/temperament tags) —
-                this quick form stays for anyone who just wants the basics. */}
-            <Link href="/owner/pets/new" className="text-xs font-semibold tap-scale" style={{ color: "var(--tan-dark, var(--tan))" }}>
-              Full intake →
-            </Link>
+        {/* Single real entry point — the multi-field wizard at
+            /owner/pets/new. The old inline quick-add form was removed so
+            there's only one place to add a pet, not two. */}
+        <Link
+          href="/owner/pets/new"
+          className="card mb-8 lg:mb-0 lg:w-96 lg:shrink-0 lg:sticky lg:top-10 flex items-center gap-3 tap-scale"
+        >
+          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)", border: "1px dashed var(--border)" }}>
+            <Plus size={20} color="var(--tan-dark, var(--tan))" />
           </div>
-
-          {/* Photo upload */}
-          <div className="flex items-center gap-4">
-            <label
-              htmlFor="pet-photo-input"
-              className="w-20 h-20 rounded-full flex items-center justify-center shrink-0 tap-scale overflow-hidden"
-              style={{ background: "var(--cream)", border: "1px dashed var(--border)", cursor: "pointer" }}
-            >
-              {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <Camera size={20} color="var(--muted)" />
-              )}
-            </label>
-            <div>
-              <label htmlFor="pet-photo-input" className="text-sm font-semibold tap-scale" style={{ color: "var(--tan-dark, var(--tan))", cursor: "pointer" }}>
-                {photoPreview ? "Change photo" : "Upload your pet's photo"}
-              </label>
-              <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Optional — shown across the app</p>
-            </div>
-            <input
-              id="pet-photo-input"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoChange}
-            />
+          <div className="flex-1">
+            <p className="font-bold">Add a pet</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Create a PawPassport profile</p>
           </div>
-
-          <input
-            className={inputClass}
-            style={inputStyle}
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <input
-            className={inputClass}
-            style={inputStyle}
-            placeholder="Breed"
-            value={form.breed}
-            onChange={(e) => setForm({ ...form, breed: e.target.value })}
-          />
-          <select
-            className={inputClass}
-            style={inputStyle}
-            value={form.size}
-            onChange={(e) => setForm({ ...form, size: e.target.value })}
-          >
-            <option value="SMALL">Small</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LARGE">Large</option>
-            <option value="GIANT">Giant</option>
-          </select>
-          <textarea
-            className={inputClass}
-            style={inputStyle}
-            placeholder="Temperament / notes (e.g. scared of loud noises)"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
-
-          {/* Optional passport details — collapsed by default, not required to add a pet */}
-          <button
-            type="button"
-            onClick={() => setShowMore(!showMore)}
-            className="flex items-center gap-1 text-sm font-medium tap-scale"
-            style={{ color: "var(--tan-dark, var(--tan))" }}
-          >
-            {showMore ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            Add Paw Passport details (optional)
-          </button>
-
-          {showMore && (
-            <div className="space-y-3 pt-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs" style={{ color: "var(--muted)" }}>Birthday</label>
-                  <input type="date" className={inputClass} style={inputStyle} value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
-                </div>
-                <div>
-                  <label className="text-xs" style={{ color: "var(--muted)" }}>Weight (kg)</label>
-                  <input type="number" step="0.1" className={inputClass} style={inputStyle} value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} />
-                </div>
-              </div>
-              <input className={inputClass} style={inputStyle} placeholder="Allergies" value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} />
-              <textarea className={inputClass} style={inputStyle} placeholder="Medical history" rows={2} value={form.medicalHistory} onChange={(e) => setForm({ ...form, medicalHistory: e.target.value })} />
-              <input className={inputClass} style={inputStyle} placeholder="Favorite treats" value={form.favoriteTreats} onChange={(e) => setForm({ ...form, favoriteTreats: e.target.value })} />
-              <input className={inputClass} style={inputStyle} placeholder="Microchip ID" value={form.microchipId} onChange={(e) => setForm({ ...form, microchipId: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <input className={inputClass} style={inputStyle} placeholder="Insurance provider" value={form.insuranceProvider} onChange={(e) => setForm({ ...form, insuranceProvider: e.target.value })} />
-                <input className={inputClass} style={inputStyle} placeholder="Policy number" value={form.insurancePolicy} onChange={(e) => setForm({ ...form, insurancePolicy: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          <button type="submit" className="btn-primary" disabled={uploading}>
-            {uploading ? "Uploading photo…" : "Add pet"}
-          </button>
-        </form>
+          <ChevronRight size={18} color="var(--muted)" />
+        </Link>
 
         <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-2 gap-3">
           {pets.map((p) => (
