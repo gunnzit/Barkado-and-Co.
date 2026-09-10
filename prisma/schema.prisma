@@ -119,6 +119,12 @@ model User {
   orders    Order[]
   heroPhotos HeroPhoto[]
   showStockPhotos Boolean @default(true)
+  // Real notification preferences — added for the Profile page's
+  // Notifications section. All default true except promotions, which
+  // defaults opt-in-later rather than on by default.
+  notifyBookingUpdates    Boolean @default(true)
+  notifyVaccineReminders  Boolean @default(true)
+  notifyPromotions        Boolean @default(false)
   address         String?
   addresses       Address[]
   activityEvents  ActivityEvent[]
