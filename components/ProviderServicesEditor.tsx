@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PawPrint, GraduationCap, Scissors, Home as HomeIcon, Info, Pencil, Plus, X, Check } from "lucide-react";
 
-type PetSize = "SMALL" | "MEDIUM" | "LARGE";
+type PetSize = "SMALL" | "MEDIUM" | "LARGE" | "GIANT";
 type Cadence = "WEEKLY" | "MONTHLY";
 type ServiceType = "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
 
@@ -19,7 +19,7 @@ type ProviderState = {
   groomingPackages: GroomingPackage[];
 };
 
-const SIZE_LABEL: Record<PetSize, string> = { SMALL: "Small", MEDIUM: "Medium", LARGE: "Large" };
+const SIZE_LABEL: Record<PetSize, string> = { SMALL: "Small", MEDIUM: "Medium", LARGE: "Large", GIANT: "Giant" };
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (

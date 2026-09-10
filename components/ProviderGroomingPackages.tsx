@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ShoppingBag } from "lucide-react";
 
-type PetSize = "SMALL" | "MEDIUM" | "LARGE";
+type PetSize = "SMALL" | "MEDIUM" | "LARGE" | "GIANT";
 type GroomingPackage = { id: string; name: string; pricesBySize: Partial<Record<PetSize, number>> };
 
-const SIZE_LABEL: Record<PetSize, string> = { SMALL: "Small", MEDIUM: "Medium", LARGE: "Large" };
+const SIZE_LABEL: Record<PetSize, string> = { SMALL: "Small", MEDIUM: "Medium", LARGE: "Large", GIANT: "Giant" };
 
 // No real per-package duration data exists yet — this defaults every
 // grooming booking to a fixed 90-minute window. A placeholder, not a real
