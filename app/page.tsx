@@ -18,6 +18,7 @@ import ProfileMenu from "@/components/ProfileMenu";
 import {
   PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
   Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion, Sparkles,
+  Syringe, ShieldPlus,
 } from "lucide-react";
 
 const SERVICES = [
@@ -34,6 +35,13 @@ const PASSPORT_ITEMS = [
   "Vaccination history", "Medical records", "Microchip details",
   "Favorite treats", "Insurance & emergency contact", "Care history",
 ];
+
+const SERVICE_LABEL: Record<string, string> = {
+  WALKING: "Adventure Walk",
+  SITTING: "Home Staycation",
+  GROOMING: "Luxury Spa Session",
+  TRAINING: "Good Manners Programme",
+};
 
 import HomeDesktopDashboard from "@/components/HomeDesktopDashboard";
 import HomeNewUserMobile from "@/components/HomeNewUserMobile";
@@ -141,15 +149,6 @@ export default async function Home() {
   // for that entire block, breaking every one of those references, not
   // just the first. Routing through this separate variable avoids that.
   let showMarketingMain = !user;
-  // (Deliberately re-assigned immediately below, not left as a pure
-  // `const` alias of `!user` — TypeScript's "aliased conditions"
-  // narrowing specifically tracks const bindings taken directly from
-  // another variable's truthiness, and continues narrowing `user`
-  // through them exactly as if `!user` had been used inline. A `let`
-  // binding isn't eligible for that optimization, which is what actually
-  // breaks the chain here — the previous const-based version compiled
-  // but still failed with the same "property does not exist on type
-  // never" error, one line further into the marketing block each time.)
 
   // ===== Real data for the MOBILE new-vs-returning split. `hasHistory`
   // is the real signal: any paid order or any booking at all, ever. =====
@@ -194,8 +193,6 @@ export default async function Home() {
 
       cartTotalPaise = cartItemsFull.reduce((sum, item) => sum + (item.product ? item.product.price * item.quantity : 0), 0);
 
-      // Real "buy again" — distinct products from past orders, most
-      // recently ordered first.
       const seenProductIds = new Set<string>();
       for (const item of pastOrderItems) {
         if (!seenProductIds.has(item.productId)) {
@@ -208,8 +205,6 @@ export default async function Home() {
         id: f.product!.id, name: f.product!.name, price: f.product!.price, compareAtPrice: f.product!.compareAtPrice, imageUrls: f.product!.imageUrls,
       }));
 
-      // Real "trusted circle" — providers this owner has actually booked
-      // with more than once, ranked by real booking count together.
       const providerCounts = new Map<string, { user: { name: string }; ratingAvg: number; count: number }>();
       for (const b of ownerBookings) {
         const existing = providerCounts.get(b.providerId);
@@ -226,8 +221,6 @@ export default async function Home() {
     }
   }
 
-  // Real "Most Popular First Visit" — computed from every owner's actual
-  // earliest booking, tallied by service type. Not a static claim.
   const allBookingsForFirstVisit = await prisma.booking.findMany({ select: { ownerId: true, type: true, createdAt: true }, orderBy: { createdAt: "asc" } });
   const firstBookingByOwner = new Map<string, string>();
   for (const b of allBookingsForFirstVisit) {
@@ -260,24 +253,15 @@ export default async function Home() {
     {showMarketingMain && (
     <main style={{ paddingBottom: 90 }}>
       <EmergencyButton />
-      {/* ===== Nav ===== */}
+
+      {/* ===== Top bar ===== */}
       <nav className="flex justify-between items-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 max-w-6xl mx-auto">
-        <Show when="signed-in">
-          <LocationHeader
-            currentAddressSnippet={user?.address ? user.address.split(",")[0] : null}
-            userPhone={user?.phone ?? null}
-          />
-        </Show>
-        <Show when="signed-out">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold tracking-wide" style={{ color: "var(--muted)" }}>Barkado & Co.</span>
-            <span className="text-base font-extrabold leading-tight">Book in a few taps</span>
-            <Link href="/sign-in" className="flex items-center gap-1 mt-0.5 tap-scale w-fit">
-              <span className="text-xs font-semibold" style={{ color: "var(--terracotta)" }}>Add address</span>
-              <ChevronRight size={12} color="var(--terracotta)" />
-            </Link>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--forest)" }}>
+            <PawPrint size={15} color="var(--gold)" />
           </div>
-        </Show>
+          <span className="font-bold text-base">Barkado &amp; Co.</span>
+        </div>
         <div className="flex gap-2 sm:gap-3 items-center">
           <ThemeToggle />
           <Show when="signed-out">
@@ -299,27 +283,30 @@ export default async function Home() {
       {/* ===== Hero ===== */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-3 grid md:grid-cols-2 gap-4 md:gap-10 items-center">
         <div className="animate-fade-up">
-          {verifiedCount > 0 && (
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            {verifiedCount > 0 && (
               <span className="trust-chip">
                 <ShieldCheck size={12} /> {verifiedCount} verified provider{verifiedCount === 1 ? "" : "s"}
               </span>
-              <Link href="/provider" className="trust-chip tap-scale" style={{ color: "var(--terracotta)" }}>
-                Earn as a provider →
-              </Link>
-            </div>
-          )}
+            )}
+            <span className="trust-chip">Free for your first 2 cancellations</span>
+            <Link href="/provider" className="trust-chip tap-scale" style={{ color: "var(--terracotta)" }}>
+              Earn as a provider →
+            </Link>
+          </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1.5 leading-tight">
-            Everything your dog needs.
+            Everything your dog needs,
             <br />
-            <span style={{ color: "var(--terracotta)" }}>One passport.</span>
+            from birth to death.
+            <br />
+            <span style={{ color: "var(--terracotta)" }}>One ecosystem.</span>
           </h1>
           <p className="text-xs sm:text-sm mb-3 max-w-md" style={{ color: "var(--muted)" }}>
             Walks, vaccines, staycations & more — booked in taps, remembered forever.
           </p>
           <div className="flex gap-2.5 mb-3">
-            <Link href="/book" className="btn-primary text-sm whitespace-nowrap">Book in a few taps</Link>
-            <Link href="/owner/pets" className="btn-secondary text-sm whitespace-nowrap">Paw Passport</Link>
+            <Link href="/book" className="btn-primary text-sm whitespace-nowrap">Book First Service</Link>
+            <Link href="/owner/pets" className="btn-secondary text-sm whitespace-nowrap">Create Free Paw Passport</Link>
           </div>
           {avgRating !== null && avgRating > 0 && (
             <p className="text-sm flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
@@ -330,11 +317,10 @@ export default async function Home() {
             </p>
           )}
         </div>
-        {/* ===== Hero photo moment ===== */}
-      <HeroImageRotator activeBreed={activePet?.breed} />
+        <HeroImageRotator activeBreed={activePet?.breed} />
       </section>
 
-      {/* ===== Offers — real, functioning, gradient cards (moved right after hero) ===== */}
+      {/* ===== Offers ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
@@ -388,12 +374,60 @@ export default async function Home() {
       </section>
       </ScrollReveal>
 
-      {/* ===== My pet needs... tap grid ===== */}
+      {/* ===== Signature offerings — real "Most Popular First Visit" badge,
+          computed from actual first-booking tallies above, not a static
+          claim. ===== */}
+      <ScrollReveal>
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
+          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Purposeful living</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 max-w-lg">Not a marketplace. An experience for every part of their week.</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {SERVICES.map((s) => {
+              const Icon = s.icon;
+              const Wrapper = s.built ? Link : "div";
+              const wrapperProps = s.built ? { href: s.href } : {};
+              const isMostPopular = mostPopularServiceType && SERVICE_LABEL[mostPopularServiceType] === s.title;
+              return (
+                <Wrapper
+                  key={s.title}
+                  {...(wrapperProps as any)}
+                  className={`card flex items-start justify-between gap-4 relative ${s.built ? "tap-scale" : ""}`}
+                  style={{ opacity: s.built ? 1 : 0.55 }}
+                >
+                  {isMostPopular && (
+                    <span
+                      className="absolute -top-2 left-4 text-[9px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: "var(--gold)", color: "var(--forest)" }}
+                    >
+                      Most Popular First Visit
+                    </span>
+                  )}
+                  <div className="flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
+                      <Icon size={20} color="var(--terracotta)" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{s.title}</p>
+                      <p className="text-xs mb-1" style={{ color: "var(--terracotta)" }}>{s.tag}</p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>{s.desc}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--forest)" }}>{s.price}</span>
+                    {s.built && <ChevronRight size={14} color="var(--muted)" />}
+                  </div>
+                </Wrapper>
+              );
+            })}
+          </div>
+        </section>
+      </ScrollReveal>
 
-      {/* ===== Upcoming events ===== */}
+      {/* ===== Upcoming events — existing real component, untouched.
+          Expos/dog shows are a future expansion, not built here. ===== */}
       <UpcomingEvents />
 
-{/* ===== Shop accessories — highlighted, maximum prominence ===== */}
+      {/* ===== The Artisan Shelf — real products, real prices ===== */}
       {products.length > 0 && (
         <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
@@ -404,9 +438,9 @@ export default async function Home() {
             <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
               <div>
                 <span className="trust-chip mb-3" style={{ background: "var(--terracotta)", color: "white", border: "none" }}>
-                  🔥 The Curated Shelf
+                  🔥 The Artisan Shelf
                 </span>
-                <h2 className="text-3xl md:text-4xl font-bold mt-3">Shop accessories.</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mt-3">Handcrafted goods.</h2>
                 <p className="text-sm mt-2" style={{ color: "var(--muted)" }}>
                   Everyday essentials for your dog — picked to last.
                 </p>
@@ -417,7 +451,7 @@ export default async function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {products.map((p, i) => (
-                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   {i === 0 && (
                     <span
                       className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-1 rounded-full"
@@ -425,6 +459,11 @@ export default async function Home() {
                     >
                       Bestseller
                     </span>
+                  )}
+                  {p.imageUrls?.[0] && (
+                    <div className="w-full aspect-square rounded-xl overflow-hidden mb-3" style={{ background: "var(--cream)" }}>
+                      <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
                   )}
                   <p className="font-semibold text-sm mb-1">{p.name}</p>
                   <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{p.category}</p>
@@ -436,46 +475,6 @@ export default async function Home() {
         </section>
       </ScrollReveal>
       )}
-
-      {/* ===== The ecosystem — services grid ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>The ecosystem</p>
-        <div className="flex justify-between items-end mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold max-w-lg">Not a marketplace. An experience for every part of their week.</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {SERVICES.map((s) => {
-            const Icon = s.icon;
-            const Wrapper = s.built ? Link : "div";
-            const wrapperProps = s.built ? { href: s.href } : {};
-            return (
-              <Wrapper
-                key={s.title}
-                {...(wrapperProps as any)}
-                className={`card flex items-start justify-between gap-4 ${s.built ? "tap-scale" : ""}`}
-                style={{ opacity: s.built ? 1 : 0.55 }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                    <Icon size={20} color="var(--terracotta)" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">{s.title}</p>
-                    <p className="text-xs mb-1" style={{ color: "var(--terracotta)" }}>{s.tag}</p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>{s.desc}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--forest)" }}>{s.price}</span>
-                  {s.built && <ChevronRight size={14} color="var(--muted)" />}
-                </div>
-              </Wrapper>
-            );
-          })}
-        </div>
-      </section>
-      </ScrollReveal>
 
       {/* ===== Paw Passport ===== */}
       <ScrollReveal>
@@ -505,11 +504,12 @@ export default async function Home() {
       </section>
       </ScrollReveal>
 
-      
-
-      
-
-      {/* ===== Trust — real verified providers ===== */}
+      {/* ===== Trust Beats Discounts — real signals (verified, rating,
+          completed count) plus a few placeholder verification badges.
+          TODO: Background Checked / Vet First-Aid Certified / Insured &
+          Bonded are NOT backed by any real verification process yet —
+          see NOT_BUILT.md. Shown as visual placeholders only, not
+          asserted claims about any specific provider. ===== */}
       {providers.length > 0 && (
         <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
@@ -534,6 +534,13 @@ export default async function Home() {
                       <Star size={11} fill="var(--forest)" /> Featured
                     </span>
                   )}
+                  {/* Placeholders — not real yet, see NOT_BUILT.md */}
+                  <span className="trust-chip" style={{ opacity: 0.5 }} title="Coming soon">
+                    <ShieldPlus size={11} /> Insured &amp; Bonded
+                  </span>
+                  <span className="trust-chip" style={{ opacity: 0.5 }} title="Coming soon">
+                    <Syringe size={11} /> First-Aid Certified
+                  </span>
                 </div>
               </div>
             ))}
@@ -542,13 +549,13 @@ export default async function Home() {
       </ScrollReveal>
       )}
 
-      {/* ===== Final CTA ===== */}
+      {/* ===== Final CTA — real established tagline, honest copy ===== */}
       <ScrollReveal>
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
         <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--panel-dark)" }}>
           <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--gold)" }}>One ecosystem</p>
           <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 max-w-xl mx-auto">
-            Give your dog the whole ecosystem.
+            Everything your dog needs, from birth to death.
           </h2>
           <p className="text-white/70 text-sm mb-8 max-w-md mx-auto">
             Free Paw Passport, verified pros, and everything your dog needs in one place.
@@ -568,7 +575,7 @@ export default async function Home() {
           <span className="font-bold">Barkado & Co.</span>
         </div>
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-          Everything your dog needs. One passport.
+          Everything your dog needs, from birth to death. One ecosystem.
         </p>
         <Link href="/provider" className="text-xs font-semibold tap-scale inline-block mb-4" style={{ color: "var(--terracotta)" }}>
           Become a provider →
@@ -584,12 +591,6 @@ export default async function Home() {
     </main>
     )}
 
-    {/* ===== Signed-in mobile — new vs. returning, gated on real order/
-        booking history. Desktop (HomeDesktopDashboard above) is
-        unaffected by this split; this is specifically the mobile
-        experience discussed. OnboardingPrompt shown for either branch —
-        this used to live inside the old shared mobile main and was
-        nearly lost when that got split into two separate components. ===== */}
     {user && (
       <div className="lg:hidden px-4 pt-2">
         <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
