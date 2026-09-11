@@ -2,16 +2,20 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import MarketingHomeExact from "@/components/MarketingHomeExact";
-
-import HomeDesktopDashboard from "@/components/HomeDesktopDashboard";
-import HomeNewUserMobile from "@/components/HomeNewUserMobile";
-import HomeReturningUserMobile from "@/components/HomeReturningUserMobile";
-import OnboardingPrompt from "@/components/OnboardingPrompt";
+import HomeUnified from "@/components/HomeUnified";
 import { getPawPointsBalance, getRollingTierPoints, tierForPoints } from "@/lib/pawPoints";
 
 export default async function Home() {
-  const [verifiedCount, ratedProviders, completedAgg, ratingAgg, products, featuredProvider] = await Promise.all([
+  const [
+    verifiedCount,
+    ratedProviders,
+    completedAgg,
+    ratingAgg,
+    products,
+    activeProviderCount,
+    groomingPackagesRaw,
+    trainingPackagesRaw,
+  ] = await Promise.all([
     prisma.provider.count({ where: { verified: true } }),
     prisma.provider.findMany({
       where: { verified: true },
@@ -25,12 +29,35 @@ export default async function Home() {
     prisma.booking.count({ where: { status: "COMPLETED" } }),
     prisma.provider.aggregate({ where: { verified: true }, _avg: { ratingAvg: true } }),
     prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" } }),
-    prisma.provider.findFirst({
-      where: { verified: true, sponsoredHomepageUntil: { gt: new Date() } },
-      include: { user: { select: { name: true } }, _count: { select: { bookings: { where: { status: "COMPLETED" } } } } },
-      orderBy: { ratingAvg: "desc" },
+    prisma.provider.count({ where: { verified: true, isAvailableNow: true } }),
+    prisma.groomingPackage.findMany({
+      take: 2,
+      orderBy: { createdAt: "desc" },
+      include: { provider: { include: { user: { select: { name: true } } } } },
+    }),
+    prisma.trainingPackage.findMany({
+      take: 2,
+      orderBy: { createdAt: "desc" },
+      include: { provider: { include: { user: { select: { name: true } } } } },
     }),
   ]);
+
+  const groomingBundles = groomingPackagesRaw.map((p) => {
+    const prices = Object.values(p.pricesBySize as Record<string, number>).filter((v) => typeof v === "number");
+    return {
+      id: p.id,
+      name: p.name,
+      startingPricePaise: prices.length > 0 ? Math.min(...prices) : 0,
+      providerName: p.provider.user.name,
+    };
+  });
+  const trainingBundles = trainingPackagesRaw.map((p) => ({
+    id: p.id,
+    name: p.name,
+    cadence: p.cadence,
+    pricePaise: p.pricePaise,
+    providerName: p.provider.user.name,
+  }));
 
   const now = new Date();
   const candidateIds = ratedProviders.map((p) => p.id);
@@ -55,15 +82,14 @@ export default async function Home() {
       if (aBoost !== bBoost) return aBoost ? -1 : 1;
       return b.ratingAvg - a.ratingAvg;
     })
-    .slice(0, 3)
-    .map((p) => ({ ...p, isCampaignBoosted: boostedProviderIds.has(p.id) }));
+    .slice(0, 3);
 
   const avgRating = ratingAgg._avg.ratingAvg;
 
   const user = await getOrCreateUser().catch(() => null);
   const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { nextDueDate: true } } } }) : [];
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
-  const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
+  const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = resolveThemeClass(activePet);
 
   const [pawPointsBalance, rollingTierPoints, cartCount, upcomingBooking, bestsellerIdsRaw] = user
@@ -80,9 +106,7 @@ export default async function Home() {
       ])
     : [0, 0, 0, null, []];
   const dashboardTier = tierForPoints(rollingTierPoints);
-  const dashboardBestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
-
-  let showMarketingMain = !user;
+  const bestsellerIds = new Set((bestsellerIdsRaw as any[]).filter((t) => t._count.productId > 0).map((t) => t.productId));
 
   let hasHistory = false;
   let cartTotalPaise = 0;
@@ -166,76 +190,34 @@ export default async function Home() {
 
   return (
     <div className={`w-full ${themeClass}`}>
-    {user && (
-      <HomeDesktopDashboard
-        userName={user.name}
-        userAddress={user.address}
-        activePet={activePet ?? null}
+      <HomeUnified
+        isSignedIn={!!user}
+        userName={user?.name ?? null}
+        userAddress={user?.address ?? null}
+        userPhone={user?.phone ?? null}
+        activePet={activePet}
         pawPointsBalance={pawPointsBalance as number}
         rollingTierPoints={rollingTierPoints as number}
         tier={dashboardTier}
         cartCount={cartCount as number}
+        cartTotalPaise={cartTotalPaise}
+        hasHistory={hasHistory}
         upcomingBooking={upcomingBooking as any}
-        products={products.map((p) => ({ id: p.id, name: p.name, price: p.price, imageUrls: p.imageUrls }))}
-        bestsellerIds={dashboardBestsellerIds}
-        providers={providers}
-        verifiedCount={verifiedCount}
-      />
-    )}
-
-    {showMarketingMain && (
-      <MarketingHomeExact
+        rebookCandidate={rebookCandidate}
+        lastGrooming={lastGrooming}
+        buyAgainProducts={buyAgainProducts}
+        wishlistItems={wishlistItems}
+        trustedProviders={trustedProviders}
         verifiedCount={verifiedCount}
         avgRating={avgRating}
+        activeProviderCount={activeProviderCount}
         providers={providers}
         products={products}
+        bestsellerIds={bestsellerIds}
         mostPopularServiceType={mostPopularServiceType}
+        groomingBundles={groomingBundles}
+        trainingBundles={trainingBundles}
       />
-    )}
-
-    {user && (
-      <div className="lg:hidden px-4 pt-2">
-        <OnboardingPrompt needsPhone={!user.phone} needsAddress={!user.address} />
-      </div>
-    )}
-    {user && !hasHistory && (
-      <div className="lg:hidden">
-        <HomeNewUserMobile
-          verifiedCount={verifiedCount}
-          avgRating={avgRating}
-          completedCount={completedAgg}
-          products={products.map((p) => ({ id: p.id, name: p.name, price: p.price, compareAtPrice: p.compareAtPrice, imageUrls: p.imageUrls }))}
-          bestsellerIds={dashboardBestsellerIds}
-          providers={providers}
-          mostPopularServiceType={mostPopularServiceType}
-          activeBreed={activePet?.breed ?? undefined}
-          userAddress={user.address}
-          userPhone={user.phone}
-          cartCount={cartCount as number}
-          pawPointsBalance={pawPointsBalance as number}
-        />
-      </div>
-    )}
-    {user && hasHistory && (
-      <div className="lg:hidden">
-        <HomeReturningUserMobile
-          userName={user.name}
-          activePet={activePet ? { id: activePet.id, name: activePet.name } : null}
-          cartCount={cartCount as number}
-          cartTotalPaise={cartTotalPaise}
-          pawPointsBalance={pawPointsBalance as number}
-          tier={dashboardTier}
-          upcomingBooking={upcomingBooking as any}
-          rebookCandidate={rebookCandidate}
-          lastGrooming={lastGrooming}
-          buyAgainProducts={buyAgainProducts}
-          wishlistItems={wishlistItems}
-          trustedProviders={trustedProviders}
-          userAddress={user.address}
-          userPhone={user.phone}
-        />
-      </div>
-    )}
     </div>
   );
 }
