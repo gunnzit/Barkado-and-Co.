@@ -1,46 +1,13 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Show } from "@clerk/nextjs";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import EmergencyButton from "@/components/EmergencyButton";
-import OnboardingPrompt from "@/components/OnboardingPrompt";
-import UpcomingEvents from "@/components/UpcomingEvents";
-import ScrollReveal from "@/components/ScrollReveal";
-import MarketingHero from "@/components/MarketingHero";
-import {
-  PawPrint, Scissors, Stethoscope, Home as HomeIcon, ShoppingBag,
-  Dumbbell, Plane, Heart, Star, ShieldCheck, ChevronRight, ShieldQuestion, Sparkles,
-  Syringe, ShieldPlus,
-} from "lucide-react";
-
-const SERVICES = [
-  { title: "Adventure Walk", tag: "Dog walking", desc: "GPS-tracked walks with a verified handler who sends route and photo updates.", icon: PawPrint, price: "from ₹299", href: "/walk-booking", built: true },
-  { title: "Luxury Spa Session", tag: "Grooming", desc: "Coat-specific bath, blow-out, nail and ear care.", icon: Scissors, price: "from ₹499", href: "/grooming", built: true },
-  { title: "Care Consult", tag: "Vet & vaccines", desc: "We track every vaccine due date so you never forget.", icon: Stethoscope, price: "Included", href: "/owner/pets", built: true },
-  { title: "Home Staycation", tag: "Sitting & boarding", desc: "In-home care with daily updates while you're away.", icon: HomeIcon, price: "from ₹899 / night", href: "/sitting", built: true },
-  { title: "Good Manners Programme", tag: "Training", desc: "Force-free trainers for basics, leash work and reactivity.", icon: Dumbbell, price: "from ₹599", href: "/training", built: true },
-  { title: "Tail Wind Travel", tag: "Travel & relocation", desc: "Pet-friendly stays and transfers, handled end to end.", icon: Plane, price: "Coming soon", href: "#", built: false },
-  { title: "The Curated Shelf", tag: "Accessories", desc: "Harnesses, beds, and everyday essentials for your pet.", icon: ShoppingBag, price: "from ₹249", href: "/accessories", built: true },
-];
-
-const PASSPORT_ITEMS = [
-  "Vaccination history", "Medical records", "Microchip details",
-  "Favorite treats", "Insurance & emergency contact", "Care history",
-];
-
-const SERVICE_LABEL: Record<string, string> = {
-  WALKING: "Adventure Walk",
-  SITTING: "Home Staycation",
-  GROOMING: "Luxury Spa Session",
-  TRAINING: "Good Manners Programme",
-};
+import MarketingHomeExact from "@/components/MarketingHomeExact";
 
 import HomeDesktopDashboard from "@/components/HomeDesktopDashboard";
 import HomeNewUserMobile from "@/components/HomeNewUserMobile";
 import HomeReturningUserMobile from "@/components/HomeReturningUserMobile";
+import OnboardingPrompt from "@/components/OnboardingPrompt";
 import { getPawPointsBalance, getRollingTierPoints, tierForPoints } from "@/lib/pawPoints";
 
 export default async function Home() {
@@ -198,7 +165,7 @@ export default async function Home() {
   }
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px" }}>
+    <div className={`w-full ${themeClass}`}>
     {user && (
       <HomeDesktopDashboard
         userName={user.name}
@@ -215,281 +182,15 @@ export default async function Home() {
         verifiedCount={verifiedCount}
       />
     )}
-    {showMarketingMain && (
-    <main style={{ paddingBottom: 90 }}>
-      <EmergencyButton />
 
-      <MarketingHero
+    {showMarketingMain && (
+      <MarketingHomeExact
         verifiedCount={verifiedCount}
         avgRating={avgRating}
-        completedAgg={completedAgg}
-        activeBreed={activePet?.breed ?? undefined}
+        providers={providers}
+        products={products}
+        mostPopularServiceType={mostPopularServiceType}
       />
-
-      {/* ===== Offers — real, functioning ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
-        <h2 className="text-2xl md:text-3xl font-bold mb-8">On us, and 10% off.</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href="/book?service=WALKING"
-            className="tap-scale rounded-2xl p-6"
-            style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
-          >
-            <p className="font-bold text-xl mb-1 text-white">Your dog's first walk is free 🎉</p>
-            <p className="text-sm text-white/85">
-              Automatically applied — no code needed. Just book your pet's first Adventure Walk.
-            </p>
-          </Link>
-          <Link
-            href="/accessories"
-            className="tap-scale rounded-2xl p-6"
-            style={{ background: "linear-gradient(135deg, #16281f 0%, #3a5c46 100%)" }}
-          >
-            <p className="font-bold text-xl mb-1 text-white">10% off accessories</p>
-            <p className="text-sm text-white/85">
-              Use code <span className="font-mono font-bold" style={{ color: "#e8a94a" }}>WELCOME10</span> at checkout.
-            </p>
-          </Link>
-        </div>
-
-        {featuredProvider && (
-          <Link
-            href={`/providers/${featuredProvider.id}`}
-            className="tap-scale rounded-2xl p-5 mt-4 flex items-center gap-4"
-            style={{ background: "var(--panel-dark)" }}
-          >
-            <div className="w-14 h-14 rounded-full overflow-hidden shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
-              {featuredProvider.photoUrl ? (
-                <img src={featuredProvider.photoUrl} alt={featuredProvider.user.name} className="w-full h-full object-cover" />
-              ) : null}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Sparkles size={12} color="var(--gold)" />
-                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "var(--gold)" }}>Featured provider</p>
-              </div>
-              <p className="font-bold text-white text-sm truncate">{featuredProvider.user.name}</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
-                ★ {featuredProvider.ratingAvg.toFixed(1)} · {featuredProvider._count.bookings} completed
-              </p>
-            </div>
-          </Link>
-        )}
-      </section>
-      </ScrollReveal>
-
-      {/* ===== Purposeful Living — real "Most Popular First Visit" badge ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Purposeful living</p>
-          <h2 className="text-2xl md:text-3xl font-bold mb-8 max-w-lg">Not a marketplace. An experience for every part of their week.</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SERVICES.map((s) => {
-              const Icon = s.icon;
-              const Wrapper = s.built ? Link : "div";
-              const wrapperProps = s.built ? { href: s.href } : {};
-              const isMostPopular = mostPopularServiceType && SERVICE_LABEL[mostPopularServiceType] === s.title;
-              return (
-                <Wrapper
-                  key={s.title}
-                  {...(wrapperProps as any)}
-                  className={`card flex items-start justify-between gap-4 relative ${s.built ? "tap-scale" : ""}`}
-                  style={{ opacity: s.built ? 1 : 0.55 }}
-                >
-                  {isMostPopular && (
-                    <span
-                      className="absolute -top-2 left-4 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: "var(--gold)", color: "var(--forest)" }}
-                    >
-                      Most Popular First Visit
-                    </span>
-                  )}
-                  <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                      <Icon size={20} color="var(--terracotta)" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">{s.title}</p>
-                      <p className="text-xs mb-1" style={{ color: "var(--terracotta)" }}>{s.tag}</p>
-                      <p className="text-xs" style={{ color: "var(--muted)" }}>{s.desc}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--forest)" }}>{s.price}</span>
-                    {s.built && <ChevronRight size={14} color="var(--muted)" />}
-                  </div>
-                </Wrapper>
-              );
-            })}
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* ===== Upcoming events — existing real component, untouched.
-          Expos/dog shows are a future expansion, not built here. ===== */}
-      <UpcomingEvents />
-
-      {/* ===== The Artisan Shelf — real products, real prices ===== */}
-      {products.length > 0 && (
-        <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-          <div
-            className="rounded-3xl p-6 md:p-10"
-            style={{ background: "linear-gradient(180deg, var(--shelf-bg-start) 0%, var(--cream) 100%)", border: "1px solid var(--border)" }}
-          >
-            <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
-              <div>
-                <span className="trust-chip mb-3" style={{ background: "var(--terracotta)", color: "white", border: "none" }}>
-                  🔥 The Artisan Shelf
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold mt-3">Handcrafted goods.</h2>
-                <p className="text-sm mt-2" style={{ color: "var(--muted)" }}>
-                  Everyday essentials for your dog — picked to last.
-                </p>
-              </div>
-              <Link href="/accessories" className="btn-primary tap-scale">
-                See all accessories →
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {products.map((p, i) => (
-                <Link href="/accessories" key={p.id} className="tap-scale rounded-2xl p-5 relative overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                  {i === 0 && (
-                    <span
-                      className="absolute -top-2 -right-2 text-[10px] font-bold px-2 py-1 rounded-full"
-                      style={{ background: "var(--gold)", color: "var(--forest)" }}
-                    >
-                      Bestseller
-                    </span>
-                  )}
-                  {p.imageUrls?.[0] && (
-                    <div className="w-full aspect-square rounded-xl overflow-hidden mb-3" style={{ background: "var(--cream)" }}>
-                      <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <p className="font-semibold text-sm mb-1">{p.name}</p>
-                  <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{p.category}</p>
-                  <p className="font-bold text-base" style={{ color: "var(--terracotta)" }}>₹{(p.price / 100).toFixed(0)}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-      )}
-
-      {/* ===== Paw Passport ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <div className="card grid md:grid-cols-2 gap-8 items-center" style={{ background: "var(--panel-dark)", color: "white", border: "none" }}>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--gold)" }}>Paw Passport</p>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Apple Health, for your dog.</h2>
-            <p className="text-sm mb-6 text-white/75">
-              Vaccination history, medical records, microchip details, and care history — in one profile, always up to date.
-            </p>
-            <ul className="space-y-2 mb-6">
-              {PASSPORT_ITEMS.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-white/90">
-                  <ShieldCheck size={15} color="var(--gold)" /> {item}
-                </li>
-              ))}
-            </ul>
-            <Link href="/owner/pets" className="btn-accent inline-flex items-center gap-1.5">
-              Open your pet's passport <ChevronRight size={15} />
-            </Link>
-          </div>
-          <div className="img-frame relative shadow-sm" style={{ minHeight: 260 }}>
-            <Image src="/images/hero-large.jpg" alt="Dog" fill sizes="500px" className="object-cover" />
-          </div>
-        </div>
-      </section>
-      </ScrollReveal>
-
-      {/* ===== Trust Beats Discounts — real signals plus placeholder
-          verification badges. TODO: Insured & Bonded / First-Aid
-          Certified are NOT backed by any real verification yet — see
-          NOT_BUILT.md. ===== */}
-      {providers.length > 0 && (
-        <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Trust beats discounts</p>
-          <h2 className="text-2xl md:text-3xl font-bold mb-8">Every pro is verified and reviewed.</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {providers.map((p) => (
-              <div key={p.id} className="card">
-                <div className="flex justify-between items-start mb-3">
-                  <p className="font-bold">{p.user.name}</p>
-                  <span className="trust-chip" style={{ background: "var(--cream)" }}>
-                    <Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(2)}
-                  </span>
-                </div>
-                <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>{p._count.bookings} completed</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="trust-chip">
-                    <ShieldCheck size={11} /> Verified
-                  </span>
-                  {p.isCampaignBoosted && (
-                    <span className="trust-chip" style={{ background: "var(--gold)", color: "var(--forest)", border: "none" }}>
-                      <Star size={11} fill="var(--forest)" /> Featured
-                    </span>
-                  )}
-                  <span className="trust-chip" style={{ opacity: 0.5 }} title="Coming soon">
-                    <ShieldPlus size={11} /> Insured &amp; Bonded
-                  </span>
-                  <span className="trust-chip" style={{ opacity: 0.5 }} title="Coming soon">
-                    <Syringe size={11} /> First-Aid Certified
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </ScrollReveal>
-      )}
-
-      {/* ===== Final CTA ===== */}
-      <ScrollReveal>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 mb-16">
-        <div className="rounded-3xl px-8 py-16 text-center" style={{ background: "var(--panel-dark)" }}>
-          <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--gold)" }}>One ecosystem</p>
-          <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 max-w-xl mx-auto">
-            Everything your dog needs, from birth to death.
-          </h2>
-          <p className="text-white/70 text-sm mb-8 max-w-md mx-auto">
-            Free Paw Passport, verified pros, and everything your dog needs in one place.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/sign-up" className="btn-accent">Book your first service</Link>
-            <Link href="/owner/pets" className="text-white/90 text-sm font-semibold self-center">Create a Paw Passport</Link>
-          </div>
-        </div>
-      </section>
-      </ScrollReveal>
-
-      {/* ===== Footer ===== */}
-      <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-10" style={{ borderTop: "1px solid var(--border)" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <PawPrint size={18} color="var(--terracotta)" />
-          <span className="font-bold">Barkado & Co.</span>
-        </div>
-        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-          Everything your dog needs, from birth to death. One ecosystem.
-        </p>
-        <Link href="/provider" className="text-xs font-semibold tap-scale inline-block mb-4" style={{ color: "var(--terracotta)" }}>
-          Become a provider →
-        </Link>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
-          <Link href="/legal/terms" className="tap-scale">Terms & Conditions</Link>
-          <Link href="/legal/privacy" className="tap-scale">Privacy Policy</Link>
-          <Link href="/legal/refund" className="tap-scale">Cancellation & Refund</Link>
-          <Link href="/legal/shipping" className="tap-scale">Shipping Policy</Link>
-          <Link href="/legal/contact" className="tap-scale">Contact Us</Link>
-        </div>
-      </footer>
-    </main>
     )}
 
     {user && (
