@@ -6,12 +6,14 @@ import {
   Sparkles, RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
   GraduationCap, Home as HomeIcon, BadgeCheck, AlertTriangle, ArrowRight,
   ChevronRight, ShieldCheck, MapPin, Truck, Clock, SlidersHorizontal, Zap,
-  Radar, HeartPulse, PhoneCall, Gift, Plus, Star,
+  Radar, HeartPulse, PhoneCall, Gift, Plus, Star, Check, PawPrint,
 } from "lucide-react";
 import EmergencyButton from "@/components/EmergencyButton";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
 import UpcomingEvents from "@/components/UpcomingEvents";
+import PetSwitcher from "@/components/PetSwitcher";
 import { derivePassportNumber } from "@/lib/passportId";
+import { formatPetAge } from "@/lib/petAge";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 const SUPPORT_PHONE = "+91 00000 00000";
@@ -20,7 +22,6 @@ const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk", SITTING: "Home Staycation", GROOMING: "Luxury Spa Session", TRAINING: "Good Manners Programme",
 };
 const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", SITTING: "/sitting", GROOMING: "/grooming", TRAINING: "/training" };
-const SIZE_LABEL: Record<string, string> = { SMALL: "Small dog", MEDIUM: "Medium dog", LARGE: "Large dog", GIANT: "Giant dog" };
 
 const ON_DEMAND = [
   { label: "Walk in 15m", icon: Footprints, href: "/walk-booking", badge: "⚡ 15M", badgeBg: "#904c2c" },
@@ -35,18 +36,13 @@ const ON_DEMAND = [
 type Pet = {
   id: string; name: string; breed: string | null; photoUrl: string | null;
   birthday: Date | null; microchipId: string | null; size: string;
+  gender?: string | null; weightKg?: number | null;
   vaccinations: { nextDueDate: Date | null }[];
 };
 type Provider = { id: string; user: { name: string }; photoUrl: string | null; ratingAvg: number; _count: { bookings: number } };
 type Product = { id: string; name: string; price: number; compareAtPrice?: number | null; imageUrls: string[] };
 type GroomingBundle = { id: string; name: string; startingPricePaise: number; providerName: string };
 type TrainingBundle = { id: string; name: string; cadence: string; pricePaise: number; providerName: string };
-
-function ageLabel(birthday: Date | null): string | null {
-  if (!birthday) return null;
-  const years = (Date.now() - birthday.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-  return years < 1 ? null : `${years.toFixed(1)} yr`;
-}
 
 export default function HomeUnified({
   isSignedIn,
@@ -89,24 +85,9 @@ export default function HomeUnified({
     }
   };
 
-  const age = activePet ? ageLabel(activePet.birthday) : null;
+  const age = activePet ? formatPetAge(activePet.birthday) : null;
   const hasVaccineRecords = (activePet?.vaccinations.length ?? 0) > 0;
   const overdueVaccine = activePet?.vaccinations.some((v) => v.nextDueDate && v.nextDueDate < new Date()) ?? false;
-
-  // Real fallback chain for the pet subtitle: age + breed when both are
-  // set (matches the mockup exactly); if either is missing (e.g. a
-  // draft/incomplete Passport), fall back to whatever real info IS on
-  // file — breed alone, age alone, or the pet's size (which always has
-  // a real default) — rather than showing a blank gap.
-  const petSubtitleParts = [age, activePet?.breed].filter(Boolean) as string[];
-  const petSubtitle = petSubtitleParts.length > 0
-    ? petSubtitleParts.join(" ")
-    : activePet
-      ? SIZE_LABEL[activePet.size] ?? "Dog"
-      : "";
-  const passportIncomplete = activePet && petSubtitleParts.length === 0;
-
-  const hasRealBundles = groomingBundles.length > 0 || trainingBundles.length > 0;
 
   return (
     <div style={{ background: "#fbfaee" }}>
@@ -136,66 +117,73 @@ export default function HomeUnified({
             </div>
           )}
 
-          <section className="px-4 pt-1 pb-2.5">
-            <div className="p-3.5 rounded-2xl flex flex-col gap-3" style={{ background: "#ffffff", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "1px solid rgba(194,200,194,0.25)" }}>
-              {activePet ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0" style={{ boxShadow: "0 0 0 2px rgba(144,76,44,0.3)" }}>
-                      {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ background: "#efeee3" }}><BadgeCheck size={18} color="#737874" /></div>}
+          {isSignedIn && (
+            <div className="px-4 pt-1">
+              <PetSwitcher />
+            </div>
+          )}
+
+          <section className="px-4 pt-2 pb-2.5">
+            {activePet ? (
+              <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: "#ffffff", border: "1px solid rgba(19,42,31,0.15)", boxShadow: "0 4px 20px -2px rgba(19,42,31,0.05)" }}>
+                <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#132a1f" }} />
+                <div className="pl-2">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#ebe5d8", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                        {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={22} color="#a29887" />}
+                      </div>
                       {hasVaccineRecords && !overdueVaccine && (
-                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: "#02120a", color: "white" }}>✓</span>
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "#1e8e47", border: "2px solid white" }}>
+                          <Check size={9} color="white" />
+                        </span>
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <h2 className="font-bold text-sm" style={{ ...H, color: "#02120a" }}>{activePet.name}</h2>
-                        {hasVaccineRecords && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "#d2e8d9", color: "#0d1f16" }}>
-                            {overdueVaccine ? "Vaccine Due" : "Vaccinated"}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-extrabold text-base leading-tight" style={{ ...H, color: "#132a1f" }}>{activePet.name}</h2>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Primary Active</span>
                       </div>
-                      <p className="text-[11px]" style={{ color: "#424844" }}>
-                        {petSubtitle}{isSignedIn ? ` • ${pawPointsBalance.toLocaleString("en-IN")} PawPoints` : ""}
+                      <p className="text-xs font-medium mt-0.5" style={{ color: "#6f6759" }}>
+                        {[activePet.breed ?? "Mixed", activePet.gender ? (activePet.gender === "MALE" ? "Male" : "Female") : null].filter(Boolean).join(" • ")}
                       </p>
-                      {passportIncomplete && (
-                        <Link href={`/owner/pets/${activePet.id}`} className="text-[10px] font-semibold" style={{ color: "#904c2c" }}>
-                          Add breed &amp; birthday →
-                        </Link>
-                      )}
+                      <p className="text-[11px] mt-0.5" style={{ color: "#8f8574" }}>
+                        {[age, activePet.weightKg ? `${activePet.weightKg} kg` : null].filter(Boolean).join(" • ")}
+                      </p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1" style={{ background: "#e9e9dd", color: "#1b1c15" }} title="Placeholder — no real voucher system yet">
-                    <Gift size={14} color="#904c2c" />
-                    Offers
-                  </span>
+                  <div className="flex items-center justify-between mt-3.5 pt-2" style={{ borderTop: "1px solid #f5f0e6" }}>
+                    <span className="text-[11px]" style={{ color: "#8f8574" }}>PawPassport™ #{derivePassportNumber(activePet.id)}</span>
+                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale" style={{ color: "#132a1f" }}>
+                      Passport &amp; Care <ChevronRight size={14} className="ml-1" />
+                    </Link>
+                  </div>
                 </div>
-              ) : (
-                <Link href="/owner/pets" onClick={gate} className="text-center py-2 block">
-                  <p className="text-sm font-semibold" style={{ color: "#02120a" }}>{isSignedIn ? "Add your first pet" : "Sign in to create your dog's Paw Passport"}</p>
-                </Link>
-              )}
+              </div>
+            ) : (
+              <Link href="/owner/pets" onClick={gate} className="rounded-2xl p-4 flex items-center justify-center text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
+                <p className="text-sm font-semibold" style={{ color: "#02120a" }}>{isSignedIn ? "Add your first pet" : "Sign in to create your dog's Paw Passport"}</p>
+              </Link>
+            )}
 
-              {rebookCandidate && (
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#02120a" }}>
-                      <History size={14} color="#904c2c" />
-                      <span>{SERVICE_LABEL[rebookCandidate.type]}</span>
-                    </div>
-                    <div className="text-[10px] truncate" style={{ color: "#424844" }}>
-                      {rebookCandidate.startTime ? rebookCandidate.startTime.toLocaleString("en-IN", { weekday: "long", hour: "numeric", minute: "2-digit" }) : ""}
-                      {rebookCandidate.provider ? ` with ${rebookCandidate.provider.user.name}` : ""}
-                      {rebookCandidate.priceAmount ? ` • ₹${(rebookCandidate.priceAmount / 100).toFixed(0)}` : ""}
-                    </div>
+            {rebookCandidate && (
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl mt-2.5" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#02120a" }}>
+                    <History size={14} color="#904c2c" />
+                    <span>{SERVICE_LABEL[rebookCandidate.type]}</span>
                   </div>
-                  <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
-                    <RotateCcw size={14} /> 1-Tap Rebook
-                  </Link>
+                  <div className="text-[10px] truncate" style={{ color: "#424844" }}>
+                    {rebookCandidate.startTime ? rebookCandidate.startTime.toLocaleString("en-IN", { weekday: "long", hour: "numeric", minute: "2-digit" }) : ""}
+                    {rebookCandidate.provider ? ` with ${rebookCandidate.provider.user.name}` : ""}
+                    {rebookCandidate.priceAmount ? ` • ₹${(rebookCandidate.priceAmount / 100).toFixed(0)}` : ""}
+                  </div>
                 </div>
-              )}
-            </div>
+                <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
+                  <RotateCcw size={14} /> 1-Tap Rebook
+                </Link>
+              </div>
+            )}
           </section>
 
           <section className="py-2.5">
@@ -228,18 +216,13 @@ export default function HomeUnified({
             </div>
           </section>
 
-          {/* ===== Grooming & Training Bundles — real packages when they
-              exist; if none exist yet (no real GroomingPackage/
-              TrainingPackage rows), shows 2 marked SAMPLE placeholder
-              cards instead of hiding the whole section, per instruction.
-              Real data always takes priority over the placeholders. ===== */}
           <section className="px-4 py-2.5">
             <div className="p-4 rounded-2xl flex flex-col gap-3.5" style={{ background: "linear-gradient(135deg, #e9e9dd, #efeee3, #f5f4e8)", border: "1px solid rgba(194,200,194,0.3)" }}>
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-extrabold text-base tracking-tight leading-tight" style={{ ...H, color: "#02120a" }}>Grooming &amp; Training Care Bundles</h3>
                   <p className="text-[11px] mt-0.5" style={{ color: "#424844" }}>
-                    {hasRealBundles ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
+                    {(groomingBundles.length > 0 || trainingBundles.length > 0) ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
                   </p>
                 </div>
                 <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#904c2c" }}>
@@ -247,7 +230,7 @@ export default function HomeUnified({
                 </Link>
               </div>
               <div className="grid grid-cols-1 gap-2.5">
-                {hasRealBundles ? (
+                {(groomingBundles.length > 0 || trainingBundles.length > 0) ? (
                   <>
                     {groomingBundles.map((b) => (
                       <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
@@ -290,7 +273,6 @@ export default function HomeUnified({
                   </>
                 ) : (
                   <>
-                    {/* SAMPLE placeholders — no real GroomingPackage/TrainingPackage exists yet, see NOT_BUILT.md */}
                     <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">

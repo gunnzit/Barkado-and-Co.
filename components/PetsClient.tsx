@@ -7,6 +7,7 @@ import { ChevronRight, ArrowLeft, Plus, Check, PawPrint } from "lucide-react";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import { derivePassportNumber } from "@/lib/passportId";
+import { formatPetAge } from "@/lib/petAge";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
@@ -14,7 +15,6 @@ const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Walk", SITTING: "Staycation", GROOMING: "Spa Groom", TRAINING: "Training",
 };
 
-// Must match the event name in PetSwitcher.tsx exactly.
 const ACTIVE_PET_CHANGED_EVENT = "barkado:active-pet-changed";
 
 type Pet = {
@@ -32,19 +32,6 @@ type Pet = {
   vaccinations: { id: string; vaccineName: string; nextDueDate: string | null }[];
   nextBooking: { type: string; startTime: string; providerName: string } | null;
 };
-
-function formatAge(birthday?: string | null): string | null {
-  if (!birthday) return null;
-  const b = new Date(birthday);
-  const now = new Date();
-  let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
-  if (now.getDate() < b.getDate()) months -= 1;
-  if (months < 0) return null;
-  const years = Math.floor(months / 12);
-  const remMonths = months % 12;
-  if (years === 0) return `${remMonths} mo${remMonths === 1 ? "" : "s"}`;
-  return `${years} yr${years === 1 ? "" : "s"}${remMonths > 0 ? ` ${remMonths} mo${remMonths === 1 ? "" : "s"}` : ""}`;
-}
 
 function breedTag(species: string | undefined, breed: string | null | undefined): string {
   if (species && species !== "Dog") return `${species} Care`;
@@ -104,10 +91,6 @@ export default function PetsClient({
       .catch(() => {});
   }, []);
 
-  // Keep this page's own "active" highlight in sync with the real
-  // server value once router.refresh() lands new props, AND stay
-  // responsive instantly to the event this button (or the header
-  // PetSwitcher) dispatches — same real event both places use.
   useEffect(() => {
     setLocalActiveId(activePetId);
   }, [activePetId]);
@@ -123,7 +106,7 @@ export default function PetsClient({
 
   const setActive = async (petId: string) => {
     setSwitching(petId);
-    setLocalActiveId(petId); // optimistic — instant highlight, no flicker
+    setLocalActiveId(petId);
     await fetch("/api/active-pet", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -189,7 +172,7 @@ export default function PetsClient({
         <div className="space-y-3.5">
           {pets.map((p) => {
             const isActive = p.id === localActiveId;
-            const age = formatAge(p.birthday);
+            const age = formatPetAge(p.birthday);
             const vChip = vaccineChip(p.vaccinations);
             const chips: { text: string; tone: "green" | "amber" | "blue" | "red" }[] = [];
             if (!isActive && p.nextBooking) {
@@ -222,7 +205,7 @@ export default function PetsClient({
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#ebe5d8", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                          {p.photoUrl ? <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" /> : <span className="text-2xl">🐾</span>}
+                          {p.photoUrl ? <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" /> : <PawPrint size={22} color="#a29887" />}
                         </div>
                         {isActive && (
                           <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "#1e8e47", border: "2px solid white" }}>
