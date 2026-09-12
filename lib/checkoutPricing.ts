@@ -18,10 +18,22 @@ export const WELCOME10_DISCOUNT_RATE = 0.10; // 10% off product subtotal — mat
 // established for the wallet's redemption value elsewhere in the app.
 export const PAWPOINTS_REDEMPTION_PAISE_PER_POINT = 25;
 
+// 1 point per ₹10 of real BASE price — same documented rate as
+// calculateEarnedPoints in lib/pawPoints.ts. Duplicated here (rather than
+// imported) because that file also imports Prisma at module scope, which
+// isn't safe to bundle into a client component. Used only for a live
+// checkout-page ESTIMATE — the actual authoritative points are always
+// computed for real in finalizeRazorpayOrder at payment confirmation.
+export function estimateEarnedPoints(baseSubtotalPaise: number): number {
+  return Math.floor(baseSubtotalPaise / 1000);
+}
+
 export type CartTotalsInput = {
   productSubtotalPaise: number;
   serviceSellingPaise: number;
+  serviceBasePaise: number;
   maintenanceFeePaise: number;
+  productCompareSavingsPaise: number;
   couponCode: string | null;
   redeemPoints: number;
   pawPointsBalance: number;
@@ -37,6 +49,8 @@ export type CartTotals = {
   actualPointsSpent: number;
   pointsDiscountPaise: number;
   grandTotalPaise: number;
+  totalSavingsPaise: number;
+  estimatedPointsEarned: number;
 };
 
 export function computeCartTotals(input: CartTotalsInput): CartTotals {
@@ -60,6 +74,14 @@ export function computeCartTotals(input: CartTotalsInput): CartTotals {
 
   const grandTotalPaise = Math.max(0, totalBeforePoints - pointsDiscountPaise);
 
+  // Real total savings shown to the customer — sum of actual product
+  // compareAtPrice discounts already baked into the listed prices, plus
+  // the real coupon discount and real points discount. Never a fabricated
+  // number.
+  const totalSavingsPaise = input.productCompareSavingsPaise + couponDiscountPaise + pointsDiscountPaise;
+
+  const estimatedPointsEarned = estimateEarnedPoints(input.productSubtotalPaise + input.serviceBasePaise);
+
   return {
     itemsTotalPaise,
     couponValid,
@@ -70,5 +92,7 @@ export function computeCartTotals(input: CartTotalsInput): CartTotals {
     actualPointsSpent,
     pointsDiscountPaise,
     grandTotalPaise,
+    totalSavingsPaise,
+    estimatedPointsEarned,
   };
 }

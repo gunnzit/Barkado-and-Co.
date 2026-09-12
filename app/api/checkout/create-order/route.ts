@@ -39,7 +39,17 @@ export async function POST(req: Request) {
       return sum;
     }, 0);
 
+    // Real savings already baked into each product's listed price, if it
+    // has a real compareAtPrice set higher than its current price.
+    const productCompareSavingsPaise = cartItems.reduce((sum, item) => {
+      if (item.kind === "PRODUCT" && item.product?.compareAtPrice && item.product.compareAtPrice > item.product.price) {
+        return sum + (item.product.compareAtPrice - item.product.price) * item.quantity;
+      }
+      return sum;
+    }, 0);
+
     const serviceItems = cartItems.filter((i) => i.kind === "SERVICE");
+    const serviceBasePaise = serviceItems.reduce((sum, i) => sum + (i.priceAmount ?? 0), 0);
     const serviceSellingPaise = serviceItems.reduce(
       (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise,
       0
@@ -54,7 +64,9 @@ export async function POST(req: Request) {
     const totals = computeCartTotals({
       productSubtotalPaise,
       serviceSellingPaise,
+      serviceBasePaise,
       maintenanceFeePaise,
+      productCompareSavingsPaise,
       couponCode: couponCode ?? null,
       redeemPoints: redeemPoints ?? 0,
       pawPointsBalance,
