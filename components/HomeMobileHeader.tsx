@@ -1,19 +1,15 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { useState } from "react";
 import Link from "next/link";
 import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
+import LocationPickerModal from "@/components/LocationPickerModal";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
-// The real LocationHeader component renders its own full secondary block
-// (duplicate "Barkado & Co." brand name, its own tagline, differently
-// styled address) rather than a plain row — not a fit for slotting in
-// here. Built a plain custom row instead, matching the reference image
-// exactly. "CHANGE" is a real link to /owner/addresses (your actual
-// address management page) rather than a decorative button — if
-// LocationHeader has a nicer inline picker you'd rather trigger instead,
-// paste that file and I'll wire it in properly.
+type Address = { id: string; label: string; fullAddress: string; receiverName: string; receiverPhone: string; isDefault: boolean };
+
 export default function HomeMobileHeader({
   userAddress,
   userPhone,
@@ -26,8 +22,23 @@ export default function HomeMobileHeader({
   pawPointsBalance: number;
 }) {
   const { user } = useUser();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [addresses, setAddresses] = useState<Address[] | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
   const addressLabel = userAddress ? userAddress.split(",")[0] : "Home";
   const addressRest = userAddress ? userAddress.split(",").slice(1).join(",").trim() : "Add your address";
+
+  const openPicker = async () => {
+    setPickerOpen(true);
+    if (addresses === null) {
+      setLoadingAddresses(true);
+      const res = await fetch("/api/addresses");
+      if (res.ok) setAddresses(await res.json());
+      else setAddresses([]);
+      setLoadingAddresses(false);
+    }
+  };
 
   return (
     <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(251,250,238,0.95)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
@@ -58,18 +69,17 @@ export default function HomeMobileHeader({
           </div>
         </div>
 
-        {/* Real location row — plain display + real link to address management */}
         <div className="flex items-center justify-between gap-2">
-          <Link href="/owner/addresses" className="flex items-center gap-1.5 min-w-0 tap-scale">
+          <button onClick={openPicker} className="flex items-center gap-1.5 min-w-0 tap-scale">
             <Navigation size={15} color="#904c2c" className="shrink-0" />
             <span className="font-bold text-xs truncate" style={{ ...H, color: "#02120a" }}>{addressLabel}</span>
             <span className="text-xs shrink-0" style={{ color: "#737874" }}>•</span>
             <span className="text-xs truncate" style={{ color: "#424844" }}>{addressRest}</span>
             <ChevronDown size={14} color="#424844" className="shrink-0" />
-          </Link>
-          <Link href="/owner/addresses" className="shrink-0 text-xs font-bold tap-scale" style={{ color: "#904c2c" }}>
+          </button>
+          <button onClick={openPicker} className="shrink-0 text-xs font-bold tap-scale" style={{ color: "#904c2c" }}>
             CHANGE
-          </Link>
+          </button>
         </div>
 
         <div className="relative flex items-center w-full h-10 rounded-xl px-3" style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(22,40,31,0.03)", border: "1px solid rgba(194,200,194,0.3)" }}>
@@ -84,6 +94,10 @@ export default function HomeMobileHeader({
           </div>
         </div>
       </div>
+
+      {pickerOpen && !loadingAddresses && (
+        <LocationPickerModal addresses={addresses ?? []} onClose={() => setPickerOpen(false)} />
+      )}
     </header>
   );
 }
