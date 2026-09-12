@@ -570,6 +570,7 @@ model Product {
   orderItems OrderItem[]
   favorites  Favorite[]
   pawPointsRewards PawPointsReward[]
+  bundleItems ProductBundleItem[]
 }
 
 model CartItem {
@@ -622,7 +623,7 @@ model Order {
   bookings Booking[]
   pawPointsTransactions PawPointsTransaction[]
   pawPointsRewardRedemptions PawPointsRewardRedemption[]
- 
+
   // Real checkout pricing breakdown, stored at order-creation time so
   // there's an auditable record of exactly what was charged and why —
   // not just the final totalAmount. All in paise except couponCode.
@@ -755,4 +756,36 @@ model Favorite {
 
   @@unique([userId, productId])
   @@unique([userId, providerId])
+}
+
+// A real, admin-curated kit of specific products sold together at one
+// real kit price. Never algorithmically generated — someone explicitly
+// builds each bundle, same principle as PawPointsReward. The "you save"
+// amount shown anywhere is always computed live (sum of real item
+// prices minus bundlePricePaise), never a separately stored/fabricated
+// number.
+//
+// NOTE: checkout does not yet have bundle-aware pricing — "Add Bundle"
+// currently shows real reference pricing only ("Coming Soon" on the
+// action itself) rather than adding items to the cart at a fake
+// discounted total. A real follow-up, not silently faked.
+model ProductBundle {
+  id               String              @id @default(cuid())
+  name             String
+  description      String?
+  bundlePricePaise Int
+  imageUrl         String?
+  active           Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+
+  items ProductBundleItem[]
+}
+
+model ProductBundleItem {
+  id        String        @id @default(cuid())
+  bundleId  String
+  bundle    ProductBundle @relation(fields: [bundleId], references: [id])
+  productId String
+  product   Product       @relation(fields: [productId], references: [id])
+  quantity  Int           @default(1)
 }
