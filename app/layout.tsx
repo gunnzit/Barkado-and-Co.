@@ -7,7 +7,6 @@ import { FavoritesProvider } from "@/components/FavoritesProvider";
 import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
 import ActivityTracker from "@/components/ActivityTracker";
-import PawPointsBadge from "@/components/PawPointsBadge";
 import OwnerSideMenu from "@/components/OwnerSideMenu";
 import "./globals.css";
 
@@ -36,19 +35,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Calling auth()/getOrCreateUser() here (even indirectly) can fight with
   // that handshake and cause a redirect loop. CartProvider and
   // FavoritesProvider both intentionally start empty and fetch their real
-  // data client-side, after mount, for the same reason — PawPointsBadge
-  // follows the same pattern (renders nothing until its own client-side
-  // fetch resolves).
+  // data client-side, after mount, for the same reason.
   //
   // BottomNav is mounted here, as a sibling to {children}, rather than
   // inside each individual page — that's what keeps it visible during route
   // transitions (loading.tsx replaces {children}'s content, not this layout
   // itself, so BottomNav never unmounts). It self-hides via pathname check
   // on routes that have their own navigation (provider, admin, cart, etc).
-  //
-  // PawPointsBadge is mounted globally the same way, rather than edited
-  // into every individual page's own header markup — a fixed floating
-  // badge, consistent with how CartPill already works.
   //
   // OwnerSideMenu follows the same pattern, opposite corner (top-left) —
   // only Home relies on BottomNav alone now; every other owner page uses
@@ -65,9 +58,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
               <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: 12, zIndex: 60 }}>
                 <OwnerSideMenu />
-              </div>
-              <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", right: 12, zIndex: 60 }}>
-                <PawPointsBadge />
               </div>
               <CartPill />
               <BottomNav />
