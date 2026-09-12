@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import AccessoriesListClient from "@/components/AccessoriesListClient";
+import ShopHighlights from "@/components/ShopHighlights";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -12,19 +13,21 @@ import { resolveThemeClass } from "@/lib/breedTheme";
 export default async function AccessoriesPage() {
   const user = await getOrCreateUser();
 
-  const [products, pets, topSellingIds] = await Promise.all([
+  const [products, pets, topSellingIds, bundlesRaw] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
       orderBy: [{ category: "asc" }, { name: "asc" }],
     }),
     user ? prisma.pet.findMany({ where: { ownerId: user.id } }) : Promise.resolve([]),
-    // Real bestseller signal — same real order-count ranking already used
-    // on the homepage, not a decorative label.
     prisma.orderItem.groupBy({
       by: ["productId"],
       _count: { productId: true },
       orderBy: { _count: { productId: "desc" } },
       take: 5,
+    }),
+    prisma.productBundle.findMany({
+      where: { active: true },
+      include: { items: { include: { product: true } } },
     }),
   ]);
 
@@ -34,8 +37,6 @@ export default async function AccessoriesPage() {
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = resolveThemeClass(activePet);
 
-  // Within-pet-size sort still applies before handing off to the client
-  // component, same logic as before.
   const sortForActivePet = (items: typeof products) => {
     if (!activePet) return items;
     return [...items].sort((a, b) => {
@@ -45,8 +46,9 @@ export default async function AccessoriesPage() {
       return aFits ? -1 : 1;
     });
   };
+  const sortedForPet = sortForActivePet(products);
 
-  const serialized = sortForActivePet(products).map((item) => ({
+  const serialized = sortedForPet.map((item) => ({
     id: item.id,
     name: item.name,
     category: item.category,
@@ -59,6 +61,40 @@ export default async function AccessoriesPage() {
     isBestseller: bestsellerIds.has(item.id),
     colorOptions: item.colorOptions,
     sizeOptions: item.sizeOptions,
+  }));
+
+  let featuredProduct: (typeof serialized[number] & { percentOff: number }) | null = null;
+  let bestPercentOff = 0;
+  for (const p of serialized) {
+    if (p.compareAtPrice && p.compareAtPrice > p.price) {
+      const off = Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100);
+      if (off > bestPercentOff) {
+        bestPercentOff = off;
+        featuredProduct = { ...p, percentOff: off };
+      }
+    }
+  }
+
+  const tailoredProducts = activePet
+    ? serialized
+        .filter((p) => !featuredProduct || p.id !== featuredProduct.id)
+        .filter((p) => {
+          const original = sortedForPet.find((sp) => sp.id === p.id)!;
+          return original.suitableSizes.length === 0 || original.suitableSizes.includes(activePet.size);
+        })
+        .slice(0, 6)
+    : [];
+
+  const impulseProducts = serialized.filter((p) => p.price < 499 && (!featuredProduct || p.id !== featuredProduct.id));
+
+  const bundles = bundlesRaw.map((b) => ({
+    id: b.id,
+    name: b.name,
+    description: b.description,
+    bundlePricePaise: b.bundlePricePaise,
+    imageUrl: b.imageUrl,
+    items: b.items.map((it) => ({ productName: it.product.name, quantity: it.quantity })),
+    realComparePaise: b.items.reduce((sum, it) => sum + it.product.price * it.quantity, 0),
   }));
 
   return (
@@ -92,7 +128,16 @@ export default async function AccessoriesPage() {
           No products yet — run the seed script to load sample accessories.
         </p>
       ) : (
-        <AccessoriesListClient products={serialized} />
+        <>
+          <ShopHighlights
+            featuredProduct={featuredProduct}
+            tailoredProducts={tailoredProducts}
+            petName={activePet?.name ?? null}
+            bundles={bundles}
+            impulseProducts={impulseProducts}
+          />
+          <AccessoriesListClient products={serialized} />
+        </>
       )}
     </main>
     </div>
