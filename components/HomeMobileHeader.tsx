@@ -7,14 +7,10 @@ import LocationHeader from "@/components/LocationHeader";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
-// NOTE: the mockup's location row ("Home • Indiranagar 5th Main...
-// Change") is rebuilt here using the REAL LocationHeader component
-// rather than a custom lookalike row — I don't have LocationHeader's
-// internals, so duplicating its UI risked either guessing wrong or
-// silently breaking real address switching. If LocationHeader's own
-// rendered output doesn't match the mockup's exact pill/chevron styling,
-// paste that file and I'll adjust it to match, instead of working around
-// it from the outside.
+// NOTE: intentionally NOT fixed/sticky — scrolls away with the rest of
+// the page, per explicit correction. Previously used `fixed top-0`,
+// which required a matching top-padding hack on <main> in HomeUnified;
+// both are removed together so there's no leftover empty gap.
 export default function HomeMobileHeader({
   userAddress,
   userPhone,
@@ -29,7 +25,7 @@ export default function HomeMobileHeader({
   const { user } = useUser();
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 pt-safe max-w-6xl mx-auto lg:relative lg:pt-0" style={{ background: "rgba(251,250,238,0.95)", backdropFilter: "blur(20px)", boxShadow: "0 4px 20px rgba(22,40,31,0.04)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
+    <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(251,250,238,0.95)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
       <div className="px-4 pt-2.5 pb-3 flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1.5">

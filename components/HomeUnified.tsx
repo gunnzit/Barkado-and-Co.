@@ -20,6 +20,7 @@ const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk", SITTING: "Home Staycation", GROOMING: "Luxury Spa Session", TRAINING: "Good Manners Programme",
 };
 const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", SITTING: "/sitting", GROOMING: "/grooming", TRAINING: "/training" };
+const SIZE_LABEL: Record<string, string> = { SMALL: "Small dog", MEDIUM: "Medium dog", LARGE: "Large dog", GIANT: "Giant dog" };
 
 const ON_DEMAND = [
   { label: "Walk in 15m", icon: Footprints, href: "/walk-booking", badge: "⚡ 15M", badgeBg: "#904c2c" },
@@ -33,7 +34,7 @@ const ON_DEMAND = [
 
 type Pet = {
   id: string; name: string; breed: string | null; photoUrl: string | null;
-  birthday: Date | null; microchipId: string | null;
+  birthday: Date | null; microchipId: string | null; size: string;
   vaccinations: { nextDueDate: Date | null }[];
 };
 type Provider = { id: string; user: { name: string }; photoUrl: string | null; ratingAvg: number; _count: { bookings: number } };
@@ -92,12 +93,27 @@ export default function HomeUnified({
   const hasVaccineRecords = (activePet?.vaccinations.length ?? 0) > 0;
   const overdueVaccine = activePet?.vaccinations.some((v) => v.nextDueDate && v.nextDueDate < new Date()) ?? false;
 
+  // Real fallback chain for the pet subtitle: age + breed when both are
+  // set (matches the mockup exactly); if either is missing (e.g. a
+  // draft/incomplete Passport), fall back to whatever real info IS on
+  // file — breed alone, age alone, or the pet's size (which always has
+  // a real default) — rather than showing a blank gap.
+  const petSubtitleParts = [age, activePet?.breed].filter(Boolean) as string[];
+  const petSubtitle = petSubtitleParts.length > 0
+    ? petSubtitleParts.join(" ")
+    : activePet
+      ? SIZE_LABEL[activePet.size] ?? "Dog"
+      : "";
+  const passportIncomplete = activePet && petSubtitleParts.length === 0;
+
+  const hasRealBundles = groomingBundles.length > 0 || trainingBundles.length > 0;
+
   return (
     <div style={{ background: "#fbfaee" }}>
       <EmergencyButton />
       <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-      <main className="flex flex-col relative w-full pt-[156px] lg:pt-4 pb-24" style={{ background: "#fbfaee" }}>
+      <main className="flex flex-col relative w-full pt-2 pb-24" style={{ background: "#fbfaee" }}>
         <div className="max-w-6xl mx-auto w-full">
 
           {activeProviderCount > 0 && (
@@ -141,8 +157,13 @@ export default function HomeUnified({
                         )}
                       </div>
                       <p className="text-[11px]" style={{ color: "#424844" }}>
-                        {[age, activePet.breed].filter(Boolean).join(" ")}{isSignedIn ? ` • ${pawPointsBalance.toLocaleString("en-IN")} PawPoints` : ""}
+                        {petSubtitle}{isSignedIn ? ` • ${pawPointsBalance.toLocaleString("en-IN")} PawPoints` : ""}
                       </p>
+                      {passportIncomplete && (
+                        <Link href={`/owner/pets/${activePet.id}`} className="text-[10px] font-semibold" style={{ color: "#904c2c" }}>
+                          Add breed &amp; birthday →
+                        </Link>
+                      )}
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1" style={{ background: "#e9e9dd", color: "#1b1c15" }} title="Placeholder — no real voucher system yet">
@@ -207,61 +228,98 @@ export default function HomeUnified({
             </div>
           </section>
 
-          {(groomingBundles.length > 0 || trainingBundles.length > 0) && (
-            <section className="px-4 py-2.5">
-              <div className="p-4 rounded-2xl flex flex-col gap-3.5" style={{ background: "linear-gradient(135deg, #e9e9dd, #efeee3, #f5f4e8)", border: "1px solid rgba(194,200,194,0.3)" }}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-extrabold text-base tracking-tight leading-tight" style={{ ...H, color: "#02120a" }}>Grooming &amp; Training Care Bundles</h3>
-                    <p className="text-[11px] mt-0.5" style={{ color: "#424844" }}>Real multi-session packages from your local providers.</p>
-                  </div>
-                  <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#904c2c" }}>
-                    All Bundles <ChevronRight size={14} />
-                  </Link>
+          {/* ===== Grooming & Training Bundles — real packages when they
+              exist; if none exist yet (no real GroomingPackage/
+              TrainingPackage rows), shows 2 marked SAMPLE placeholder
+              cards instead of hiding the whole section, per instruction.
+              Real data always takes priority over the placeholders. ===== */}
+          <section className="px-4 py-2.5">
+            <div className="p-4 rounded-2xl flex flex-col gap-3.5" style={{ background: "linear-gradient(135deg, #e9e9dd, #efeee3, #f5f4e8)", border: "1px solid rgba(194,200,194,0.3)" }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-extrabold text-base tracking-tight leading-tight" style={{ ...H, color: "#02120a" }}>Grooming &amp; Training Care Bundles</h3>
+                  <p className="text-[11px] mt-0.5" style={{ color: "#424844" }}>
+                    {hasRealBundles ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
+                  </p>
                 </div>
-                <div className="grid grid-cols-1 gap-2.5">
-                  {groomingBundles.map((b) => (
-                    <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Bundle</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                        <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
-                          Choose Bundle <ArrowRight size={12} />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                  {trainingBundles.map((b) => (
-                    <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Bundle</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                        <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
-                          Choose Bundle <ArrowRight size={12} />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#904c2c" }}>
+                  All Bundles <ChevronRight size={14} />
+                </Link>
               </div>
-            </section>
-          )}
+              <div className="grid grid-cols-1 gap-2.5">
+                {hasRealBundles ? (
+                  <>
+                    {groomingBundles.map((b) => (
+                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Bundle</span>
+                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
+                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
+                          <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
+                            Choose Bundle <ArrowRight size={12} />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                    {trainingBundles.map((b) => (
+                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Bundle</span>
+                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
+                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
+                          <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
+                            Choose Bundle <ArrowRight size={12} />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {/* SAMPLE placeholders — no real GroomingPackage/TrainingPackage exists yet, see NOT_BUILT.md */}
+                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Sample</span>
+                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Groom &amp; Glow Ritual (4 Sessions)</h4>
+                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹1,599</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Sample</span>
+                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Master Manners &amp; Social (6 Sessions)</h4>
+                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹3,899</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
 
           {products.length > 0 && (
             <section className="px-4 py-3">
