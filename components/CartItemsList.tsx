@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Minus, Plus, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon,
   Tag, Sparkles, MessageSquare, Truck, CheckCircle2, Lock, Pencil,
-  ShieldCheck, Award, ThumbsUp, Clock,
+  ShieldCheck, Award, ThumbsUp, Clock, ShoppingBag,
 } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import RazorpayCheckoutButton from "@/components/RazorpayCheckoutButton";
@@ -43,12 +43,12 @@ export default function CartItemsList({
   const productItems = items.filter((i) => i.kind === "PRODUCT" && i.product);
 
   const productSubtotalPaise = productItems.reduce((sum, i) => sum + i.product!.price * i.quantity, 0);
-  const productCompareSavingsPaise = productItems.reduce((sum, i) => {
-    if (i.product!.compareAtPrice && i.product!.compareAtPrice > i.product!.price) {
-      return sum + (i.product!.compareAtPrice - i.product!.price) * i.quantity;
-    }
-    return sum;
-  }, 0);
+  // Cart items only carry a lightweight product snapshot (id, name,
+  // price, icon) — no compareAtPrice, so per-line "was ₹X" savings can't
+  // be shown here. Real compareAtPrice-based savings ARE shown for the
+  // "Frequently Added" suggestions below, which use the full Product
+  // record fetched fresh from the server.
+  const productCompareSavingsPaise = 0;
   const serviceBasePaise = serviceItems.reduce((sum, i) => sum + (i.priceAmount ?? 0), 0);
   const serviceSellingPaise = serviceItems.reduce(
     (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise,
@@ -164,17 +164,12 @@ export default function CartItemsList({
             <div className="space-y-3">
               {productItems.map((item) => (
                 <div key={item.id} className="flex items-start gap-3 pb-3" style={{ borderBottom: "1px solid rgba(194,200,194,0.15)" }}>
-                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0" style={{ background: "#f5f4e8" }}>
-                    {item.product!.imageUrls?.[0] && <img src={item.product!.imageUrls[0]} alt={item.product!.name} className="w-full h-full object-cover" />}
+                  <div className="w-16 h-16 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f5f4e8" }}>
+                    <ShoppingBag size={22} color="#c2c8c2" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate" style={{ ...H, color: "#02120a" }}>{item.product!.name}</p>
-                    <div className="flex items-baseline gap-1.5 mt-1">
-                      <span className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹{(item.product!.price / 100).toFixed(0)}</span>
-                      {item.product!.compareAtPrice && item.product!.compareAtPrice > item.product!.price && (
-                        <span className="text-xs line-through" style={{ color: "#737874" }}>₹{(item.product!.compareAtPrice / 100).toFixed(0)}</span>
-                      )}
-                    </div>
+                    <p className="text-sm font-extrabold mt-1" style={{ ...H, color: "#02120a" }}>₹{(item.product!.price / 100).toFixed(0)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <button onClick={() => removeItem(item.id)} className="tap-scale" aria-label="Remove">
