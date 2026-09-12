@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ChevronDown, PawPrint, Check, Palette } from "lucide-react";
@@ -9,19 +9,20 @@ import { THEME_OPTIONS } from "@/lib/breedTheme";
 
 type Pet = { id: string; name: string; breed?: string | null; photoUrl?: string | null; themeOverride?: string | null };
 
+// Real cross-component sync: any control that changes the active pet
+// (this component's own switcher, or PetsClient's "Set Active" button)
+// dispatches this after a successful /api/active-pet call, and every
+// mounted PetSwitcher listens for it — so all of them reflect the real
+// change immediately, not just the one that triggered it.
+const ACTIVE_PET_CHANGED_EVENT = "barkado:active-pet-changed";
+
 export default function PetSwitcher({
   avatarOnly = false,
   hideThemeSwitch = false,
   display = "viewing",
 }: {
   avatarOnly?: boolean;
-  // Opt-in only — every existing usage keeps showing the real theme
-  // swatch button unless explicitly hidden, so this never changes
-  // behavior anywhere it wasn't touched.
   hideThemeSwitch?: boolean;
-  // "viewing" (default, unchanged everywhere else) renders "Viewing
-  // {name}". "active" renders the two-line "ACTIVE / {name} ⌄" pill
-  // style, opt-in for pages that want that exact look.
   display?: "viewing" | "active";
 }) {
   const { isSignedIn } = useUser();
@@ -33,23 +34,33 @@ export default function PetSwitcher({
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
+  const refetchActive = useCallback(async () => {
     if (!isSignedIn) return;
-    (async () => {
-      const [petsRes, activeRes] = await Promise.all([
-        fetch("/api/pets"),
-        fetch("/api/active-pet"),
-      ]);
-      const petsData: Pet[] = petsRes.ok ? await petsRes.json() : [];
-      const activeData = activeRes.ok ? await activeRes.json() : { petId: null };
-      setPets(petsData);
-      const urlPetId = pathname.match(/^\/owner\/pets\/([^/]+)/)?.[1];
-      const fallback = petsData[0]?.id ?? null;
-      setActiveId(urlPetId || activeData.petId || fallback);
-      setLoaded(true);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const [petsRes, activeRes] = await Promise.all([
+      fetch("/api/pets"),
+      fetch("/api/active-pet"),
+    ]);
+    const petsData: Pet[] = petsRes.ok ? await petsRes.json() : [];
+    const activeData = activeRes.ok ? await activeRes.json() : { petId: null };
+    setPets(petsData);
+    const urlPetId = pathname.match(/^\/owner\/pets\/([^/]+)/)?.[1];
+    const fallback = petsData[0]?.id ?? null;
+    setActiveId(urlPetId || activeData.petId || fallback);
+    setLoaded(true);
   }, [isSignedIn, pathname]);
+
+  useEffect(() => {
+    refetchActive();
+  }, [refetchActive]);
+
+  // Real sync — re-fetch whenever ANY control on the page (including a
+  // different PetSwitcher instance, or PetsClient's own Set Active
+  // buttons) reports the active pet actually changed.
+  useEffect(() => {
+    const handler = () => refetchActive();
+    window.addEventListener(ACTIVE_PET_CHANGED_EVENT, handler);
+    return () => window.removeEventListener(ACTIVE_PET_CHANGED_EVENT, handler);
+  }, [refetchActive]);
 
   const handleSelect = async (petId: string) => {
     setActiveId(petId);
@@ -66,6 +77,7 @@ export default function PetSwitcher({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ petId }),
     });
+    window.dispatchEvent(new CustomEvent(ACTIVE_PET_CHANGED_EVENT, { detail: { petId } }));
     router.refresh();
   };
 
@@ -168,9 +180,6 @@ export default function PetSwitcher({
         )}
       </div>
 
-      {/* Theme swatch — real quick theme switch for the active pet.
-          Opt-in hidden via hideThemeSwitch; every existing page that
-          doesn't pass that prop keeps seeing it exactly as before. */}
       {!hideThemeSwitch && (
         <div className="relative inline-block">
           <button

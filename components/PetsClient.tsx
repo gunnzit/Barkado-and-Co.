@@ -14,6 +14,9 @@ const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Walk", SITTING: "Staycation", GROOMING: "Spa Groom", TRAINING: "Training",
 };
 
+// Must match the event name in PetSwitcher.tsx exactly.
+const ACTIVE_PET_CHANGED_EVENT = "barkado:active-pet-changed";
+
 type Pet = {
   id: string;
   name: string;
@@ -84,6 +87,7 @@ export default function PetsClient({
 }) {
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
+  const [localActiveId, setLocalActiveId] = useState<string | null>(activePetId);
   const [pawPointsBalance, setPawPointsBalance] = useState(0);
   const [switching, setSwitching] = useState<string | null>(null);
 
@@ -100,16 +104,32 @@ export default function PetsClient({
       .catch(() => {});
   }, []);
 
-  // Real switching — the same /api/active-pet endpoint PetSwitcher itself
-  // uses, not a direct cookie write. Keeps this button consistent with
-  // every other real "make active" control in the app.
+  // Keep this page's own "active" highlight in sync with the real
+  // server value once router.refresh() lands new props, AND stay
+  // responsive instantly to the event this button (or the header
+  // PetSwitcher) dispatches — same real event both places use.
+  useEffect(() => {
+    setLocalActiveId(activePetId);
+  }, [activePetId]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const petId = (e as CustomEvent).detail?.petId;
+      if (petId) setLocalActiveId(petId);
+    };
+    window.addEventListener(ACTIVE_PET_CHANGED_EVENT, handler);
+    return () => window.removeEventListener(ACTIVE_PET_CHANGED_EVENT, handler);
+  }, []);
+
   const setActive = async (petId: string) => {
     setSwitching(petId);
+    setLocalActiveId(petId); // optimistic — instant highlight, no flicker
     await fetch("/api/active-pet", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ petId }),
     });
+    window.dispatchEvent(new CustomEvent(ACTIVE_PET_CHANGED_EVENT, { detail: { petId } }));
     router.refresh();
     setSwitching(null);
   };
@@ -168,7 +188,7 @@ export default function PetsClient({
 
         <div className="space-y-3.5">
           {pets.map((p) => {
-            const isActive = p.id === activePetId;
+            const isActive = p.id === localActiveId;
             const age = formatAge(p.birthday);
             const vChip = vaccineChip(p.vaccinations);
             const chips: { text: string; tone: "green" | "amber" | "blue" | "red" }[] = [];
