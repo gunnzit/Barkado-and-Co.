@@ -14,5 +14,5 @@ export default async function PetsPage() {
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0];
   const initialThemeClass = resolveThemeClass(activePet);
 
-  return <PetsClient initialThemeClass={initialThemeClass} />;
+  return <PetsClient initialThemeClass={initialThemeClass} activePetId={activePet?.id ?? null} />;
 }

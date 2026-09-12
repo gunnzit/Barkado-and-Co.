@@ -34,6 +34,10 @@ const createSchema = z.object({
 // List the current user's own pets. PetsClient's "Your pets" page depends
 // on this — each pet includes vaccinations so the "N vaccines on record"
 // badge on the pet list can render without a second request per pet.
+//
+// Also now attaches each pet's real next upcoming booking (if any) —
+// additive to the response shape, nothing existing removed, so any other
+// consumer of this route keeps working unchanged.
 export async function GET() {
   const user = await getOrCreateUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -44,7 +48,35 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(pets);
+  const petIds = pets.map((p) => p.id);
+  const upcomingBookings = petIds.length > 0
+    ? await prisma.booking.findMany({
+        where: {
+          petId: { in: petIds },
+          status: { in: ["ACCEPTED", "IN_PROGRESS", "REQUESTED"] },
+          startTime: { gte: new Date() },
+        },
+        orderBy: { startTime: "asc" },
+        include: { provider: { include: { user: { select: { name: true } } } } },
+      })
+    : [];
+
+  const nextBookingByPet = new Map<string, (typeof upcomingBookings)[number]>();
+  for (const b of upcomingBookings) {
+    if (!nextBookingByPet.has(b.petId)) nextBookingByPet.set(b.petId, b);
+  }
+
+  const withBookings = pets.map((p) => {
+    const nb = nextBookingByPet.get(p.id);
+    return {
+      ...p,
+      nextBooking: nb
+        ? { type: nb.type, startTime: nb.startTime, providerName: nb.provider.user.name }
+        : null,
+    };
+  });
+
+  return NextResponse.json(withBookings);
 }
 
 export async function POST(req: Request) {
