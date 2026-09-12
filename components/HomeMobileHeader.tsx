@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
@@ -11,8 +11,6 @@ const H = { fontFamily: "var(--font-heading)" } as const;
 
 type Address = { id: string; label: string; fullAddress: string; receiverName: string; receiverPhone: string; isDefault: boolean };
 
-// Real example queries the placeholder cycles through — purely a UI
-// hint of what CAN be searched, not fabricated search results.
 const SEARCH_PHRASES = [
   "dog walking in 15m",
   "puppy food",
@@ -53,20 +51,13 @@ export default function HomeMobileHeader({
     }
   };
 
-  // Real search — Enter (or the search icon) navigates to the actual
-  // /search page. Assuming the standard `q` query param since that page's
-  // source hasn't been seen directly — if it reads a different param
-  // name, this is a one-line fix once confirmed.
-  const [query, setQuery] = useState("");
-  const submitSearch = () => {
-    const q = query.trim();
-    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
-  };
+  // Real search hand-off — the moment this field is tapped/focused, it
+  // opens the actual /search page (real debounced /api/search results,
+  // real recent-searches, real trending chips) rather than trying to
+  // duplicate any of that logic here. All real typing and suggestions
+  // happen on that page, not in this header.
+  const openSearch = () => router.push("/search");
 
-  // Real typewriter-cycling placeholder — types out each example phrase,
-  // pauses, deletes it, then types the next. Runs purely via local
-  // component state; stops mattering once the person actually types
-  // something (native placeholder just stops being visible then).
   const [placeholderText, setPlaceholderText] = useState("");
   useEffect(() => {
     let phraseIndex = 0;
@@ -141,23 +132,19 @@ export default function HomeMobileHeader({
           </button>
         </div>
 
-        <div className="relative flex items-center w-full h-10 rounded-xl px-3" style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(22,40,31,0.03)", border: "1px solid rgba(194,200,194,0.3)" }}>
-          <button onClick={submitSearch} aria-label="Search" className="shrink-0">
-            <Search size={18} color="#424844" className="mr-2" />
-          </button>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submitSearch();
-            }}
-            className="w-full bg-transparent text-xs placeholder:text-[#737874] focus:outline-none truncate"
-            placeholder={`Search '${placeholderText}'...`}
-          />
+        <button
+          onClick={openSearch}
+          className="relative flex items-center w-full h-10 rounded-xl px-3 text-left"
+          style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(22,40,31,0.03)", border: "1px solid rgba(194,200,194,0.3)" }}
+        >
+          <Search size={18} color="#424844" className="mr-2 shrink-0" />
+          <span className="flex-1 text-xs truncate" style={{ color: "#737874" }}>
+            Search '{placeholderText}'...
+          </span>
           <div className="flex items-center gap-1.5 pl-2 shrink-0" style={{ borderLeft: "1px solid rgba(194,200,194,0.3)" }}>
             <Mic size={17} color="#904c2c" />
           </div>
-        </div>
+        </button>
       </div>
 
       {pickerOpen && !loadingAddresses && (

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, Mic, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, Mic, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon, ChevronRight, Heart, Star } from "lucide-react";
 import { AccessoryCard } from "@/components/AccessoryCard";
+import { useFavorites } from "@/components/FavoritesProvider";
 
 const RECENT_KEY = "barkado_recent_searches";
 const MAX_RECENT = 6;
@@ -42,6 +43,12 @@ export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounced(query, 300);
 
+  const { favorites } = useFavorites();
+  const productFavorites = favorites.filter((f) => f.product);
+  const providerFavorites = favorites.filter((f) => f.provider);
+
+  const [activeTab, setActiveTab] = useState<"recent" | "wishlist" | "trending">("recent");
+
   useEffect(() => {
     inputRef.current?.focus();
     try {
@@ -51,6 +58,10 @@ export default function SearchPage() {
       // ignore malformed localStorage content
     }
   }, []);
+
+  useEffect(() => {
+    if (recent.length === 0 && favorites.length > 0) setActiveTab("wishlist");
+  }, [recent.length, favorites.length]);
 
   useEffect(() => {
     const q = debouncedQuery.trim();
@@ -91,6 +102,12 @@ export default function SearchPage() {
     commitToRecent(q);
   };
 
+  const TABS: { key: "recent" | "wishlist" | "trending"; label: string; count: number | null }[] = [
+    { key: "recent", label: "Recent", count: recent.length || null },
+    { key: "wishlist", label: "Wishlist", count: favorites.length || null },
+    { key: "trending", label: "Trending", count: null },
+  ];
+
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
       <div className="max-w-lg mx-auto pb-16">
@@ -125,44 +142,138 @@ export default function SearchPage() {
 
         {!query && (
           <div className="px-5">
-            {recent.length > 0 && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-bold text-sm">Recent searches</h2>
-                  <button onClick={clearRecent} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
-                    clear
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {recent.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => runQuery(r)}
-                      className="tap-scale px-3.5 py-2 rounded-full text-xs font-medium"
-                      style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+            <div className="flex items-center gap-1.5 mb-5 p-1 rounded-full" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className="flex-1 tap-scale py-2 rounded-full text-xs font-bold flex items-center justify-center gap-1"
+                  style={{
+                    background: activeTab === t.key ? "var(--panel-dark)" : "transparent",
+                    color: activeTab === t.key ? "white" : "var(--muted)",
+                  }}
+                >
+                  {t.label}
+                  {t.count != null && (
+                    <span
+                      className="text-[10px] px-1.5 rounded-full"
+                      style={{
+                        background: activeTab === t.key ? "rgba(255,255,255,0.2)" : "var(--cream)",
+                        color: activeTab === t.key ? "white" : "var(--muted)",
+                      }}
                     >
-                      {r}
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "recent" && (
+              recent.length > 0 ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="font-bold text-sm">Recent searches</h2>
+                    <button onClick={clearRecent} className="text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
+                      clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recent.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => runQuery(r)}
+                        className="tap-scale px-3.5 py-2 rounded-full text-xs font-medium"
+                        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm py-10 text-center" style={{ color: "var(--muted)" }}>No recent searches yet.</p>
+              )
+            )}
+
+            {activeTab === "wishlist" && (
+              favorites.length > 0 ? (
+                <div className="space-y-6">
+                  {productFavorites.length > 0 && (
+                    <div>
+                      <h2 className="font-bold text-sm mb-3">Saved products</h2>
+                      <div className="space-y-2.5">
+                        {productFavorites.map((f) => (
+                          <Link
+                            key={f.id}
+                            href={`/accessories/${f.product!.id}`}
+                            className="card tap-scale flex items-center gap-3"
+                          >
+                            <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 flex items-center justify-center" style={{ background: "var(--cream)" }}>
+                              {f.product!.imageUrls?.[0] ? (
+                                <img src={f.product!.imageUrls[0]} alt={f.product!.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <Heart size={16} color="var(--muted)" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm truncate">{f.product!.name}</p>
+                              <p className="text-xs" style={{ color: "var(--muted)" }}>₹{(f.product!.price / 100).toFixed(0)}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {providerFavorites.length > 0 && (
+                    <div>
+                      <h2 className="font-bold text-sm mb-3">Saved providers</h2>
+                      <div className="space-y-2.5">
+                        {providerFavorites.map((f) => (
+                          <div key={f.id} className="card flex items-center gap-3">
+                            <img
+                              src={f.provider!.photoUrl || `https://i.pravatar.cc/150?u=${f.provider!.id}`}
+                              alt={f.provider!.user.name}
+                              className="w-11 h-11 rounded-full object-cover shrink-0"
+                              style={{ border: "1px solid var(--border)" }}
+                            />
+                            <div>
+                              <p className="font-semibold text-sm">{f.provider!.user.name}</p>
+                              <span className="flex items-center gap-1 text-xs" style={{ color: "var(--muted)" }}>
+                                <Star size={11} fill="var(--gold)" color="var(--gold)" /> {f.provider!.ratingAvg.toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <Heart size={28} color="var(--muted)" className="mx-auto mb-2" />
+                  <p className="text-sm" style={{ color: "var(--muted)" }}>Nothing saved yet — tap the heart on any provider or product.</p>
+                </div>
+              )
+            )}
+
+            {activeTab === "trending" && (
+              <div>
+                <h2 className="font-bold text-sm mb-3">Trending</h2>
+                <div className="flex flex-wrap gap-2">
+                  {TRENDING.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => runQuery(t)}
+                      className="tap-scale px-3.5 py-2 rounded-full text-xs font-medium"
+                      style={{ background: "var(--cream)", border: "1px solid var(--border)", color: "var(--terracotta)" }}
+                    >
+                      {t}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-
-            <div>
-              <h2 className="font-bold text-sm mb-3">Trending</h2>
-              <div className="flex flex-wrap gap-2">
-                {TRENDING.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => runQuery(t)}
-                    className="tap-scale px-3.5 py-2 rounded-full text-xs font-medium"
-                    style={{ background: "var(--cream)", border: "1px solid var(--border)", color: "var(--terracotta)" }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
