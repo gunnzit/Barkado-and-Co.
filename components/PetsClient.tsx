@@ -78,10 +78,10 @@ function vaccineChip(vaccinations: Pet["vaccinations"]): { text: string; tone: "
 
 export default function PetsClient({
   initialThemeClass = "",
-  activePetId,
+  activePetId = null,
 }: {
   initialThemeClass?: string;
-  activePetId: string | null;
+  activePetId?: string | null;
 }) {
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
