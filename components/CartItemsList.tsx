@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Minus, Plus, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon } from "lucide-react";
+import { Minus, Plus, X, PawPrint, Scissors, GraduationCap, Home as HomeIcon, Tag, Sparkles, MessageSquare, Truck, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import RazorpayCheckoutButton from "@/components/RazorpayCheckoutButton";
 import { computeServiceCommission } from "@/lib/commission";
+import { computeCartTotals, FREE_DELIVERY_THRESHOLD_PAISE, WELCOME10_CODE } from "@/lib/checkoutPricing";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -20,10 +22,6 @@ const SERVICE_ICON: Record<string, any> = {
   TRAINING: GraduationCap,
 };
 
-// Category color-coding from the design system — each service type gets its
-// own accent (Adventure Walk = forest, Home Staycation = terracotta,
-// Luxury Spa = gold, Good Manners = heritage red), used at low opacity for
-// the icon badge background and full opacity for the icon itself.
 const SERVICE_COLOR: Record<string, string> = {
   WALKING: "var(--forest)",
   SITTING: "var(--terracotta)",
@@ -43,18 +41,55 @@ export default function CartItemsList() {
   const serviceItems = items.filter((i) => i.kind === "SERVICE");
   const productItems = items.filter((i) => i.kind === "PRODUCT" && i.product);
 
-  const itemsTotal = items.reduce((sum, i) => {
-    if (i.kind === "PRODUCT" && i.product) return sum + i.product.price * i.quantity;
-    if (i.kind === "SERVICE") return sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise;
-    return sum;
-  }, 0);
-
-  const maintenanceFeeTotal = serviceItems.reduce(
+  const productSubtotalPaise = productItems.reduce((sum, i) => sum + i.product!.price * i.quantity, 0);
+  const serviceSellingPaise = serviceItems.reduce(
+    (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise,
+    0
+  );
+  const maintenanceFeePaise = serviceItems.reduce(
     (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).maintenanceFeePaise,
     0
   );
 
-  const grandTotal = itemsTotal + maintenanceFeeTotal;
+  // Real PawPoints balance — fetched client-side from the same endpoint
+  // the floating PawPoints badge already uses.
+  const [pawPointsBalance, setPawPointsBalance] = useState(0);
+  useEffect(() => {
+    fetch("/api/owner/pawpoints")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setPawPointsBalance(data.balance ?? 0))
+      .catch(() => {});
+  }, []);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [redeemPointsEnabled, setRedeemPointsEnabled] = useState(false);
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [gateCode, setGateCode] = useState("");
+
+  const applyCoupon = () => {
+    setCouponError(null);
+    if (couponInput.trim().toUpperCase() === WELCOME10_CODE) {
+      setAppliedCoupon(WELCOME10_CODE);
+    } else {
+      setCouponError("Invalid or expired code");
+    }
+  };
+
+  // Redeem up to the full available balance when the toggle is on —
+  // computeCartTotals caps it to what's actually owed, so this never
+  // over-redeems.
+  const requestedRedeemPoints = redeemPointsEnabled ? pawPointsBalance : 0;
+
+  const totals = computeCartTotals({
+    productSubtotalPaise,
+    serviceSellingPaise,
+    maintenanceFeePaise,
+    couponCode: appliedCoupon,
+    redeemPoints: requestedRedeemPoints,
+    pawPointsBalance,
+  });
 
   if (!loading && items.length === 0) {
     return (
@@ -70,8 +105,34 @@ export default function CartItemsList() {
     );
   }
 
+  const deliveryProgressPct = Math.min(100, Math.round((totals.itemsTotalPaise / FREE_DELIVERY_THRESHOLD_PAISE) * 100));
+
   return (
     <>
+      {/* Free delivery progress — real threshold, no fake "2x points" claim */}
+      {totals.deliveryFeePaise > 0 && (
+        <div className="px-6 pb-3">
+          <div className="card rounded-xl">
+            <div className="flex items-center justify-between text-label-sm mb-2">
+              <span className="flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+                <Truck size={14} /> Add ₹{(totals.freeDeliveryRemainingPaise / 100).toFixed(0)} more for free delivery
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full" style={{ background: "var(--cream)" }}>
+              <div className="h-full rounded-full" style={{ width: `${deliveryProgressPct}%`, background: "var(--terracotta)" }} />
+            </div>
+          </div>
+        </div>
+      )}
+      {totals.deliveryFeePaise === 0 && (
+        <div className="px-6 pb-3">
+          <div className="card rounded-xl flex items-center gap-2" style={{ background: "var(--cream)" }}>
+            <CheckCircle2 size={16} color="var(--forest)" />
+            <span className="text-label-sm font-semibold">Free delivery unlocked</span>
+          </div>
+        </div>
+      )}
+
       <div className="px-6 pb-4 space-y-3">
         {serviceItems.map((item) => {
           const Icon = SERVICE_ICON[item.serviceType ?? "WALKING"];
@@ -138,6 +199,92 @@ export default function CartItemsList() {
 
       {items.length > 0 && (
         <>
+          {/* Coupon */}
+          <div className="px-6 pb-3">
+            <div className="card rounded-xl">
+              <p className="text-label-sm font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+                <Tag size={13} /> Coupons &amp; Offers
+              </p>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-body-md font-semibold">
+                    <CheckCircle2 size={15} color="var(--forest)" /> {appliedCoupon} applied
+                  </span>
+                  <button onClick={() => setAppliedCoupon(null)} className="text-label-sm font-semibold" style={{ color: "var(--terracotta)" }}>
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      placeholder="Enter code"
+                      className="flex-1 text-sm px-3 py-2 rounded-lg"
+                      style={{ border: "1px solid var(--border)" }}
+                    />
+                    <button onClick={applyCoupon} className="btn-secondary text-sm shrink-0">Apply</button>
+                  </div>
+                  {couponError && <p className="text-label-sm mt-1.5" style={{ color: "var(--heritage-red)" }}>{couponError}</p>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* PawPoints redemption — the main real feature here */}
+          {pawPointsBalance > 0 && (
+            <div className="px-6 pb-3">
+              <div className="card rounded-xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles size={18} color="var(--gold)" />
+                  <div>
+                    <p className="font-heading text-label-md">PawPoints Balance</p>
+                    <p className="text-label-sm" style={{ color: "var(--muted)" }}>{pawPointsBalance.toLocaleString("en-IN")} points available</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setRedeemPointsEnabled(!redeemPointsEnabled)}
+                  className="w-11 h-6 rounded-full relative tap-scale shrink-0"
+                  style={{ background: redeemPointsEnabled ? "var(--terracotta)" : "var(--border)" }}
+                  aria-label="Toggle PawPoints redemption"
+                >
+                  <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: redeemPointsEnabled ? 22 : 2 }} />
+                </button>
+              </div>
+              {redeemPointsEnabled && totals.actualPointsSpent > 0 && (
+                <div className="mt-2 flex justify-between text-label-sm px-1">
+                  <span style={{ color: "var(--muted)" }}>Redeem {totals.actualPointsSpent.toLocaleString("en-IN")} PawPoints</span>
+                  <span className="font-semibold" style={{ color: "var(--terracotta)" }}>-₹{(totals.pointsDiscountPaise / 100).toFixed(2)} applied</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Real delivery/rider instructions */}
+          <div className="px-6 pb-3">
+            <div className="card rounded-xl">
+              <p className="text-label-sm font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5" style={{ color: "var(--muted)" }}>
+                <MessageSquare size={13} /> Rider &amp; Groomer Instructions
+              </p>
+              <textarea
+                value={deliveryInstructions}
+                onChange={(e) => setDeliveryInstructions(e.target.value)}
+                placeholder="e.g. Ring bell softly, dog gets excited"
+                rows={2}
+                className="w-full text-sm px-3 py-2 rounded-lg mb-2"
+                style={{ border: "1px solid var(--border)" }}
+              />
+              <input
+                value={gateCode}
+                onChange={(e) => setGateCode(e.target.value)}
+                placeholder="Gate code (optional)"
+                className="w-full text-sm px-3 py-2 rounded-lg"
+                style={{ border: "1px solid var(--border)" }}
+              />
+            </div>
+          </div>
+
           <div className="px-6 mb-28">
             <div className="card rounded-xl">
               <p className="text-label-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--muted)" }}>
@@ -145,12 +292,32 @@ export default function CartItemsList() {
               </p>
               <div className="flex justify-between text-body-md mb-2">
                 <span style={{ color: "var(--muted)" }}>Items total</span>
-                <span className="font-semibold">₹{(itemsTotal / 100).toFixed(0)}</span>
+                <span className="font-semibold">₹{(totals.itemsTotalPaise / 100).toFixed(0)}</span>
               </div>
-              {maintenanceFeeTotal > 0 && (
+              {maintenanceFeePaise > 0 && (
                 <div className="flex justify-between text-body-md mb-2">
                   <span style={{ color: "var(--muted)" }}>Maintenance fee</span>
-                  <span className="font-semibold">₹{(maintenanceFeeTotal / 100).toFixed(0)}</span>
+                  <span className="font-semibold">₹{(maintenanceFeePaise / 100).toFixed(0)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-body-md mb-2">
+                <span style={{ color: "var(--muted)" }}>Delivery</span>
+                <span className="font-semibold">{totals.deliveryFeePaise > 0 ? `₹${(totals.deliveryFeePaise / 100).toFixed(0)}` : "FREE"}</span>
+              </div>
+              {totals.couponDiscountPaise > 0 && (
+                <div className="flex justify-between text-body-md mb-2" style={{ color: "var(--terracotta)" }}>
+                  <span>Coupon ({appliedCoupon})</span>
+                  <span className="font-semibold">-₹{(totals.couponDiscountPaise / 100).toFixed(0)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-body-md mb-2">
+                <span style={{ color: "var(--muted)" }}>GST (18%)</span>
+                <span className="font-semibold">₹{(totals.gstPaise / 100).toFixed(0)}</span>
+              </div>
+              {totals.pointsDiscountPaise > 0 && (
+                <div className="flex justify-between text-body-md mb-2" style={{ color: "var(--terracotta)" }}>
+                  <span>PawPoints redeemed</span>
+                  <span className="font-semibold">-₹{(totals.pointsDiscountPaise / 100).toFixed(0)}</span>
                 </div>
               )}
               <div
@@ -158,7 +325,7 @@ export default function CartItemsList() {
                 style={{ borderTop: "1px solid var(--border)" }}
               >
                 <span>Grand total</span>
-                <span>₹{(grandTotal / 100).toFixed(0)}</span>
+                <span>₹{(totals.grandTotalPaise / 100).toFixed(0)}</span>
               </div>
             </div>
           </div>
@@ -175,10 +342,23 @@ export default function CartItemsList() {
             <div className="max-w-lg mx-auto flex items-center gap-4">
               <div className="shrink-0">
                 <p className="text-label-sm" style={{ color: "var(--muted)" }}>Total</p>
-                <p className="font-heading text-headline-md">₹{(grandTotal / 100).toFixed(0)}</p>
+                <p className="font-heading text-headline-md">₹{(totals.grandTotalPaise / 100).toFixed(0)}</p>
               </div>
               <div className="flex-1">
-                <RazorpayCheckoutButton amountLabel={`₹${(grandTotal / 100).toFixed(0)}`} disabled={items.length === 0} />
+                {/* NOTE: RazorpayCheckoutButton needs to accept and forward
+                    these new checkout params to /api/checkout/create-order
+                    — not yet wired since I don't have that component's
+                    source. See chat note. */}
+                <RazorpayCheckoutButton
+                  amountLabel={`₹${(totals.grandTotalPaise / 100).toFixed(0)}`}
+                  disabled={items.length === 0}
+                  checkoutExtras={{
+                    couponCode: appliedCoupon ?? undefined,
+                    redeemPoints: totals.actualPointsSpent || undefined,
+                    deliveryInstructions: deliveryInstructions.trim() || undefined,
+                    gateCode: gateCode.trim() || undefined,
+                  }}
+                />
               </div>
             </div>
           </div>

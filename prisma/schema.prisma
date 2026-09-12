@@ -622,6 +622,25 @@ model Order {
   bookings Booking[]
   pawPointsTransactions PawPointsTransaction[]
   pawPointsRewardRedemptions PawPointsRewardRedemption[]
+  Add these fields to your `model Order { ... }` block:
+
+  // Real checkout pricing breakdown, stored at order-creation time so
+  // there's an auditable record of exactly what was charged and why —
+  // not just the final totalAmount. All in paise except couponCode.
+  couponCode           String?
+  couponDiscountPaise  Int?
+  deliveryFeePaise     Int?
+  gstPaise             Int?
+  // Points the customer asked to redeem at checkout — the REAL
+  // PawPointsTransaction (type REDEEMED) is created only after payment
+  // is confirmed (in your payment-verification/webhook route), not
+  // here. This field just records the intent so that route knows what
+  // to finalize.
+  pawPointsRedeemed    Int?
+  // Real delivery/handling instructions collected at checkout — replaces
+  // the mockup's "Rider & Groomer Instructions" card.
+  deliveryInstructions String?
+  gateCode             String?
 }
 
 // One row per real points event — earning, redeeming, or reversing either

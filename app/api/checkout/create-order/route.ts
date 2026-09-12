@@ -1,16 +1,30 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { razorpay } from "@/lib/razorpay";
 import { computeServiceCommission } from "@/lib/commission";
+import { computeCartTotals } from "@/lib/checkoutPricing";
+import { getPawPointsBalance } from "@/lib/pawPoints";
 
-// Computes the current cart total, opens a matching order on Razorpay, and
-// records a local PENDING Order row linking the two. The client uses the
-// returned razorpayOrderId to open the Razorpay Checkout widget.
-export async function POST() {
+const bodySchema = z.object({
+  couponCode: z.string().optional(),
+  redeemPoints: z.number().nonnegative().optional(),
+  deliveryInstructions: z.string().optional(),
+  gateCode: z.string().optional(),
+});
+
+export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = bodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+    const { couponCode, redeemPoints, deliveryInstructions, gateCode } = parsed.data;
 
     const cartItems = await prisma.cartItem.findMany({
       where: { userId: user.id },
@@ -20,31 +34,55 @@ export async function POST() {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    const totalAmount = cartItems.reduce((sum, item) => {
-      if (item.kind === "PRODUCT" && item.product) {
-        return sum + item.product.price * item.quantity;
-      }
-      if (item.kind === "SERVICE") {
-        // priceAmount on the cart item is the BASE price — the owner
-        // actually pays base + 8% (split as selling-price markup +
-        // separate maintenance fee, itemized in the cart UI).
-        return sum + computeServiceCommission(item.priceAmount ?? 0).ownerTotalPaise;
-      }
+    const productSubtotalPaise = cartItems.reduce((sum, item) => {
+      if (item.kind === "PRODUCT" && item.product) return sum + item.product.price * item.quantity;
       return sum;
     }, 0);
 
-    if (totalAmount <= 0) {
-      return NextResponse.json({ error: "Cart total is invalid" }, { status: 400 });
+    const serviceItems = cartItems.filter((i) => i.kind === "SERVICE");
+    const serviceSellingPaise = serviceItems.reduce(
+      (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).sellingPricePaise,
+      0
+    );
+    const maintenanceFeePaise = serviceItems.reduce(
+      (sum, i) => sum + computeServiceCommission(i.priceAmount ?? 0).maintenanceFeePaise,
+      0
+    );
+
+    const pawPointsBalance = await getPawPointsBalance(user.id);
+
+    const totals = computeCartTotals({
+      productSubtotalPaise,
+      serviceSellingPaise,
+      maintenanceFeePaise,
+      couponCode: couponCode ?? null,
+      redeemPoints: redeemPoints ?? 0,
+      pawPointsBalance,
+    });
+
+    if (totals.grandTotalPaise <= 0) {
+      return NextResponse.json({ error: "Order total is invalid" }, { status: 400 });
     }
 
     const localOrder = await prisma.order.create({
-      data: { userId: user.id, status: "PENDING", totalAmount },
+      data: {
+        userId: user.id,
+        status: "PENDING",
+        totalAmount: totals.grandTotalPaise,
+        couponCode: totals.couponValid ? couponCode!.trim().toUpperCase() : null,
+        couponDiscountPaise: totals.couponDiscountPaise,
+        deliveryFeePaise: totals.deliveryFeePaise,
+        gstPaise: totals.gstPaise,
+        pawPointsRedeemed: totals.actualPointsSpent,
+        deliveryInstructions: deliveryInstructions?.trim() || null,
+        gateCode: gateCode?.trim() || null,
+      },
     });
 
     let razorpayOrder;
     try {
       razorpayOrder = await razorpay.orders.create({
-        amount: totalAmount,
+        amount: totals.grandTotalPaise,
         currency: "INR",
         receipt: localOrder.id,
       });
@@ -63,7 +101,7 @@ export async function POST() {
     return NextResponse.json({
       localOrderId: updatedOrder.id,
       razorpayOrderId: razorpayOrder.id,
-      amount: totalAmount,
+      amount: totals.grandTotalPaise,
       currency: "INR",
     });
   } catch (err) {
