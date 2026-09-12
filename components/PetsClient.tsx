@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, ArrowLeft, Plus, Check, Sparkles } from "lucide-react";
+import { ChevronRight, ArrowLeft, Plus, Check, PawPrint } from "lucide-react";
 import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
-import ThemeToggle from "@/components/ThemeToggle";
 import { derivePassportNumber } from "@/lib/passportId";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
@@ -116,10 +115,9 @@ export default function PetsClient({
         <div className="flex items-center justify-between">
           <PetSwitcher />
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: "#f4eada", color: "#a26227" }}>
-              <Sparkles size={12} /> {pawPointsBalance.toLocaleString("en-IN")} pts
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold" style={{ background: "#f4eada", color: "#a26227", border: "1px solid #e9dcc8" }}>
+              <PawPrint size={13} /> {pawPointsBalance.toLocaleString("en-IN")} pts
             </div>
-            <ThemeToggle />
             <ProfileMenu />
           </div>
         </div>
