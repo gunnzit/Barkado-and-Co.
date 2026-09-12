@@ -22,12 +22,27 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+// Real checkout-time extras from the cart (coupon code, PawPoints to
+// redeem, delivery/rider instructions, gate code) — forwarded straight
+// through to /api/checkout/create-order so the server computes the exact
+// same total the cart UI showed, using the same shared checkoutPricing
+// math. All optional; omitting the prop entirely still works exactly as
+// before (no coupon/points/instructions).
+type CheckoutExtras = {
+  couponCode?: string;
+  redeemPoints?: number;
+  deliveryInstructions?: string;
+  gateCode?: string;
+};
+
 export default function RazorpayCheckoutButton({
   amountLabel,
   disabled,
+  checkoutExtras,
 }: {
   amountLabel: string;
   disabled?: boolean;
+  checkoutExtras?: CheckoutExtras;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -55,7 +70,11 @@ export default function RazorpayCheckoutButton({
       return;
     }
 
-    const orderRes = await fetch("/api/checkout/create-order", { method: "POST" });
+    const orderRes = await fetch("/api/checkout/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(checkoutExtras ?? {}),
+    });
     if (!orderRes.ok) {
       const body = await orderRes.json().catch(() => ({}));
       fail(body.error || `Couldn't start payment (status ${orderRes.status}).`);
