@@ -1,7 +1,8 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
 import LocationPickerModal from "@/components/LocationPickerModal";
@@ -9,6 +10,17 @@ import LocationPickerModal from "@/components/LocationPickerModal";
 const H = { fontFamily: "var(--font-heading)" } as const;
 
 type Address = { id: string; label: string; fullAddress: string; receiverName: string; receiverPhone: string; isDefault: boolean };
+
+// Real example queries the placeholder cycles through — purely a UI
+// hint of what CAN be searched, not fabricated search results.
+const SEARCH_PHRASES = [
+  "dog walking in 15m",
+  "puppy food",
+  "spa van nearby",
+  "dog groomer today",
+  "training classes",
+  "leashes & collars",
+];
 
 export default function HomeMobileHeader({
   userAddress,
@@ -22,6 +34,7 @@ export default function HomeMobileHeader({
   pawPointsBalance: number;
 }) {
   const { user } = useUser();
+  const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -39,6 +52,52 @@ export default function HomeMobileHeader({
       setLoadingAddresses(false);
     }
   };
+
+  // Real search — Enter (or the search icon) navigates to the actual
+  // /search page. Assuming the standard `q` query param since that page's
+  // source hasn't been seen directly — if it reads a different param
+  // name, this is a one-line fix once confirmed.
+  const [query, setQuery] = useState("");
+  const submitSearch = () => {
+    const q = query.trim();
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
+
+  // Real typewriter-cycling placeholder — types out each example phrase,
+  // pauses, deletes it, then types the next. Runs purely via local
+  // component state; stops mattering once the person actually types
+  // something (native placeholder just stops being visible then).
+  const [placeholderText, setPlaceholderText] = useState("");
+  useEffect(() => {
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const current = SEARCH_PHRASES[phraseIndex];
+      if (!deleting) {
+        charIndex += 1;
+        setPlaceholderText(current.slice(0, charIndex));
+        if (charIndex === current.length) {
+          deleting = true;
+          timeoutId = setTimeout(tick, 1400);
+          return;
+        }
+      } else {
+        charIndex -= 1;
+        setPlaceholderText(current.slice(0, charIndex));
+        if (charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % SEARCH_PHRASES.length;
+        }
+      }
+      timeoutId = setTimeout(tick, deleting ? 35 : 65);
+    };
+
+    timeoutId = setTimeout(tick, 600);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   return (
     <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(251,250,238,0.95)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
@@ -83,11 +142,17 @@ export default function HomeMobileHeader({
         </div>
 
         <div className="relative flex items-center w-full h-10 rounded-xl px-3" style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(22,40,31,0.03)", border: "1px solid rgba(194,200,194,0.3)" }}>
-          <Search size={18} color="#424844" className="mr-2 shrink-0" />
+          <button onClick={submitSearch} aria-label="Search" className="shrink-0">
+            <Search size={18} color="#424844" className="mr-2" />
+          </button>
           <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitSearch();
+            }}
             className="w-full bg-transparent text-xs placeholder:text-[#737874] focus:outline-none truncate"
-            placeholder="Search 'dog walking in 15m', 'puppy food', 'spa van'..."
-            readOnly
+            placeholder={`Search '${placeholderText}'...`}
           />
           <div className="flex items-center gap-1.5 pl-2 shrink-0" style={{ borderLeft: "1px solid rgba(194,200,194,0.3)" }}>
             <Mic size={17} color="#904c2c" />
