@@ -95,9 +95,9 @@ export default function LocationPickerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 flex items-end sm:items-center justify-center" style={{ zIndex: 99999 }}>
       <div className="absolute inset-0" style={{ background: "rgba(2,18,10,0.5)" }} onClick={onClose} />
-      <div className="relative w-full sm:max-w-md max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: "#fbfaee" }}>
+      <div className="relative w-full sm:max-w-md max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: "#fbfaee" }}>
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
             <h2 className="font-extrabold text-lg" style={{ ...H, color: "#02120a" }}>Select Service Location</h2>
@@ -150,6 +150,9 @@ export default function LocationPickerModal({
           </div>
 
           <div className="flex flex-col gap-2.5 mb-3">
+            {filtered.length === 0 && (
+              <p className="text-xs text-center py-3" style={{ color: "#737874" }}>No saved addresses yet — add one below.</p>
+            )}
             {filtered.map((a) => {
               const Icon = iconFor(a.label);
               const isSelected = a.id === selectedId;
@@ -206,7 +209,7 @@ export default function LocationPickerModal({
             </button>
           )}
 
-          <div className="flex items-start gap-2.5 p-3 rounded-xl mt-3 opacity-70" style={{ background: "#efeee3" }} title="Placeholder — real access notes/gate codes not built yet">
+          <div className="flex items-start gap-2.5 p-3 rounded-xl mt-3 mb-1 opacity-70" style={{ background: "#efeee3" }} title="Placeholder — real access notes/gate codes not built yet">
             <PawPrint size={16} color="#904c2c" className="shrink-0 mt-0.5" />
             <p className="text-[10px] leading-snug" style={{ color: "#424844" }}>
               <span className="font-bold">Pet-Specific Access Notes</span> — gate codes, lift instructions, and handling cues aren't tracked per-address yet.
@@ -214,7 +217,7 @@ export default function LocationPickerModal({
           </div>
         </div>
 
-        <div className="p-4 flex items-center justify-between gap-3 shrink-0" style={{ background: "#02120a" }}>
+        <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex items-center justify-between gap-3 shrink-0" style={{ background: "#02120a" }}>
           <div className="min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(228,227,215,0.7)" }}>Selected Location</p>
             <p className="text-xs font-bold truncate" style={{ color: "white", ...H }}>{selected ? `${selected.fullAddress.split(",")[0]} • ${selected.label}` : "No address selected"}</p>
