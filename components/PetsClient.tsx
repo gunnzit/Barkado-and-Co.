@@ -100,11 +100,18 @@ export default function PetsClient({
       .catch(() => {});
   }, []);
 
-  const setActive = (petId: string) => {
+  // Real switching — the same /api/active-pet endpoint PetSwitcher itself
+  // uses, not a direct cookie write. Keeps this button consistent with
+  // every other real "make active" control in the app.
+  const setActive = async (petId: string) => {
     setSwitching(petId);
-    document.cookie = `active_pet_id=${petId}; path=/; max-age=31536000`;
+    await fetch("/api/active-pet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ petId }),
+    });
     router.refresh();
-    setTimeout(() => setSwitching(null), 400);
+    setSwitching(null);
   };
 
   const themeClass = initialThemeClass;
@@ -113,7 +120,7 @@ export default function PetsClient({
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
       <header className="sticky top-0 z-30 px-5 pt-3 pb-3" style={{ background: "rgba(251,250,238,0.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
         <div className="flex items-center justify-between">
-          <PetSwitcher />
+          <PetSwitcher display="active" hideThemeSwitch />
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold" style={{ background: "#f4eada", color: "#a26227", border: "1px solid #e9dcc8" }}>
               <PawPrint size={13} /> {pawPointsBalance.toLocaleString("en-IN")} pts

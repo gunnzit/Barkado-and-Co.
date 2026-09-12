@@ -9,7 +9,21 @@ import { THEME_OPTIONS } from "@/lib/breedTheme";
 
 type Pet = { id: string; name: string; breed?: string | null; photoUrl?: string | null; themeOverride?: string | null };
 
-export default function PetSwitcher({ avatarOnly = false }: { avatarOnly?: boolean }) {
+export default function PetSwitcher({
+  avatarOnly = false,
+  hideThemeSwitch = false,
+  display = "viewing",
+}: {
+  avatarOnly?: boolean;
+  // Opt-in only — every existing usage keeps showing the real theme
+  // swatch button unless explicitly hidden, so this never changes
+  // behavior anywhere it wasn't touched.
+  hideThemeSwitch?: boolean;
+  // "viewing" (default, unchanged everywhere else) renders "Viewing
+  // {name}". "active" renders the two-line "ACTIVE / {name} ⌄" pill
+  // style, opt-in for pages that want that exact look.
+  display?: "viewing" | "active";
+}) {
   const { isSignedIn } = useUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -29,7 +43,6 @@ export default function PetSwitcher({ avatarOnly = false }: { avatarOnly?: boole
       const petsData: Pet[] = petsRes.ok ? await petsRes.json() : [];
       const activeData = activeRes.ok ? await activeRes.json() : { petId: null };
       setPets(petsData);
-      // If the URL itself names a pet (a pet detail page), that pet is the active one visually.
       const urlPetId = pathname.match(/^\/owner\/pets\/([^/]+)/)?.[1];
       const fallback = petsData[0]?.id ?? null;
       setActiveId(urlPetId || activeData.petId || fallback);
@@ -111,7 +124,17 @@ export default function PetSwitcher({ avatarOnly = false }: { avatarOnly?: boole
             </span>
           )}
 
-          {!avatarOnly && (
+          {!avatarOnly && display === "active" && (
+            <div className="text-left leading-none">
+              <span className="text-[10px] uppercase tracking-wider font-bold block" style={{ color: "var(--muted)" }}>Active</span>
+              <span className="text-xs font-bold flex items-center gap-1 mt-0.5">
+                {activePet.name}
+                {pets.length > 1 && <ChevronDown size={13} color="var(--muted)" />}
+              </span>
+            </div>
+          )}
+
+          {!avatarOnly && display === "viewing" && (
             <>
               <span className="text-xs font-semibold whitespace-nowrap">Viewing {activePet.name}</span>
               {pets.length > 1 && <ChevronDown size={13} color="var(--muted)" />}
@@ -145,52 +168,56 @@ export default function PetSwitcher({ avatarOnly = false }: { avatarOnly?: boole
         )}
       </div>
 
-      {/* Theme swatch — quick theme switch for the active pet, right beside the switcher */}
-      <div className="relative inline-block">
-        <button
-          onClick={() => setThemeMenuOpen((v) => !v)}
-          className="tap-scale rounded-full flex items-center justify-center"
-          style={{ width: 30, height: 30, background: currentThemeSwatch, border: "1px solid var(--border)" }}
-          aria-label="Change theme"
-        >
-          <Palette size={12} color="white" style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.5))" }} />
-        </button>
+      {/* Theme swatch — real quick theme switch for the active pet.
+          Opt-in hidden via hideThemeSwitch; every existing page that
+          doesn't pass that prop keeps seeing it exactly as before. */}
+      {!hideThemeSwitch && (
+        <div className="relative inline-block">
+          <button
+            onClick={() => setThemeMenuOpen((v) => !v)}
+            className="tap-scale rounded-full flex items-center justify-center"
+            style={{ width: 30, height: 30, background: currentThemeSwatch, border: "1px solid var(--border)" }}
+            aria-label="Change theme"
+          >
+            <Palette size={12} color="white" style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.5))" }} />
+          </button>
 
-        {themeMenuOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
-            <div
-              className="absolute top-full right-0 mt-2 rounded-xl overflow-hidden z-50 shadow-lg p-3"
-              style={{ background: "var(--card)", border: "1px solid var(--border)", minWidth: 200 }}
-            >
-              <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--muted)" }}>Theme for {activePet.name}</p>
-              <div className="grid grid-cols-3 gap-2">
-                {THEME_OPTIONS.map((opt) => {
-                  const isActive = currentThemeKey === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      onClick={() => setPetTheme(activePet.id, opt.key)}
-                      className="tap-scale flex flex-col items-center gap-1"
-                    >
-                      <span
-                        className="w-8 h-8 rounded-full block"
-                        style={{
-                          background: opt.swatch,
-                          boxShadow: isActive ? "0 0 0 2px var(--card), 0 0 0 3.5px var(--terracotta)" : "none",
-                        }}
-                      />
-                      <span className="text-[9px] text-center leading-tight" style={{ color: isActive ? "var(--terracotta)" : "var(--muted)", fontWeight: isActive ? 700 : 500 }}>
-                        {opt.label === "Auto (match breed)" ? "Auto" : opt.label.split(" ")[0]}
-                      </span>
-                    </button>
-                  );
-                })}
+          {themeMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+              <div
+                className="absolute top-full right-0 mt-2 rounded-xl overflow-hidden z-50 shadow-lg p-3"
+                style={{ background: "var(--card)", border: "1px solid var(--border)", minWidth: 200 }}
+              >
+                <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--muted)" }}>Theme for {activePet.name}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {THEME_OPTIONS.map((opt) => {
+                    const isActive = currentThemeKey === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        onClick={() => setPetTheme(activePet.id, opt.key)}
+                        className="tap-scale flex flex-col items-center gap-1"
+                      >
+                        <span
+                          className="w-8 h-8 rounded-full block"
+                          style={{
+                            background: opt.swatch,
+                            boxShadow: isActive ? "0 0 0 2px var(--card), 0 0 0 3.5px var(--terracotta)" : "none",
+                          }}
+                        />
+                        <span className="text-[9px] text-center leading-tight" style={{ color: isActive ? "var(--terracotta)" : "var(--muted)", fontWeight: isActive ? 700 : 500 }}>
+                          {opt.label === "Auto (match breed)" ? "Auto" : opt.label.split(" ")[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
