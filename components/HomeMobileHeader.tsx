@@ -2,15 +2,18 @@
 
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Sparkles, ShoppingBag, User, Search, Mic } from "lucide-react";
-import LocationHeader from "@/components/LocationHeader";
+import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
-// NOTE: intentionally NOT fixed/sticky — scrolls away with the rest of
-// the page, per explicit correction. Previously used `fixed top-0`,
-// which required a matching top-padding hack on <main> in HomeUnified;
-// both are removed together so there's no leftover empty gap.
+// The real LocationHeader component renders its own full secondary block
+// (duplicate "Barkado & Co." brand name, its own tagline, differently
+// styled address) rather than a plain row — not a fit for slotting in
+// here. Built a plain custom row instead, matching the reference image
+// exactly. "CHANGE" is a real link to /owner/addresses (your actual
+// address management page) rather than a decorative button — if
+// LocationHeader has a nicer inline picker you'd rather trigger instead,
+// paste that file and I'll wire it in properly.
 export default function HomeMobileHeader({
   userAddress,
   userPhone,
@@ -23,6 +26,8 @@ export default function HomeMobileHeader({
   pawPointsBalance: number;
 }) {
   const { user } = useUser();
+  const addressLabel = userAddress ? userAddress.split(",")[0] : "Home";
+  const addressRest = userAddress ? userAddress.split(",").slice(1).join(",").trim() : "Add your address";
 
   return (
     <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(251,250,238,0.95)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
@@ -53,7 +58,19 @@ export default function HomeMobileHeader({
           </div>
         </div>
 
-        <LocationHeader currentAddressSnippet={userAddress ? userAddress.split(",")[0] : null} userPhone={userPhone} />
+        {/* Real location row — plain display + real link to address management */}
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/owner/addresses" className="flex items-center gap-1.5 min-w-0 tap-scale">
+            <Navigation size={15} color="#904c2c" className="shrink-0" />
+            <span className="font-bold text-xs truncate" style={{ ...H, color: "#02120a" }}>{addressLabel}</span>
+            <span className="text-xs shrink-0" style={{ color: "#737874" }}>•</span>
+            <span className="text-xs truncate" style={{ color: "#424844" }}>{addressRest}</span>
+            <ChevronDown size={14} color="#424844" className="shrink-0" />
+          </Link>
+          <Link href="/owner/addresses" className="shrink-0 text-xs font-bold tap-scale" style={{ color: "#904c2c" }}>
+            CHANGE
+          </Link>
+        </div>
 
         <div className="relative flex items-center w-full h-10 rounded-xl px-3" style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(22,40,31,0.03)", border: "1px solid rgba(194,200,194,0.3)" }}>
           <Search size={18} color="#424844" className="mr-2 shrink-0" />
