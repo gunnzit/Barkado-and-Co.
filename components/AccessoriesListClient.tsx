@@ -1,20 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import { AccessoryCard, type Accessory } from "@/components/AccessoryCard";
 
 const PAGE_SIZE = 6;
 
-export default function AccessoriesListClient({ products }: { products: Accessory[] }) {
-  const [query, setQuery] = useState("");
+export default function AccessoriesListClient({
+  products,
+  query,
+}: {
+  products: Accessory[];
+  query: string;
+}) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of products) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
-    return Array.from(counts.entries()); // [category, count][]
+    return Array.from(counts.entries());
   }, [products]);
 
   const filtered = useMemo(() => {
@@ -31,25 +36,6 @@ export default function AccessoriesListClient({ products }: { products: Accessor
 
   return (
     <div>
-      {/* ===== Search — real, client-side over the already-loaded catalog.
-          No fake/no-op search box. ===== */}
-      <div className="px-6 mb-4">
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-          <Search size={16} color="var(--muted)" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setVisibleCount(PAGE_SIZE);
-            }}
-            placeholder="Search accessories..."
-            className="flex-1 bg-transparent outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* ===== Category filter chips — real counts ===== */}
       <div className="px-6 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => { setActiveCategory(null); setVisibleCount(PAGE_SIZE); }}
@@ -78,7 +64,6 @@ export default function AccessoriesListClient({ products }: { products: Accessor
         ))}
       </div>
 
-      {/* ===== Free shipping banner — real, static policy copy ===== */}
       <div className="px-6 mb-6">
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
           <Truck size={14} /> Free shipping on orders over ₹500
@@ -90,9 +75,6 @@ export default function AccessoriesListClient({ products }: { products: Accessor
           Showing {visible.length} of {filtered.length} {activeCategory ? activeCategory.toLowerCase() : "curated"} essentials
         </p>
 
-        {/* Single column on mobile; a real 2-column grid from tablet
-            width up — this page previously looked identical at every
-            screen size, which wasn't a deliberate choice. */}
         {filtered.length === 0 ? (
           <p className="text-sm py-10 text-center" style={{ color: "var(--muted)" }}>No products match your search.</p>
         ) : (

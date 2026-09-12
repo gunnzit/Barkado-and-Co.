@@ -1,13 +1,7 @@
-import Link from "next/link";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
-import AccessoriesListClient from "@/components/AccessoriesListClient";
-import ShopHighlights from "@/components/ShopHighlights";
-import PetSwitcher from "@/components/PetSwitcher";
-import ProfileMenu from "@/components/ProfileMenu";
-import ThemeToggle from "@/components/ThemeToggle";
+import ShopPageClient from "@/components/ShopPageClient";
 import { resolveThemeClass } from "@/lib/breedTheme";
 
 export default async function AccessoriesPage() {
@@ -98,48 +92,24 @@ export default async function AccessoriesPage() {
   }));
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-    <main className="pb-28 max-w-lg sm:max-w-4xl mx-auto">
-      <div className="px-6 pt-4 flex items-center justify-between">
-        <PetSwitcher avatarOnly />
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <ProfileMenu />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 px-6 py-5">
-        <Link href="/" className="tap-scale">
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <ShoppingBag size={20} color="var(--tan)" /> Accessories
-        </h1>
-      </div>
-
-      <p className="px-6 text-sm mb-5" style={{ color: "var(--muted)" }}>
-        {activePet
-          ? `Everyday essentials — sorted for ${activePet.name}'s size.`
-          : "Everyday essentials for your pet, picked to last."}
-      </p>
-
-      {products.length === 0 ? (
-        <p className="px-6 text-sm" style={{ color: "var(--muted)" }}>
-          No products yet — run the seed script to load sample accessories.
-        </p>
-      ) : (
-        <>
-          <ShopHighlights
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
+      <main className="pb-28 max-w-lg sm:max-w-4xl mx-auto">
+        {products.length === 0 ? (
+          <p className="px-6 pt-6 text-sm" style={{ color: "var(--muted)" }}>
+            No products yet — run the seed script to load sample accessories.
+          </p>
+        ) : (
+          <ShopPageClient
+            userAddress={user?.address ?? null}
+            products={serialized}
             featuredProduct={featuredProduct}
             tailoredProducts={tailoredProducts}
             petName={activePet?.name ?? null}
             bundles={bundles}
             impulseProducts={impulseProducts}
           />
-          <AccessoriesListClient products={serialized} />
-        </>
-      )}
-    </main>
+        )}
+      </main>
     </div>
   );
 }
