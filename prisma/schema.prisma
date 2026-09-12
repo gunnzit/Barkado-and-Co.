@@ -622,8 +622,7 @@ model Order {
   bookings Booking[]
   pawPointsTransactions PawPointsTransaction[]
   pawPointsRewardRedemptions PawPointsRewardRedemption[]
-  Add these fields to your `model Order { ... }` block:
-
+ 
   // Real checkout pricing breakdown, stored at order-creation time so
   // there's an auditable record of exactly what was charged and why —
   // not just the final totalAmount. All in paise except couponCode.
