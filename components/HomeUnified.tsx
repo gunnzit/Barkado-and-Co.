@@ -6,7 +6,7 @@ import {
   Sparkles, RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
   GraduationCap, Home as HomeIcon, BadgeCheck, AlertTriangle, ArrowRight,
   ChevronRight, ShieldCheck, MapPin, Truck, Clock, SlidersHorizontal, Zap,
-  Radar, HeartPulse, PhoneCall, Gift, Plus, Star, Check, PawPrint,
+  Radar, HeartPulse, PhoneCall, Gift, Plus, Star, Check, PawPrint, MoreVertical,
 } from "lucide-react";
 import EmergencyButton from "@/components/EmergencyButton";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
@@ -14,6 +14,7 @@ import UpcomingEvents from "@/components/UpcomingEvents";
 import PetSwitcher from "@/components/PetSwitcher";
 import { derivePassportNumber } from "@/lib/passportId";
 import { formatPetAge } from "@/lib/petAge";
+import { vaccineStatusChip } from "@/lib/petVaccineStatus";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 const SUPPORT_PHONE = "+91 00000 00000";
@@ -86,8 +87,7 @@ export default function HomeUnified({
   };
 
   const age = activePet ? formatPetAge(activePet.birthday) : null;
-  const hasVaccineRecords = (activePet?.vaccinations.length ?? 0) > 0;
-  const overdueVaccine = activePet?.vaccinations.some((v) => v.nextDueDate && v.nextDueDate < new Date()) ?? false;
+  const vChip = activePet ? vaccineStatusChip(activePet.vaccinations) : null;
 
   return (
     <div style={{ background: "#fbfaee" }}>
@@ -117,34 +117,30 @@ export default function HomeUnified({
             </div>
           )}
 
-          {isSignedIn && (
-            <div className="px-4 pt-1">
-              <PetSwitcher />
-            </div>
-          )}
-
           <section className="px-4 pt-2 pb-2.5">
             {activePet ? (
               <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: "#ffffff", border: "1px solid rgba(19,42,31,0.15)", boxShadow: "0 4px 20px -2px rgba(19,42,31,0.05)" }}>
                 <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#132a1f" }} />
                 <div className="pl-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <PetSwitcher display="viewing" hideThemeSwitch />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Active</span>
+                      <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="w-7 h-7 rounded-lg flex items-center justify-center" aria-label="Pet options">
+                        <MoreVertical size={16} color="#a29887" />
+                      </Link>
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#ebe5d8", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                         {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={22} color="#a29887" />}
                       </div>
-                      {hasVaccineRecords && !overdueVaccine && (
-                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "#1e8e47", border: "2px solid white" }}>
-                          <Check size={9} color="white" />
-                        </span>
-                      )}
+                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full" style={{ border: "2px solid #1e8e47", background: "white" }} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-extrabold text-base leading-tight" style={{ ...H, color: "#132a1f" }}>{activePet.name}</h2>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Primary Active</span>
-                      </div>
-                      <p className="text-xs font-medium mt-0.5" style={{ color: "#6f6759" }}>
+                      <p className="text-xs font-medium" style={{ color: "#6f6759" }}>
                         {[activePet.breed ?? "Mixed", activePet.gender ? (activePet.gender === "MALE" ? "Male" : "Female") : null].filter(Boolean).join(" • ")}
                       </p>
                       <p className="text-[11px] mt-0.5" style={{ color: "#8f8574" }}>
@@ -152,9 +148,28 @@ export default function HomeUnified({
                       </p>
                     </div>
                   </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid #f2ece1" }}>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#ebf5ee", color: "#1d693b", border: "1px solid #d5ebdc" }}>
+                      <Check size={11} /> PawPassport™ #{derivePassportNumber(activePet.id)}
+                    </span>
+                    {vChip && (
+                      <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#faf2e6", color: "#a6611b", border: "1px solid #f2e0c7" }}>
+                        {vChip.text}
+                      </span>
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between mt-3.5 pt-2" style={{ borderTop: "1px solid #f5f0e6" }}>
-                    <span className="text-[11px]" style={{ color: "#8f8574" }}>PawPassport™ #{derivePassportNumber(activePet.id)}</span>
-                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale" style={{ color: "#132a1f" }}>
+                    {rebookCandidate ? (
+                      <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: "#877d6d" }}>
+                        <MapPin size={11} /> Next: {SERVICE_LABEL[rebookCandidate.type]}
+                        {rebookCandidate.startTime ? ` ${rebookCandidate.startTime.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale ml-auto" style={{ color: "#132a1f" }}>
                       Passport &amp; Care <ChevronRight size={14} className="ml-1" />
                     </Link>
                   </div>

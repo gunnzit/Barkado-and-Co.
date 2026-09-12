@@ -8,6 +8,7 @@ import PetSwitcher from "@/components/PetSwitcher";
 import ProfileMenu from "@/components/ProfileMenu";
 import { derivePassportNumber } from "@/lib/passportId";
 import { formatPetAge } from "@/lib/petAge";
+import { vaccineStatusChip } from "@/lib/petVaccineStatus";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
@@ -51,18 +52,6 @@ function formatWhen(iso: string): string {
   if (isToday) return `Today ${time}`;
   if (isTomorrow) return `Tomorrow ${time}`;
   return `${d.toLocaleDateString("en-IN", { weekday: "short" })} ${time}`;
-}
-
-function vaccineChip(vaccinations: Pet["vaccinations"]): { text: string; tone: "amber" | "red" } | null {
-  const withDates = vaccinations.filter((v) => v.nextDueDate);
-  if (withDates.length === 0) return null;
-  const now = new Date();
-  const soonest = withDates.reduce((a, b) => (new Date(a.nextDueDate!) < new Date(b.nextDueDate!) ? a : b));
-  const due = new Date(soonest.nextDueDate!);
-  const daysUntil = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (daysUntil < 0) return { text: "Vaccine overdue", tone: "red" };
-  if (daysUntil <= 21) return { text: `Vaccine booster in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`, tone: "amber" };
-  return { text: `Vaccines valid (${due.getFullYear()})`, tone: "amber" };
 }
 
 export default function PetsClient({
@@ -173,7 +162,7 @@ export default function PetsClient({
           {pets.map((p) => {
             const isActive = p.id === localActiveId;
             const age = formatPetAge(p.birthday);
-            const vChip = vaccineChip(p.vaccinations);
+            const vChip = vaccineStatusChip(p.vaccinations);
             const chips: { text: string; tone: "green" | "amber" | "blue" | "red" }[] = [];
             if (!isActive && p.nextBooking) {
               chips.push({ text: `${SERVICE_LABEL[p.nextBooking.type] ?? p.nextBooking.type}: ${formatWhen(p.nextBooking.startTime)}`, tone: "blue" });
