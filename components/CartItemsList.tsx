@@ -41,6 +41,7 @@ export default function CartItemsList({
 
   const serviceItems = items.filter((i) => i.kind === "SERVICE");
   const productItems = items.filter((i) => i.kind === "PRODUCT" && i.product);
+  const hasProducts = productItems.length > 0;
 
   const productSubtotalPaise = productItems.reduce((sum, i) => sum + i.product!.price * i.quantity, 0);
   // Cart items only carry a lightweight product snapshot (id, name,
@@ -117,7 +118,7 @@ export default function CartItemsList({
     );
   }
 
-  const deliveryProgressPct = Math.min(100, Math.round((totals.itemsTotalPaise / FREE_DELIVERY_THRESHOLD_PAISE) * 100));
+  const deliveryProgressPct = hasProducts ? Math.min(100, Math.round((productSubtotalPaise / FREE_DELIVERY_THRESHOLD_PAISE) * 100)) : 0;
 
   return (
     <>
@@ -130,24 +131,31 @@ export default function CartItemsList({
                 {items.length} item{items.length === 1 ? "" : "s"}
               </span>
             </div>
-            <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#ffdbcd", color: "#904c2c" }} title="Placeholder — single delivery tier only">
-              <Truck size={12} /> Delivery
-            </span>
+            {hasProducts && (
+              <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#ffdbcd", color: "#904c2c" }} title="Placeholder — single delivery tier only">
+                <Truck size={12} /> Delivery
+              </span>
+            )}
           </div>
-          {totals.deliveryFeePaise > 0 ? (
-            <>
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span style={{ color: "#424844" }}>Add ₹{(totals.freeDeliveryRemainingPaise / 100).toFixed(0)} for free delivery</span>
-                <span className="font-bold" style={{ color: "#904c2c" }}>{deliveryProgressPct}%</span>
+          {/* Delivery only applies to real accessories/products — a
+              booking-only cart has nothing to ship, so this section
+              doesn't render at all in that case. */}
+          {hasProducts && (
+            totals.deliveryFeePaise > 0 ? (
+              <>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span style={{ color: "#424844" }}>Add ₹{(totals.freeDeliveryRemainingPaise / 100).toFixed(0)} for free delivery</span>
+                  <span className="font-bold" style={{ color: "#904c2c" }}>{deliveryProgressPct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full" style={{ background: "#efeee3" }}>
+                  <div className="h-full rounded-full" style={{ width: `${deliveryProgressPct}%`, background: "#904c2c" }} />
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#0d1f16" }}>
+                <CheckCircle2 size={14} color="#10b981" /> Free delivery unlocked
               </div>
-              <div className="h-1.5 rounded-full" style={{ background: "#efeee3" }}>
-                <div className="h-full rounded-full" style={{ width: `${deliveryProgressPct}%`, background: "#904c2c" }} />
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#0d1f16" }}>
-              <CheckCircle2 size={14} color="#10b981" /> Free delivery unlocked
-            </div>
+            )
           )}
         </div>
       </div>
@@ -396,14 +404,16 @@ export default function CartItemsList({
                   <span className="font-semibold">₹{(maintenanceFeePaise / 100).toFixed(0)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm mb-2">
-                <span style={{ color: "#424844" }}>Delivery</span>
-                {totals.deliveryFeePaise > 0 ? (
-                  <span className="font-semibold">₹{(totals.deliveryFeePaise / 100).toFixed(0)}</span>
-                ) : (
-                  <span className="font-bold" style={{ color: "#0d1f16" }}>FREE</span>
-                )}
-              </div>
+              {hasProducts && (
+                <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: "#424844" }}>Delivery</span>
+                  {totals.deliveryFeePaise > 0 ? (
+                    <span className="font-semibold">₹{(totals.deliveryFeePaise / 100).toFixed(0)}</span>
+                  ) : (
+                    <span className="font-bold" style={{ color: "#0d1f16" }}>FREE</span>
+                  )}
+                </div>
+              )}
               {totals.couponDiscountPaise > 0 && (
                 <div className="flex justify-between text-sm mb-2" style={{ color: "#904c2c" }}>
                   <span>Coupon ({appliedCoupon})</span>
@@ -411,7 +421,7 @@ export default function CartItemsList({
                 </div>
               )}
               <div className="flex justify-between text-sm mb-2">
-                <span style={{ color: "#424844" }}>Taxes &amp; GST (18%)</span>
+                <span style={{ color: "#424844" }}>GST (18%, inclusive of tax)</span>
                 <span className="font-semibold">₹{(totals.gstPaise / 100).toFixed(0)}</span>
               </div>
               {totals.pointsDiscountPaise > 0 && (
@@ -424,7 +434,7 @@ export default function CartItemsList({
                 <span className="font-extrabold text-base" style={{ ...H, color: "#02120a" }}>Total Payable</span>
                 <span className="font-extrabold text-base" style={{ ...H, color: "#02120a" }}>₹{(totals.grandTotalPaise / 100).toFixed(0)}</span>
               </div>
-              <p className="text-[10px] mt-0.5" style={{ color: "#737874" }}>Includes all applied discounts &amp; taxes</p>
+              <p className="text-[10px] mt-0.5" style={{ color: "#737874" }}>All prices inclusive of tax · discounts already applied</p>
 
               {(totals.totalSavingsPaise > 0 || totals.estimatedPointsEarned > 0) && (
                 <div className="mt-3 p-2.5 rounded-xl flex items-center gap-2" style={{ background: "#ffdad6" }}>

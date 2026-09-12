@@ -3,13 +3,13 @@
 // AND client components (CartItemsList needs to show the same numbers
 // the server will actually charge).
 
-export const FREE_DELIVERY_THRESHOLD_PAISE = 50000; // ₹500 — confirmed real
+export const FREE_DELIVERY_THRESHOLD_PAISE = 50000; // ₹500 — confirmed real, checked against PRODUCT subtotal only
 
 // TODO: placeholder — confirm the real delivery fee amount. Currently
 // ₹49 as a provisional stand-in. See NOT_BUILT.md.
 export const DELIVERY_FEE_PAISE = 4900;
 
-export const GST_RATE = 0.18; // confirmed real, 18%
+export const GST_RATE = 0.18; // confirmed real, 18% — prices are GST-INCLUSIVE (see below)
 
 export const WELCOME10_CODE = "WELCOME10";
 export const WELCOME10_DISCOUNT_RATE = 0.10; // 10% off product subtotal — matches the existing real homepage offer
@@ -45,6 +45,9 @@ export type CartTotals = {
   couponDiscountPaise: number;
   deliveryFeePaise: number;
   freeDeliveryRemainingPaise: number;
+  // The GST already embedded inside the item/service/delivery prices —
+  // NOT an amount added on top. grandTotalPaise does not add this in;
+  // it's shown purely as a real breakdown of what's already included.
   gstPaise: number;
   actualPointsSpent: number;
   pointsDiscountPaise: number;
@@ -59,13 +62,22 @@ export function computeCartTotals(input: CartTotalsInput): CartTotals {
   const couponValid = input.couponCode?.trim().toUpperCase() === WELCOME10_CODE;
   const couponDiscountPaise = couponValid ? Math.round(input.productSubtotalPaise * WELCOME10_DISCOUNT_RATE) : 0;
 
-  const deliveryFeePaise = itemsTotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? 0 : DELIVERY_FEE_PAISE;
-  const freeDeliveryRemainingPaise = Math.max(0, FREE_DELIVERY_THRESHOLD_PAISE - itemsTotalPaise);
+  // Delivery is a real product-shipping charge only — a booking-only cart
+  // (no accessories) is never charged delivery, since there's nothing
+  // being shipped. Threshold and remaining-amount are both checked
+  // against the PRODUCT subtotal alone, not combined with service value.
+  const hasProducts = input.productSubtotalPaise > 0;
+  const deliveryFeePaise = hasProducts && input.productSubtotalPaise < FREE_DELIVERY_THRESHOLD_PAISE ? DELIVERY_FEE_PAISE : 0;
+  const freeDeliveryRemainingPaise = hasProducts ? Math.max(0, FREE_DELIVERY_THRESHOLD_PAISE - input.productSubtotalPaise) : 0;
 
-  const preGstPaise = Math.max(0, itemsTotalPaise + input.maintenanceFeePaise + deliveryFeePaise - couponDiscountPaise);
-  const gstPaise = Math.round(preGstPaise * GST_RATE);
+  // Real GST-inclusive pricing: item/service prices, the maintenance fee,
+  // and the delivery fee are all treated as ALREADY containing 18% GST
+  // (standard Indian MRP-inclusive convention) — not taxed on top. The
+  // coupon discount is subtracted first, same as before.
+  const inclusiveTotalPaise = Math.max(0, itemsTotalPaise + input.maintenanceFeePaise + deliveryFeePaise - couponDiscountPaise);
+  const gstPaise = Math.round(inclusiveTotalPaise - inclusiveTotalPaise / (1 + GST_RATE));
 
-  const totalBeforePoints = preGstPaise + gstPaise;
+  const totalBeforePoints = inclusiveTotalPaise; // GST is already inside this — never added again
 
   const safeRedeemPoints = Math.max(0, Math.min(Math.floor(input.redeemPoints), input.pawPointsBalance));
   const requestedPointsDiscountPaise = safeRedeemPoints * PAWPOINTS_REDEMPTION_PAISE_PER_POINT;
@@ -74,10 +86,6 @@ export function computeCartTotals(input: CartTotalsInput): CartTotals {
 
   const grandTotalPaise = Math.max(0, totalBeforePoints - pointsDiscountPaise);
 
-  // Real total savings shown to the customer — sum of actual product
-  // compareAtPrice discounts already baked into the listed prices, plus
-  // the real coupon discount and real points discount. Never a fabricated
-  // number.
   const totalSavingsPaise = input.productCompareSavingsPaise + couponDiscountPaise + pointsDiscountPaise;
 
   const estimatedPointsEarned = estimateEarnedPoints(input.productSubtotalPaise + input.serviceBasePaise);
