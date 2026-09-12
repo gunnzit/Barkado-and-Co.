@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { sendBookingEmail } from "./sendBookingEmail";
 import { computeServiceCommission } from "./commission";
-import { calculateEarnedPoints } from "./pawPoints";
+import { calculateEarnedPoints, getPawPointsBalance } from "./pawPoints";
 
 const SERVICE_LABEL: Record<string, string> = {
   WALKING: "Adventure Walk",
@@ -51,10 +51,20 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
     return sum;
   }, 0);
 
+  // Real PawPoints redemption, finalized only now that payment is
+  // confirmed — never at checkout time (create-order only recorded the
+  // intent on order.pawPointsRedeemed). Re-clamped against the user's
+  // ACTUAL current balance rather than trusting the stored intent as-is,
+  // in case the balance changed between checkout and payment confirmation
+  // (e.g. they redeemed points elsewhere in another tab in the meantime).
+  const requestedRedemption = order.pawPointsRedeemed ?? 0;
+  const currentBalance = requestedRedemption > 0 ? await getPawPointsBalance(order.userId) : 0;
+  const actualRedemption = Math.max(0, Math.min(requestedRedemption, currentBalance));
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id: order.id },
-      data: { status: "PAID", paidAt },
+      data: { status: "PAID", paidAt, pawPointsRedeemed: actualRedemption },
     }),
     ...(totalEarnedPoints > 0
       ? [
@@ -63,6 +73,18 @@ export async function finalizeRazorpayOrder(razorpayOrderId: string) {
               userId: order.userId,
               type: "EARNED",
               points: totalEarnedPoints,
+              orderId: order.id,
+            },
+          }),
+        ]
+      : []),
+    ...(actualRedemption > 0
+      ? [
+          prisma.pawPointsTransaction.create({
+            data: {
+              userId: order.userId,
+              type: "REDEEMED",
+              points: actualRedemption,
               orderId: order.id,
             },
           }),
