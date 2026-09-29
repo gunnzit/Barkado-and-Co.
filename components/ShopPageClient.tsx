@@ -4,6 +4,7 @@ import { useState } from "react";
 import ShopHeader from "@/components/ShopHeader";
 import ShopHighlights from "@/components/ShopHighlights";
 import AccessoriesListClient from "@/components/AccessoriesListClient";
+import PartnerBrandBanner from "@/components/PartnerBrandBanner";
 import type { Accessory } from "@/components/AccessoryCard";
 
 type Product = {
@@ -23,6 +24,7 @@ export default function ShopPageClient({
   petName,
   bundles,
   impulseProducts,
+  partnerBrandName,
 }: {
   userAddress: string | null;
   products: Accessory[];
@@ -31,12 +33,14 @@ export default function ShopPageClient({
   petName: string | null;
   bundles: Bundle[];
   impulseProducts: Product[];
+  partnerBrandName?: string | null;
 }) {
   const [query, setQuery] = useState("");
 
   return (
     <>
       <ShopHeader userAddress={userAddress} query={query} onQueryChange={setQuery} />
+      {partnerBrandName && <PartnerBrandBanner partnerBrandName={partnerBrandName} />}
       <ShopHighlights
         featuredProduct={featuredProduct}
         tailoredProducts={tailoredProducts}

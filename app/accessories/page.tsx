@@ -11,6 +11,7 @@ export default async function AccessoriesPage() {
     prisma.product.findMany({
       where: { active: true },
       orderBy: [{ category: "asc" }, { name: "asc" }],
+      include: { partnerBrand: true },
     }),
     user ? prisma.pet.findMany({ where: { ownerId: user.id } }) : Promise.resolve([]),
     prisma.orderItem.groupBy({
@@ -55,6 +56,7 @@ export default async function AccessoriesPage() {
     isBestseller: bestsellerIds.has(item.id),
     colorOptions: item.colorOptions,
     sizeOptions: item.sizeOptions,
+    partnerBrand: item.partnerBrand ? { id: item.partnerBrand.id, name: item.partnerBrand.name } : null,
   }));
 
   let featuredProduct: (typeof serialized[number] & { percentOff: number }) | null = null;
@@ -91,6 +93,10 @@ export default async function AccessoriesPage() {
     realComparePaise: b.items.reduce((sum, it) => sum + it.product.price * it.quantity, 0),
   }));
 
+  // Real, conditional — only set when a real product is actually tagged
+  // with a real partner brand.
+  const activePartnerBrandName = serialized.find((p) => p.partnerBrand)?.partnerBrand?.name ?? null;
+
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
       <main className="pb-28 max-w-lg sm:max-w-4xl mx-auto">
@@ -107,6 +113,7 @@ export default async function AccessoriesPage() {
             petName={activePet?.name ?? null}
             bundles={bundles}
             impulseProducts={impulseProducts}
+            partnerBrandName={activePartnerBrandName}
           />
         )}
       </main>

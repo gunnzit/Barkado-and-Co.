@@ -318,6 +318,12 @@ model Provider {
   upiVpa                String?
   payoutInfoUpdatedAt   DateTime?
 
+  // Real partner-brand tag — set only when this provider genuinely
+  // represents a real business partner (e.g. Ramal Pet Mall's own
+  // grooming staff). Null for every independent provider.
+  partnerBrandId String?
+  partnerBrand   PartnerBrand? @relation(fields: [partnerBrandId], references: [id])
+
   bookings     Booking[]
   cartItems    CartItem[]
   availability ProviderAvailability[]
@@ -566,6 +572,12 @@ model Product {
   sizeOptions   String[] @default([])
   createdAt   DateTime @default(now())
 
+  // Real partner-brand tag — set only when this product genuinely comes
+  // from a real business partner (e.g. Ramal Pet Mall). Null for every
+  // regular catalog item.
+  partnerBrandId String?
+  partnerBrand   PartnerBrand? @relation(fields: [partnerBrandId], references: [id])
+
   cartItems  CartItem[]
   orderItems OrderItem[]
   favorites  Favorite[]
@@ -788,4 +800,22 @@ model ProductBundleItem {
   productId String
   product   Product       @relation(fields: [productId], references: [id])
   quantity  Int           @default(1)
+}
+
+// A real business partner whose products/providers are tagged as coming
+// from them — built for Ramal Pet Mall, but reusable for any future
+// retail/service partner. googlePlaceId is the partner's REAL Google
+// Business Profile place_id, used to fetch their real rating, reviews,
+// address, and hours live (see /api/partner-brands/[id]/google-info) —
+// never fabricated review content.
+model PartnerBrand {
+  id            String    @id @default(cuid())
+  name          String
+  googlePlaceId String?
+  logoUrl       String?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  products  Product[]
+  providers Provider[]
 }

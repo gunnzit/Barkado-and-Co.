@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Sparkles, Check } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
+import PartnerBrandTag from "@/components/PartnerBrandTag";
 
 export type Accessory = {
   id: string;
@@ -19,6 +20,9 @@ export type Accessory = {
   isBestseller?: boolean;
   colorOptions?: string[];
   sizeOptions?: string[];
+  // Real partner tagging — set only when this product actually belongs
+  // to a real PartnerBrand record. Null/undefined for everything else.
+  partnerBrand?: { id: string; name: string } | null;
 };
 
 const ICONS = {
@@ -30,9 +34,6 @@ const ICONS = {
   carrier: Briefcase,
 };
 
-// A small, deterministic set of real display colors for color-name swatches
-// (e.g. "Brown" -> a brown dot) — purely visual mapping for names that are
-// already real data (product.colorOptions), not fabricated content itself.
 const COLOR_DOT: Record<string, string> = {
   brown: "#8b5a3c", tan: "#c9a876", black: "#2b2b2b", white: "#f5f5f0",
   grey: "#9a9a9a", gray: "#9a9a9a", green: "#4a7c59", blue: "#4a6c9c",
@@ -62,12 +63,6 @@ export function AccessoryCard({ item }: { item: Accessory }) {
   const [justAdded, setJustAdded] = useState(false);
   const [error, setError] = useState("");
 
-  // Uses its own direct call (needed to send selectedColor/selectedSize,
-  // which the shared cart context's setQuantity doesn't know about) rather
-  // than going through useCart()'s setQuantity — that function's current
-  // internals aren't something to guess at safely here. Shows a local
-  // "Added" confirmation instead of trying to sync the shared cart-badge
-  // count, which may lag until the cart page itself is opened/refreshed.
   const addToCart = async () => {
     setAdding(true);
     setError("");
@@ -92,7 +87,6 @@ export function AccessoryCard({ item }: { item: Accessory }) {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-      {/* ===== Image with real badge overlay ===== */}
       <Link href={`/accessories/${item.id}`} className="block relative">
         <div className="w-full flex items-center justify-center relative" style={{ height: 200, background: "var(--cream)" }}>
           {photo ? (
@@ -120,10 +114,12 @@ export function AccessoryCard({ item }: { item: Accessory }) {
           <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>{item.description}</p>
         </Link>
 
-        {/* ===== Real, interactive color/size selection — only shown when
-            the product actually has options (product.colorOptions /
-            sizeOptions). Selecting here feeds directly into the real
-            Add to Cart call below, validated server-side. ===== */}
+        {item.partnerBrand && (
+          <div className="mt-2">
+            <PartnerBrandTag partnerBrandId={item.partnerBrand.id} partnerBrandName={item.partnerBrand.name} />
+          </div>
+        )}
+
         {(colorOptions.length > 0 || sizeOptions.length > 0) && (
           <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
             {colorOptions.length > 0 && (
@@ -182,9 +178,6 @@ export function AccessoryCard({ item }: { item: Accessory }) {
           </div>
 
           {colorOptions.length > 0 || sizeOptions.length > 0 ? (
-            // Has real variant options — always goes through the custom
-            // addToCart above (needs to send the selection), never the
-            // shared useCart stepper below, which has no variant awareness.
             <button
               onClick={addToCart}
               disabled={item.stock <= 0 || adding}
