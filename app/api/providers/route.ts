@@ -1,17 +1,6 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getOrCreateUser } from "@/lib/auth";
 import { computeBudgetUsedPaise, isCapReached } from "@/lib/campaignBudget";
-
-const providerSchema = z.object({
-  bio: z.string().optional(),
-  servicesOffered: z.array(z.enum(["WALKING", "SITTING"])).min(1),
-  serviceAreaPin: z.string().optional(),
-  radiusKm: z.number().int().positive().default(5),
-  pricePerWalk: z.number().int().positive().optional(),
-  pricePerSitDay: z.number().int().positive().optional(),
-});
 
 // Composite ranking weights — how much each factor moves a provider up the
 // list. Rating and reliability (not declining/expiring/cancelling on
@@ -99,7 +88,22 @@ export async function GET(req: Request) {
   const requested = startTime ? new Date(startTime) : null;
 
   const scored = providers.map((p) => {
-    const { availability, bookings, ...rest } = p;
+    // This endpoint is PUBLIC, so private fields are stripped here before the
+    // row can reach the response: ID documents, bank/UPI details and the
+    // admin-only review timestamp must never be sent to customers.
+    const {
+      availability,
+      bookings,
+      verificationDocs: _verificationDocs,
+      verificationSubmittedAt: _verificationSubmittedAt,
+      payoutMethod: _payoutMethod,
+      bankAccountNumber: _bankAccountNumber,
+      bankIFSC: _bankIFSC,
+      bankAccountHolderName: _bankAccountHolderName,
+      upiVpa: _upiVpa,
+      payoutInfoUpdatedAt: _payoutInfoUpdatedAt,
+      ...rest
+    } = p;
 
     let availableAtRequestedTime: boolean | null = null;
     if (requested && availability.length > 0) {
@@ -193,24 +197,9 @@ export async function GET(req: Request) {
   return NextResponse.json(scored);
 }
 
-// Register as a provider (creates Provider row for current user, role stays as-is until admin verifies)
-export async function POST(req: Request) {
-  const user = await getOrCreateUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await req.json();
-  const parsed = providerSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-
-  const provider = await prisma.provider.upsert({
-    where: { userId: user.id },
-    update: parsed.data,
-    create: { ...parsed.data, userId: user.id },
-  });
-
-  await prisma.user.update({ where: { id: user.id }, data: { role: "PROVIDER" } });
-
-  return NextResponse.json(provider, { status: 201 });
+// Provider registration moved to POST /api/provider/join (verification-gated).
+// The old handler here skipped review and switched the user's role to
+// PROVIDER immediately — which could even demote an admin — so it is retired.
+export async function POST() {
+  return NextResponse.json({ error: "Moved: use /api/provider/join" }, { status: 410 });
 }

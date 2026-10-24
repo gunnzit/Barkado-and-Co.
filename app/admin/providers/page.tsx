@@ -56,10 +56,10 @@ export default async function AdminProvidersPage() {
                 </div>
                 {p.verificationDocs.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
-                    {p.verificationDocs.map((url, i) => (
+                    {p.verificationDocs.map((_, i) => (
                       <a
-                        key={url}
-                        href={url}
+                        key={i}
+                        href={`/api/provider/verification/file?providerId=${p.id}&i=${i}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-xs tap-scale"

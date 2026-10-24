@@ -2,18 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ShieldCheck, Clock, FileText, Upload } from "lucide-react";
+import { compressImage } from "@/lib/compressImage";
 
 type ProviderProfile = {
   verified: boolean;
   verificationDocs: string[];
   verificationSubmittedAt: string | null;
 };
-
-function docLabel(url: string, index: number) {
-  const raw = url.split("/").pop() ?? `Document ${index + 1}`;
-  // Strip the "{timestamp}-" prefix we add at upload time for a cleaner display name.
-  return raw.replace(/^\d+-/, "");
-}
 
 export default function ProviderVerificationUpload() {
   const [profile, setProfile] = useState<ProviderProfile | null>(null);
@@ -31,15 +26,26 @@ export default function ProviderVerificationUpload() {
 
   useEffect(load, []);
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (original: File) => {
     setUploading(true);
     setError("");
+    // Shrinks photos so they fit under the 4.5MB server limit; PDFs pass through untouched.
+    const file = await compressImage(original);
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/provider/verification/upload", { method: "POST", body: formData });
+    let res: Response;
+    try {
+      res = await fetch("/api/provider/verification/upload", { method: "POST", body: formData });
+    } catch {
+      setUploading(false);
+      setError("Couldn't reach the server. Check your connection and try again.");
+      return;
+    }
     setUploading(false);
     if (res.ok) {
       load();
+    } else if (res.status === 413) {
+      setError("That file is too large. Try a smaller photo or a PDF under 4MB.");
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Upload failed. Please try again.");
@@ -78,7 +84,7 @@ export default function ProviderVerificationUpload() {
 
       <div className="card">
         <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Upload a document</p>
-        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>Government ID, certification, or proof of experience. JPG, PNG, or PDF, up to 10MB.</p>
+        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>Government ID, certification, or proof of experience. JPG, PNG, or PDF, up to 4MB. Only Barkado's review team can see these.</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -105,16 +111,16 @@ export default function ProviderVerificationUpload() {
         <div className="card">
           <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Submitted documents</p>
           <div className="space-y-2">
-            {profile.verificationDocs.map((url, i) => (
+            {profile.verificationDocs.map((_, i) => (
               <a
-                key={url}
-                href={url}
+                key={i}
+                href={`/api/provider/verification/file?i=${i}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-xs tap-scale"
                 style={{ color: "var(--terracotta)" }}
               >
-                <FileText size={13} /> {docLabel(url, i)}
+                <FileText size={13} /> Document {i + 1}
               </a>
             ))}
           </div>
