@@ -6,6 +6,7 @@ import ProviderDashboard from "@/components/ProviderDashboard";
 import ProviderJoinForm from "@/components/ProviderJoinForm";
 import ProviderOnlineToggle from "@/components/ProviderOnlineToggle";
 import { expireStaleBookings } from "@/lib/expireStaleBookings";
+import { isApplicationSubmitted } from "@/lib/providerApplication";
 
 const BENEFITS = [
   { icon: Wallet, title: "Set your own prices", desc: "You decide what you charge for each service you offer." },
@@ -56,7 +57,7 @@ export default async function ProviderPage() {
               Sign in to get started
             </Link>
             <p className="text-xs text-center mt-3" style={{ color: "var(--muted)" }}>
-              Takes about a minute — pick your services, verify your details, done.
+              Takes about 5 minutes. Keep your phone number, a clear photo and your ID handy.
             </p>
           </div>
         </main>
@@ -69,7 +70,10 @@ export default async function ProviderPage() {
     include: { _count: { select: { bookings: { where: { status: "COMPLETED" } } } } },
   });
 
-  if (!provider) {
+  // A Provider row exists from the moment services are chosen (step 1), so
+  // "row exists" does not mean "application sent". Someone who closed the app
+  // mid-way must land back in the form, not on the "being reviewed" screen.
+  if (!provider || (!provider.verified && !isApplicationSubmitted(provider))) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
         <main className="pb-16 max-w-lg mx-auto">
@@ -79,7 +83,21 @@ export default async function ProviderPage() {
             </Link>
             <h1 className="text-lg font-bold">Become a provider</h1>
           </div>
-          <ProviderJoinForm userEmail={user.email} userPhone={user.phone} />
+          <ProviderJoinForm
+            userEmail={user.email}
+            userPhone={user.phone}
+            initial={
+              provider
+                ? {
+                    services: provider.servicesOffered,
+                    photoUrl: provider.photoUrl,
+                    hasDocument: provider.verificationDocs.length > 0,
+                    bio: provider.bio ?? "",
+                    serviceCity: provider.serviceCity ?? "",
+                  }
+                : null
+            }
+          />
         </main>
       </div>
     );

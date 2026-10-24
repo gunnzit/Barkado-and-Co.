@@ -296,6 +296,13 @@ model Provider {
   isAvailableNow  Boolean  @default(false)
   verificationDocs        String[] @default([])
   verificationSubmittedAt DateTime?
+  // Provider application — set by /api/provider/application. The Provider row
+  // exists from the moment services are chosen (step 1), so applicationSubmittedAt
+  // is what really marks "finished the form and sent it for review".
+  serviceCity            String?   // CHANDIGARH | MOHALI | PANCHKULA (validated in code)
+  termsAcceptedAt        DateTime?
+  termsVersion           String?
+  applicationSubmittedAt DateTime?
   // Sponsorship is scoped per service category, plus a separate broader
   // "homepage" tier — a provider can be featured in Walking without paying
   // for Grooming too, or pay more for the premium homepage-wide tier which
