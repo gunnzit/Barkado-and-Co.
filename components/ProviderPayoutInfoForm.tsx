@@ -110,7 +110,7 @@ export default function ProviderPayoutInfoForm({ onSaved }: { onSaved: () => voi
       {error && <p className="text-xs" style={{ color: "var(--terracotta)" }}>{error}</p>}
 
       {verifiedBank && (
-        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--forest, #16281f)" }}>
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--forest, #3d1426)" }}>
           <CheckCircle2 size={13} /> Format verified — {verifiedBank.bankName}, {verifiedBank.bankBranch}
         </p>
       )}

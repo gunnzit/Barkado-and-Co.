@@ -83,7 +83,7 @@ export default function HomeDesktopDashboard({
       <aside className="w-64 shrink-0 flex flex-col justify-between px-4 py-6" style={{ background: "var(--card)", borderRight: "1px solid var(--border)" }}>
         <div>
           <div className="flex items-center gap-2 px-2 mb-8">
-            <PawPrint size={22} color="var(--forest, #16281f)" />
+            <PawPrint size={22} color="var(--forest, #3d1426)" />
             <div>
               <p className="font-bold text-sm leading-tight">Barkado &amp; Co.</p>
             </div>
@@ -91,7 +91,7 @@ export default function HomeDesktopDashboard({
 
           <p className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2" style={{ color: "var(--muted)" }}>Marketplace &amp; Club</p>
           <nav className="space-y-0.5 mb-6">
-            <Link href="/" className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+            <Link href="/" className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
               <HomeIcon size={16} /> Home
             </Link>
             {SIDEBAR_LINKS.map((link) => {
@@ -177,7 +177,7 @@ export default function HomeDesktopDashboard({
                   {hasVaccineRecords && (
                     <span
                       className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full shrink-0"
-                      style={{ background: overdueVaccine ? "#fdece5" : "#e8f4ec", color: overdueVaccine ? "#a5652a" : "#2f6fb0" }}
+                      style={{ background: overdueVaccine ? "#fdf1d6" : "#e4ebf6", color: overdueVaccine ? "#8a2a4d" : "#2f6fb0" }}
                     >
                       <Syringe size={11} /> {overdueVaccine ? "Vaccine Due" : "Vaccines Current"}
                     </span>
@@ -282,7 +282,7 @@ export default function HomeDesktopDashboard({
                       </p>
                     </div>
                   </div>
-                  <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "var(--forest, #16281f)" }}>
+                  <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "var(--forest, #3d1426)" }}>
                     <ShieldCheck size={12} /> Verified
                   </span>
                 </div>

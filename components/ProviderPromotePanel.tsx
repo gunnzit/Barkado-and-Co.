@@ -28,7 +28,7 @@ function loadRazorpayScript(): Promise<void> {
 type Scope = "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
 
 const SERVICE_META: Record<Scope, { label: string; icon: any; color: string }> = {
-  WALKING: { label: "Adventure Walking", icon: PawPrint, color: "var(--forest, #16281f)" },
+  WALKING: { label: "Adventure Walking", icon: PawPrint, color: "var(--forest, #3d1426)" },
   SITTING: { label: "Home Staycation", icon: HomeIcon, color: "var(--terracotta)" },
   GROOMING: { label: "Luxury Grooming", icon: Scissors, color: "var(--gold)" },
   TRAINING: { label: "Professional Training", icon: GraduationCap, color: "var(--heritage-red, #c0392b)" },
@@ -143,7 +143,7 @@ function NewCampaignScreen({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="tap-scale p-1.5 rounded-full" style={{ color: "var(--forest, #16281f)" }}>
+          <button onClick={onBack} className="tap-scale p-1.5 rounded-full" style={{ color: "var(--forest, #3d1426)" }}>
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-lg font-bold">New Campaign</h1>
@@ -357,8 +357,8 @@ function NewCampaignScreen({
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
                     <Check size={10} /> Verified
                   </span>
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}>
-                    <Star size={10} fill="var(--forest, #16281f)" /> Featured
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}>
+                    <Star size={10} fill="var(--forest, #3d1426)" /> Featured
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs" style={{ color: "var(--muted)" }}>
@@ -451,7 +451,7 @@ export default function ProviderPromotePanel({
   return (
     <div className="px-6 space-y-5">
       {justLaunched && (
-        <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: "rgba(22,40,31,0.08)", border: "1px solid var(--panel-dark)" }}>
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: "rgba(61,20,38,0.08)", border: "1px solid var(--panel-dark)" }}>
           <p className="text-sm font-semibold">"{justLaunched}" launched</p>
           <button onClick={() => setJustLaunched(null)} className="tap-scale" aria-label="Dismiss">
             <X size={16} color="var(--muted)" />
@@ -473,7 +473,7 @@ export default function ProviderPromotePanel({
           <button
             onClick={() => setView("history")}
             className="tap-scale flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
-            style={{ border: "1px solid var(--border)", color: "var(--forest, #16281f)" }}
+            style={{ border: "1px solid var(--border)", color: "var(--forest, #3d1426)" }}
           >
             <History size={16} /> Campaign History
           </button>
@@ -516,12 +516,12 @@ export default function ProviderPromotePanel({
           <div
             className="flex items-center gap-3 p-3 rounded-xl"
             style={{
-              background: isTopRated ? "rgba(232,169,74,0.08)" : "var(--cream)",
-              border: `1px solid ${isTopRated ? "rgba(232,169,74,0.3)" : "var(--border)"}`,
+              background: isTopRated ? "rgba(249,221,138,0.08)" : "var(--cream)",
+              border: `1px solid ${isTopRated ? "rgba(249,221,138,0.3)" : "var(--border)"}`,
               opacity: isTopRated ? 1 : 0.6,
             }}
           >
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: isTopRated ? "rgba(232,169,74,0.2)" : "var(--card)" }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: isTopRated ? "rgba(249,221,138,0.2)" : "var(--card)" }}>
               <Award size={20} color={isTopRated ? "var(--gold)" : "var(--muted)"} />
             </div>
             <div>

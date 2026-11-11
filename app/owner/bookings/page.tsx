@@ -21,9 +21,9 @@ const SERVICE_ICON: Record<string, any> = {
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  REQUESTED: { bg: "#fdece0", text: "#a5652a" },
-  ACCEPTED: { bg: "#e3f0e6", text: "#2f7a44" },
-  IN_PROGRESS: { bg: "#e3f0e6", text: "#2f7a44" },
+  REQUESTED: { bg: "#fdf1d6", text: "#8a2a4d" },
+  ACCEPTED: { bg: "#e4ebf6", text: "#2f7a44" },
+  IN_PROGRESS: { bg: "#e4ebf6", text: "#2f7a44" },
   COMPLETED: { bg: "var(--cream)", text: "var(--terracotta)" },
   CANCELLED: { bg: "#f3e8e8", text: "#a53a3a" },
   DECLINED: { bg: "#f3e8e8", text: "#a53a3a" },
@@ -143,7 +143,7 @@ export default async function OwnerBookingsPage() {
                     </div>
                     <span
                       className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0"
-                      style={o.status === "PAID" ? { background: "#e3f0e6", color: "#2f7a44" } : { background: "var(--cream)", color: "var(--muted)" }}
+                      style={o.status === "PAID" ? { background: "#e4ebf6", color: "#2f7a44" } : { background: "var(--cream)", color: "var(--muted)" }}
                     >
                       {o.status}
                     </span>

@@ -109,8 +109,8 @@ export default function PetsClient({
   const themeClass = initialThemeClass;
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
-      <header className="sticky top-0 z-30 px-5 pt-3 pb-3" style={{ background: "rgba(251,250,238,0.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(194,200,194,0.2)" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fffaf0", minHeight: "100vh" }}>
+      <header className="sticky top-0 z-30 px-5 pt-3 pb-3" style={{ background: "rgba(255,250,240,0.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(227,207,196,0.2)" }}>
         <div className="flex items-center justify-between">
           <PetSwitcher display="active" hideThemeSwitch />
           <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function PetsClient({
 
       <main className="max-w-lg lg:max-w-2xl mx-auto px-5 pt-4 pb-28">
         <div className="flex items-baseline justify-between mb-1">
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ ...H, color: "#132a1f" }}>Your Pets</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight" style={{ ...H, color: "#2a0c18" }}>Your Pets</h1>
           <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.7)", color: "#8c8271", border: "1px solid #e5dfd1" }}>
             {pets.length} registered
           </span>
@@ -142,19 +142,19 @@ export default function PetsClient({
           style={{ background: "linear-gradient(135deg, #ffffff, #f9f5ec)", border: "2px dashed #d2c5b0" }}
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(217,107,67,0.1)", color: "#d96b43" }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(110,30,59,0.1)", color: "#d96b43" }}>
               <Plus size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-sm flex items-center gap-1.5" style={{ color: "#132a1f" }}>
+              <h3 className="font-bold text-sm flex items-center gap-1.5" style={{ color: "#2a0c18" }}>
                 Add a New Pet
-                <span className="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded" style={{ background: "#132a1f", color: "white" }}>New</span>
+                <span className="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded" style={{ background: "#6e1e3b", color: "white" }}>New</span>
               </h3>
               <p className="text-xs mt-0.5" style={{ color: "#7a7160" }}>Generate a verified PawPassport ID &amp; medical log</p>
             </div>
           </div>
           <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "white", border: "1px solid #e3dcce" }}>
-            <ChevronRight size={16} color="#132a1f" />
+            <ChevronRight size={16} color="#2a0c18" />
           </div>
         </Link>
 
@@ -184,11 +184,11 @@ export default function PetsClient({
                 className="relative overflow-hidden rounded-2xl p-4"
                 style={{
                   background: "#ffffff",
-                  border: isActive ? "1px solid rgba(19,42,31,0.15)" : "1px solid #e8e2d5",
-                  boxShadow: "0 4px 20px -2px rgba(19,42,31,0.05)",
+                  border: isActive ? "1px solid rgba(42,12,24,0.15)" : "1px solid #e8e2d5",
+                  boxShadow: "0 4px 20px -2px rgba(42,12,24,0.05)",
                 }}
               >
-                {isActive && <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#132a1f" }} />}
+                {isActive && <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#6e1e3b" }} />}
                 <div className={isActive ? "pl-2" : ""}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -204,9 +204,9 @@ export default function PetsClient({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="font-extrabold text-base leading-tight" style={{ ...H, color: "#132a1f" }}>{p.name}</h2>
+                          <h2 className="font-extrabold text-base leading-tight" style={{ ...H, color: "#2a0c18" }}>{p.name}</h2>
                           {isActive ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Primary Active</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#6e1e3b", color: "#fff8ec" }}>Primary Active</span>
                           ) : (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#f5efeb", color: "#8c6239", border: "1px solid #e9dcd1" }}>{breedTag(p.species, p.breed)}</span>
                           )}
@@ -224,7 +224,7 @@ export default function PetsClient({
                         onClick={() => setActive(p.id)}
                         disabled={switching === p.id}
                         className="text-xs font-bold px-2.5 py-1 rounded-full tap-scale shrink-0"
-                        style={{ background: "#faf8f2", color: "#132a1f", border: "1px solid #dfd8ca" }}
+                        style={{ background: "#fff8ec", color: "#2a0c18", border: "1px solid #dfd8ca" }}
                       >
                         {switching === p.id ? "Setting…" : "Set Active"}
                       </button>
@@ -252,7 +252,7 @@ export default function PetsClient({
                     ) : (
                       <span className="text-[11px]" style={{ color: "#8f8574" }}>PawPassport™ #{derivePassportNumber(p.id)}</span>
                     )}
-                    <Link href={`/owner/pets/${p.id}`} className="inline-flex items-center text-xs font-bold tap-scale" style={{ color: "#132a1f" }}>
+                    <Link href={`/owner/pets/${p.id}`} className="inline-flex items-center text-xs font-bold tap-scale" style={{ color: "#2a0c18" }}>
                       {isActive ? "Passport & Care" : "View Profile"}
                       <ChevronRight size={14} className="ml-1" />
                     </Link>
@@ -263,13 +263,13 @@ export default function PetsClient({
           })}
         </div>
 
-        <div className="mt-4 rounded-2xl p-4 flex items-center justify-between opacity-80" style={{ background: "#132a1f", color: "white" }} title="Placeholder — not a real feature yet">
+        <div className="mt-4 rounded-2xl p-4 flex items-center justify-between opacity-80" style={{ background: "#6e1e3b", color: "white" }} title="Placeholder — not a real feature yet">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(196,131,68,0.2)", border: "1px solid rgba(196,131,68,0.4)" }}>
               🛡️
             </div>
             <div>
-              <h4 className="font-bold text-xs" style={{ color: "#faf8f2" }}>PawPassport™ Medical Share</h4>
+              <h4 className="font-bold text-xs" style={{ color: "#fff8ec" }}>PawPassport™ Medical Share</h4>
               <p className="text-[11px]" style={{ color: "#c6beaf" }}>Coming soon — QR share for vets &amp; boarders</p>
             </div>
           </div>

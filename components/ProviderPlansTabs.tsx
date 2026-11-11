@@ -30,7 +30,7 @@ export default function ProviderPlansTabs({ basePricePaise }: { basePricePaise: 
       price: Math.round(baseRupees * 1.8),
       unit: "/ wk",
       features: ["Advanced command mastery", "Distraction proofing in parks", "Priority text support"],
-      accent: "var(--forest, #16281f)",
+      accent: "var(--forest, #3d1426)",
       dark: true,
     },
   ];
@@ -68,7 +68,7 @@ export default function ProviderPlansTabs({ basePricePaise }: { basePricePaise: 
               className="tap-scale px-4 py-1.5 rounded-full text-xs font-semibold capitalize"
               style={{
                 background: tab === t ? "var(--card)" : "transparent",
-                color: tab === t ? "var(--forest, #16281f)" : "var(--muted)",
+                color: tab === t ? "var(--forest, #3d1426)" : "var(--muted)",
                 boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
               }}
             >

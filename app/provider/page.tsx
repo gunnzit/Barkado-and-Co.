@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import ProviderDashboard from "@/components/ProviderDashboard";
 import ProviderJoinForm from "@/components/ProviderJoinForm";
+import ProviderJoinHero, { ProviderHowItWorks } from "@/components/ProviderJoinHero";
 import ProviderOnlineToggle from "@/components/ProviderOnlineToggle";
 import { expireStaleBookings } from "@/lib/expireStaleBookings";
 import { isApplicationSubmitted } from "@/lib/providerApplication";
@@ -20,44 +21,47 @@ export default async function ProviderPage() {
   if (!user) {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
-        <main className="pb-16 max-w-lg mx-auto">
-          <div className="flex items-center gap-3 px-6 pt-4 pb-5">
-            <Link href="/" className="tap-scale">
-              <ArrowLeft size={20} />
+        <main className="pb-28 max-w-lg mx-auto">
+          <ProviderJoinHero />
+
+          <div className="px-4 space-y-5">
+            <Link href="/sign-in?redirect_url=/provider" className="w-full tap-scale flex items-center justify-center h-12 rounded-full font-bold text-sm shadow-md" style={{ background: "#f9dd8a", color: "#3d1426", fontFamily: "var(--font-heading)" }}>
+              Apply now
             </Link>
-          </div>
 
-          <div className="px-6">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--cream)", border: "1px solid var(--border)" }}>
-              <PawPrint size={26} color="var(--terracotta)" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">Become a Barkado provider</h1>
-            <p className="text-sm mb-8" style={{ color: "var(--muted)" }}>
-              Walk, groom, train, or sit for pets near you — on your own schedule, at your own price.
-            </p>
-
-            <div className="space-y-3 mb-8">
-              {BENEFITS.map((b) => {
-                const Icon = b.icon;
-                return (
-                  <div key={b.title} className="card flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                      <Icon size={16} color="var(--terracotta)" />
+            <section>
+              <h2 className="text-lg font-bold mb-3">Why join Barkado &amp; Co.?</h2>
+              <div className="space-y-2.5">
+                {BENEFITS.map((b) => {
+                  const Icon = b.icon;
+                  return (
+                    <div key={b.title} className="card !p-4 flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fef3dc" }}>
+                        <Icon size={18} color="var(--terracotta)" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: "var(--terracotta)" }}>{b.title}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{b.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm">{b.title}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{b.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            </section>
+
+            <ProviderHowItWorks />
+
+            <div>
+              <Link href="/sign-in?redirect_url=/provider" className="btn-primary w-full tap-scale text-center block">
+                Sign in to start your application
+              </Link>
+              <p className="text-xs text-center mt-3" style={{ color: "var(--muted)" }}>
+                Takes about 5 minutes. Keep your phone number, a clear photo and your ID handy.
+              </p>
             </div>
 
-            <Link href="/sign-in?redirect_url=/provider" className="btn-primary w-full tap-scale text-center block">
-              Sign in to get started
-            </Link>
-            <p className="text-xs text-center mt-3" style={{ color: "var(--muted)" }}>
-              Takes about 5 minutes. Keep your phone number, a clear photo and your ID handy.
+            <p className="flex items-center justify-center gap-1.5 text-[11px] pt-2" style={{ color: "var(--muted)" }}>
+              <PawPrint size={12} color="var(--terracotta)" /> Barkado &amp; Co. · A Hug in every Paw
             </p>
           </div>
         </main>
@@ -77,12 +81,7 @@ export default async function ProviderPage() {
     return (
       <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
         <main className="pb-16 max-w-lg mx-auto">
-          <div className="flex items-center gap-3 px-6 pt-4 pb-5">
-            <Link href="/" className="tap-scale">
-              <ArrowLeft size={20} />
-            </Link>
-            <h1 className="text-lg font-bold">Become a provider</h1>
-          </div>
+          <ProviderJoinHero compact />
           <ProviderJoinForm
             userEmail={user.email}
             userPhone={user.phone}
@@ -113,8 +112,8 @@ export default async function ProviderPage() {
             </Link>
           </div>
           <div className="px-6 text-center py-14">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#fdece0" }}>
-              <Clock size={28} color="#a5652a" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#fdf1d6" }}>
+              <Clock size={28} color="#8a2a4d" />
             </div>
             <h1 className="text-xl font-bold mb-2">Your request is being reviewed</h1>
             <p className="text-sm mb-2 max-w-xs mx-auto" style={{ color: "var(--muted)" }}>
@@ -167,7 +166,7 @@ export default async function ProviderPage() {
       <main className="pb-16 max-w-lg lg:max-w-none mx-auto">
         <div className="flex items-center justify-between px-6 pt-4 pb-3">
           <div className="flex items-center gap-2">
-            <PawPrint size={20} color="var(--forest, #16281f)" />
+            <PawPrint size={20} color="var(--forest, #3d1426)" />
             <span className="font-bold text-lg">Barkado Pro</span>
           </div>
           <div className="flex items-center gap-3">

@@ -293,7 +293,8 @@ export default function ServiceBookingFlow({
       {phase === "intro" && serviceType === "WALKING" && (
         <div className="animate-fade-up">
           {/* ===== Hero photo ===== */}
-          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+          <div className="relative mx-4 mb-6 overflow-hidden rounded-[2rem]" style={{ height: 280, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+            <span className="brand-wave z-10" aria-hidden="true" />
             <Image
               src="/images/banner-instant-walk.jpg"
               alt="Dog on a walk"
@@ -304,13 +305,13 @@ export default function ServiceBookingFlow({
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+              style={{ background: "linear-gradient(0deg, rgba(61,20,38,0.85) 10%, rgba(61,20,38,0.1) 60%, transparent 100%)" }}
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="absolute bottom-0 left-0 right-0 p-6 pb-9">
               {isFirstWalk && (
                 <span
                   className="inline-block text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full mb-3"
-                  style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+                  style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}
                 >
                   10% off your first walk
                 </span>
@@ -349,9 +350,9 @@ export default function ServiceBookingFlow({
                       <button
                         key={pkg.min}
                         onClick={() => setWalkDurationMin(pkg.min)}
-                        className="tap-scale w-full flex items-center justify-between rounded-xl px-4 py-3 text-left"
+                        className="tap-scale w-full flex items-center justify-between rounded-3xl px-4 py-3.5 text-left"
                         style={{
-                          background: selected ? "var(--cream)" : "var(--card)",
+                          background: selected ? "#fef3dc" : "var(--card)",
                           border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
                         }}
                       >
@@ -391,7 +392,7 @@ export default function ServiceBookingFlow({
                 <h2 className="font-bold text-lg mb-3">Why Choose Our Walks?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #16281f)" },
+                    { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #3d1426)" },
                     { icon: Camera, title: "Photo Updates", desc: "Paw-some moments delivered to your phone — coming soon.", color: "var(--terracotta)" },
                     { icon: ShieldCheck, title: "Verified Walkers", desc: "Every walker is document-verified before going live.", color: "var(--gold)" },
                     { icon: Clock, title: "Flexible Durations", desc: "30, 45, or 60-minute walks to fit your schedule.", color: "var(--heritage-red, #c0392b)" },
@@ -436,7 +437,7 @@ export default function ServiceBookingFlow({
                             would be a false claim, not a "coming soon". */}
                         <div className="flex flex-wrap justify-center gap-1">
                           {SAMPLE_WALKING_SPECIALTIES[sampleIndexFor(w.id, SAMPLE_WALKING_SPECIALTIES.length)].map((tag) => (
-                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
                               {tag}
                             </span>
                           ))}
@@ -457,7 +458,8 @@ export default function ServiceBookingFlow({
       {phase === "intro" && serviceType === "TRAINING" && (
         <div className="animate-fade-up">
           {/* ===== Hero photo ===== */}
-          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+          <div className="relative mx-4 mb-6 overflow-hidden rounded-[2rem]" style={{ height: 280, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+            <span className="brand-wave z-10" aria-hidden="true" />
             <Image
               src="/images/hero-dog-german-shepherd.jpg"
               alt="Dog training session"
@@ -468,9 +470,9 @@ export default function ServiceBookingFlow({
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+              style={{ background: "linear-gradient(0deg, rgba(61,20,38,0.85) 10%, rgba(61,20,38,0.1) 60%, transparent 100%)" }}
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="absolute bottom-0 left-0 right-0 p-6 pb-9">
               <div
                 className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
                 style={{ background: "var(--heritage-red, #c0392b)", color: "white" }}
@@ -529,7 +531,7 @@ export default function ServiceBookingFlow({
                 <h2 className="font-bold text-lg mb-3">Why Choose Our Training?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    { icon: ShieldCheck, title: "Certified Trainers", desc: "Verified trainer certifications — coming soon.", color: "var(--forest, #16281f)" },
+                    { icon: ShieldCheck, title: "Certified Trainers", desc: "Verified trainer certifications — coming soon.", color: "var(--forest, #3d1426)" },
                     { icon: Sparkles, title: "Positive Reinforcement", desc: "We only work with reward-based, positive methods.", color: "var(--gold)" },
                     { icon: PawPrint, title: "Personalized Plans", desc: "Every dog is unique — tailored to your pet's needs.", color: "var(--terracotta)" },
                     { icon: Camera, title: "Progress Reports", desc: "Session updates and homework — coming soon.", color: "var(--heritage-red, #c0392b)" },
@@ -558,7 +560,8 @@ export default function ServiceBookingFlow({
           every groomer names and prices their own packages). ===== */}
       {phase === "intro" && serviceType === "GROOMING" && (
         <div className="animate-fade-up">
-          <div className="relative w-full mb-6 overflow-hidden" style={{ height: 280 }}>
+          <div className="relative mx-4 mb-6 overflow-hidden rounded-[2rem]" style={{ height: 280, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+            <span className="brand-wave z-10" aria-hidden="true" />
             <Image
               src="/images/hero-dog-beagle.jpg"
               alt="Dog grooming session"
@@ -569,12 +572,12 @@ export default function ServiceBookingFlow({
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(0deg, rgba(22,40,31,0.85) 10%, rgba(22,40,31,0.1) 60%, transparent 100%)" }}
+              style={{ background: "linear-gradient(0deg, rgba(61,20,38,0.85) 10%, rgba(61,20,38,0.1) 60%, transparent 100%)" }}
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="absolute bottom-0 left-0 right-0 p-6 pb-9">
               <div
                 className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
-                style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}
+                style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}
               >
                 Luxury Spa Session
               </div>
@@ -603,7 +606,7 @@ export default function ServiceBookingFlow({
                 <h2 className="font-bold text-lg mb-3">Why Choose Our Grooming?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    { icon: ShieldCheck, title: "Verified Groomers", desc: "Every groomer is document-verified before going live.", color: "var(--forest, #16281f)" },
+                    { icon: ShieldCheck, title: "Verified Groomers", desc: "Every groomer is document-verified before going live.", color: "var(--forest, #3d1426)" },
                     { icon: Star, title: "Breed-Specific Styling", desc: "Real groomer specialties and years of experience — see them on each profile.", color: "var(--gold)" },
                     { icon: PawPrint, title: "Priced by Size", desc: "Transparent, per-size pricing for every package, no surprises.", color: "var(--terracotta)" },
                     { icon: Camera, title: "Photo Updates", desc: "Before/after photos from the session — coming soon.", color: "var(--heritage-red, #c0392b)" },
@@ -644,7 +647,7 @@ export default function ServiceBookingFlow({
                       src={p.photoUrl || `https://i.pravatar.cc/150?u=pet-${p.id}`}
                       alt={p.name}
                       className="w-16 h-16 rounded-full object-cover mb-1.5"
-                      style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}` }}
+                      style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`, boxShadow: selected ? "0 0 0 3px var(--gold)" : undefined }}
                     />
                     <p className="text-xs font-semibold" style={{ color: selected ? undefined : "var(--muted)" }}>{p.name}</p>
                   </button>
@@ -674,7 +677,7 @@ export default function ServiceBookingFlow({
                   <button
                     key={d.iso}
                     onClick={() => setSelectedDateIso(d.iso)}
-                    className="tap-scale flex-1 flex flex-col items-center py-2 rounded-xl"
+                    className="tap-scale flex-1 flex flex-col items-center py-2.5 rounded-full"
                     style={{ background: selected ? "var(--panel-dark)" : "transparent" }}
                   >
                     <span className="text-[11px] font-semibold mb-1" style={{ color: selected ? "rgba(255,255,255,0.75)" : "var(--muted)" }}>
@@ -707,9 +710,9 @@ export default function ServiceBookingFlow({
                           <button
                             key={slot.label}
                             onClick={() => setSelectedSlot(slot)}
-                            className="tap-scale px-4 py-2.5 rounded-xl text-sm font-semibold"
+                            className="tap-scale px-4 py-2.5 rounded-full text-sm font-semibold"
                             style={{
-                              background: selected ? "var(--card)" : "var(--card)",
+                              background: selected ? "var(--gold)" : "var(--card)",
                               border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
                             }}
                           >
@@ -869,12 +872,12 @@ export default function ServiceBookingFlow({
                               mechanism). Only shown when an active, PAID
                               campaign actually matched this search. */}
                           {p.isCampaignBoosted && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}>
-                              <Star size={10} fill="var(--forest, #16281f)" /> Featured
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}>
+                              <Star size={10} fill="var(--forest, #3d1426)" /> Featured
                             </span>
                           )}
                           {p.availableAtRequestedTime === false && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
                               <Clock size={10} /> Outside their hours
                             </span>
                           )}
@@ -956,7 +959,7 @@ export default function ServiceBookingFlow({
                           <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "var(--muted)" }}>Specialties</p>
                           <div className="flex flex-wrap gap-1">
                             {(serviceType === "GROOMING" ? SAMPLE_GROOMING_SPECIALTIES : SAMPLE_SPECIALTIES)[sampleIndexFor(p.id, SAMPLE_SPECIALTIES.length)].map((tag) => (
-                              <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+                              <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
                                 {tag}
                               </span>
                             ))}
@@ -1005,8 +1008,8 @@ export default function ServiceBookingFlow({
 
       <style jsx>{`
         @keyframes walkStartPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(201, 122, 86, 0.5); }
-          50% { box-shadow: 0 0 0 12px rgba(201, 122, 86, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(110, 30, 59, 0.5); }
+          50% { box-shadow: 0 0 0 12px rgba(110, 30, 59, 0); }
         }
         .walk-start-pulse {
           animation: walkStartPulse 2s ease-in-out infinite;

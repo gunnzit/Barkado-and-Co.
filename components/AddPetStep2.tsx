@@ -197,23 +197,23 @@ export default function AddPetStep2({ pet: initialPet }: { pet: Pet }) {
         </div>
 
         {/* Vaccination Ledger — dark card, same treatment as the Passport page */}
-        <div className="rounded-2xl bg-[#02120a] text-[#fbfaee] p-4 mb-2 shadow-lg">
+        <div className="rounded-2xl bg-[#6e1e3b] text-[#fffaf0] p-4 mb-2 shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Syringe size={18} color="#fcba5a" />
+              <Syringe size={18} color="#f9dd8a" />
               <p className="font-bold text-sm">Vaccination Ledger</p>
             </div>
-            <Link href="/owner/vaccines" className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#fcba5a] text-[#291800] flex items-center gap-1">
+            <Link href="/owner/vaccines" className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#f9dd8a] text-[#291800] flex items-center gap-1">
               <Plus size={12} /> Add Record
             </Link>
           </div>
-          <div className="flex items-center justify-around text-center text-xs bg-[#16281f] rounded-xl p-2.5">
+          <div className="flex items-center justify-around text-center text-xs bg-[#6e1e3b] rounded-xl p-2.5">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span className="font-bold">{vaxCounts.VALID} Valid</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#fcba5a]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#f9dd8a]"></span>
               <span className="font-bold">{vaxCounts.DUE_SOON} Booster Due</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -235,8 +235,8 @@ export default function AddPetStep2({ pet: initialPet }: { pet: Pet }) {
                 const status = vaccinationStatus(v);
                 const badgeStyle =
                   status === "OVERDUE" ? { background: "#ffdad6", color: "#93000a" } :
-                  status === "DUE_SOON" ? { background: "#fcba5a", color: "#291800" } :
-                  { background: "#d2e8d9", color: "#02120a" };
+                  status === "DUE_SOON" ? { background: "#f9dd8a", color: "#291800" } :
+                  { background: "#dbe5f3", color: "#2a0c18" };
                 const badgeLabel = status === "OVERDUE" ? "Overdue" : status === "DUE_SOON" ? "Booster Due" : "Valid";
                 return (
                   <div key={v.id} className="card flex items-center justify-between py-3">

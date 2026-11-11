@@ -87,17 +87,17 @@ export default function ProviderEarningsPanel() {
       {/* ===== Total Earned — lifetime net. Kept separate from "Amount
           Owed" below, since they're genuinely different numbers: lifetime
           earned vs. what's currently unclaimed and requestable. ===== */}
-      <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
-        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: "rgba(201,122,86,0.08)" }} />
+      <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
+        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: "rgba(110,30,59,0.08)" }} />
         <div className="relative z-10">
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--muted)" }}>Total Earned</p>
           <h2 className="text-4xl font-bold mb-1">{rupees(data.lifetimeNetPaise)}</h2>
           <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-            <span className="font-semibold" style={{ color: "var(--forest, #16281f)" }}>{rupees(data.amountOwedPaise)}</span> owed right now
+            <span className="font-semibold" style={{ color: "var(--forest, #3d1426)" }}>{rupees(data.amountOwedPaise)}</span> owed right now
           </p>
 
           {justRequested ? (
-            <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--forest, #16281f)" }}>
+            <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--forest, #3d1426)" }}>
               <CheckCircle2 size={16} /> Payout requested — we'll be in touch.
             </p>
           ) : (
@@ -141,7 +141,7 @@ export default function ProviderEarningsPanel() {
         <div className="card" style={{ background: "var(--cream)" }}>
           <div className="flex justify-between items-start mb-2">
             <p className="text-[11px] font-semibold">Net Payouts</p>
-            <PiggyBank size={16} color="var(--forest, #16281f)" style={{ opacity: 0.5 }} />
+            <PiggyBank size={16} color="var(--forest, #3d1426)" style={{ opacity: 0.5 }} />
           </div>
           <p className="text-xl font-bold">{rupees(data.month.totalPaise)}</p>
           <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>This month</p>
@@ -193,7 +193,7 @@ export default function ProviderEarningsPanel() {
               <>
                 <p className="text-sm font-medium">{data.payoutInfo.holderName} · {data.payoutInfo.accountMasked}</p>
                 {data.payoutInfo.bankName && (
-                  <p className="text-xs flex items-center gap-1.5 mt-0.5" style={{ color: "var(--forest, #16281f)" }}>
+                  <p className="text-xs flex items-center gap-1.5 mt-0.5" style={{ color: "var(--forest, #3d1426)" }}>
                     <CheckCircle2 size={12} /> Format verified — {data.payoutInfo.bankName}, {data.payoutInfo.bankBranch}
                   </p>
                 )}

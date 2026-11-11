@@ -157,14 +157,14 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {topPages.length > 0 && (
             <div className="card">
               <p className="text-sm font-bold mb-3">Most visited pages</p>
-              <TopBarChart data={topPages} color="#c97a56" />
+              <TopBarChart data={topPages} color="#6e1e3b" />
             </div>
           )}
 
           {topClicks.length > 0 && (
             <div className="card">
               <p className="text-sm font-bold mb-3">Most clicked</p>
-              <TopBarChart data={topClicks} color="#16281f" />
+              <TopBarChart data={topClicks} color="#3d1426" />
             </div>
           )}
 

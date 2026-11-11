@@ -48,7 +48,7 @@ export default async function TrainingPage() {
               )}
             </div>
           </div>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0" style={{ background: "#e8f4ec", color: "#2f6fb0" }}>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0" style={{ background: "#e4ebf6", color: "#2f6fb0" }}>
             <span className="w-2 h-2 rounded-full" style={{ background: "#2f9e5f" }} />
             Nearby
           </span>

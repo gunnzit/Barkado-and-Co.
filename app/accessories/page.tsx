@@ -98,7 +98,7 @@ export default async function AccessoriesPage() {
   const activePartnerBrandName = serialized.find((p) => p.partnerBrand)?.partnerBrand?.name ?? null;
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fffaf0", minHeight: "100vh" }}>
       <main className="pb-28 max-w-lg sm:max-w-4xl mx-auto">
         {products.length === 0 ? (
           <p className="px-6 pt-6 text-sm" style={{ color: "var(--muted)" }}>

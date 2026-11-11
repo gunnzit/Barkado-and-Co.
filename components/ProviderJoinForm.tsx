@@ -30,7 +30,7 @@ export type JoinInitial = {
 // Colours fall back to fixed values so this works whether or not the new
 // design tokens (--success, --danger…) have been added to globals.css yet.
 const OK = "var(--success, #2f7a44)";
-const OK_BG = "var(--success-bg, #e3f0e6)";
+const OK_BG = "var(--success-bg, #e4ebf6)";
 const BAD = "var(--danger, #b3261e)";
 
 const BIO_MIN = 20;

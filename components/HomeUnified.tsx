@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import {
-  Sparkles, RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
-  GraduationCap, Home as HomeIcon, BadgeCheck, AlertTriangle, ArrowRight,
-  ChevronRight, ShieldCheck, MapPin, Truck, Clock, SlidersHorizontal, Zap,
-  Radar, HeartPulse, PhoneCall, Gift, Plus, Star, Check, PawPrint, MoreVertical,
+  RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
+  GraduationCap, Home as HomeIcon, BadgeCheck, ArrowRight,
+  ChevronRight, ShieldCheck, MapPin, PhoneCall, Plus, Star, Check, PawPrint, MoreVertical,
 } from "lucide-react";
 import EmergencyButton from "@/components/EmergencyButton";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
@@ -24,15 +23,31 @@ const SERVICE_LABEL: Record<string, string> = {
 };
 const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", SITTING: "/sitting", GROOMING: "/grooming", TRAINING: "/training" };
 
-const ON_DEMAND = [
-  { label: "Walk in 15m", icon: Footprints, href: "/walk-booking", badge: "⚡ 15M", badgeBg: "#904c2c" },
-  { label: "Mobile Spa", icon: Bath, href: "/grooming", badge: "20% OFF", badgeBg: "#fcba5a" },
-  { label: "Vet At Home", icon: Stethoscope, href: "/owner/pets", badge: "24/7", badgeBg: "#02120a" },
-  { label: "10m Treats", icon: Utensils, href: "/accessories", badge: "FAST", badgeBg: "#904c2c" },
-  { label: "Manners", icon: GraduationCap, href: "/training", badge: null },
-  { label: "Staycation", icon: HomeIcon, href: "/sitting", badge: null },
-  { label: "Passport", icon: BadgeCheck, href: "/owner/pets", badge: null },
+// Service grid from the Stitch "Home" design (design/stitch/01-home). No speed or
+// discount badges: none of those promises are backed by real dispatch data yet.
+const SERVICES = [
+  { label: "Dog Walks", icon: Footprints, href: "/walk-booking" },
+  { label: "Home Spa", icon: Bath, href: "/grooming" },
+  { label: "Vet at Home", icon: Stethoscope, href: "/owner/pets" },
+  { label: "Training", icon: GraduationCap, href: "/training" },
+  { label: "Staycation", icon: HomeIcon, href: "/sitting" },
+  { label: "Shop", icon: Utensils, href: "/accessories" },
 ];
+
+const PLUM = "#6e1e3b";
+const INK = "#3d1426";
+const YELLOW = "#f9dd8a";
+const IVORY = "#fbf0d9";
+const CARD_SHADOW = "0 8px 24px -4px rgba(61,20,38,0.06)";
+
+/** Golden-yellow wavy band — the brand's signature edge for plum panels. */
+function WaveBand({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 10 C 50 0, 100 20, 150 10 S 250 0, 300 10 S 380 20, 400 8 L400 24 L0 24 Z" fill={YELLOW} />
+    </svg>
+  );
+}
 
 type Pet = {
   id: string; name: string; breed: string | null; photoUrl: string | null;
@@ -90,16 +105,41 @@ export default function HomeUnified({
   const vChip = activePet ? vaccineStatusChip(activePet.vaccinations) : null;
 
   return (
-    <div style={{ background: "#fbfaee" }}>
+    <div style={{ background: IVORY }}>
       <EmergencyButton />
       <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-      <main className="flex flex-col relative w-full pt-2 pb-24" style={{ background: "#fbfaee" }}>
+      <main className="flex flex-col relative w-full pt-2 pb-24" style={{ background: IVORY }}>
         <div className="max-w-6xl mx-auto w-full">
+
+          {/* Hero — plum card, cut-out dog, golden wave (Stitch Home) */}
+          <section className="px-4 pt-2 pb-3">
+            <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+              <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
+              <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-8">
+                <div className="flex-1 min-w-0 pb-1">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
+                    <PawPrint size={11} /> Chandigarh
+                  </span>
+                  <h1 className="mt-2 text-[28px] leading-[1.1] font-bold tracking-tight text-white" style={H}>
+                    A Hug in every Paw
+                  </h1>
+                  <p className="mt-1.5 text-xs leading-snug" style={{ color: "rgba(251,240,217,0.85)" }}>
+                    Verified walkers, groomers and sitters at your doorstep.
+                  </p>
+                  <Link href="/walk-booking" onClick={gate} className="mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
+                    Book a walk <ArrowRight size={15} />
+                  </Link>
+                </div>
+                <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="w-32 h-40 sm:w-44 sm:h-52 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)" }} />
+              </div>
+              <WaveBand className="absolute bottom-0 left-0 w-full h-5" />
+            </div>
+          </section>
 
           {activeProviderCount > 0 && (
             <div className="px-4 py-2">
-              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl" style={{ background: "#02120a", color: "white" }}>
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl" style={{ background: "#6e1e3b", color: "white" }}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#34d399" }} />
@@ -107,10 +147,10 @@ export default function HomeUnified({
                   </span>
                   <div className="truncate text-xs">
                     <span className="font-bold text-white">{activeProviderCount} Pro{activeProviderCount === 1 ? "" : "s"} active</span>
-                    <span style={{ color: "rgba(228,227,215,0.8)" }}> around your area</span>
+                    <span style={{ color: "rgba(240,224,200,0.8)" }}> around your area</span>
                   </div>
                 </div>
-                <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#904c2c", color: "white", ...H }} title="Not a real ETA yet">
+                <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#6e1e3b", color: "white", ...H }} title="Not a real ETA yet">
                   ⚡ ETA
                 </span>
               </div>
@@ -119,13 +159,13 @@ export default function HomeUnified({
 
           <section className="px-4 pt-2 pb-2.5">
             {activePet ? (
-              <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: "#ffffff", border: "1px solid rgba(19,42,31,0.15)", boxShadow: "0 4px 20px -2px rgba(19,42,31,0.05)" }}>
-                <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#132a1f" }} />
+              <div className="relative overflow-hidden rounded-[1.75rem] p-4" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
+                <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: PLUM }} />
                 <div className="pl-2">
                   <div className="flex items-center justify-between mb-3">
                     <PetSwitcher display="viewing" hideThemeSwitch />
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Active</span>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: "#6e1e3b", color: "#fff8ec" }}>Active</span>
                       <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="w-7 h-7 rounded-lg flex items-center justify-center" aria-label="Pet options">
                         <MoreVertical size={16} color="#a29887" />
                       </Link>
@@ -150,7 +190,7 @@ export default function HomeUnified({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid #f2ece1" }}>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#ebf5ee", color: "#1d693b", border: "1px solid #d5ebdc" }}>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbe5f3", color: INK }}>
                       <Check size={11} /> PawPassport™ #{derivePassportNumber(activePet.id)}
                     </span>
                     {vChip && (
@@ -169,62 +209,61 @@ export default function HomeUnified({
                     ) : (
                       <span />
                     )}
-                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale ml-auto" style={{ color: "#132a1f" }}>
+                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale ml-auto" style={{ color: "#2a0c18" }}>
                       Passport &amp; Care <ChevronRight size={14} className="ml-1" />
                     </Link>
                   </div>
                 </div>
               </div>
             ) : (
-              <Link href="/owner/pets" onClick={gate} className="rounded-2xl p-4 flex items-center justify-center text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                <p className="text-sm font-semibold" style={{ color: "#02120a" }}>{isSignedIn ? "Add your first pet" : "Sign in to create your dog's Paw Passport"}</p>
+              <Link href="/owner/pets" onClick={gate} className="relative overflow-hidden rounded-[1.75rem] p-4 flex items-center gap-3 tap-scale" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
+                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
+                  <BadgeCheck size={22} color={PLUM} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[17px] leading-tight" style={{ ...H, color: PLUM }}>Paw Passport</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#5e4752" }}>
+                    {isSignedIn ? "Add your dog to keep vaccines, care notes and walks in one place." : "Sign in to create your dog's Paw Passport: vaccines, care notes and walks in one place."}
+                  </p>
+                </div>
+                <ChevronRight size={18} color={PLUM} className="shrink-0" />
               </Link>
             )}
 
             {rebookCandidate && (
-              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl mt-2.5" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl mt-2.5" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)" }}>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#02120a" }}>
-                    <History size={14} color="#904c2c" />
+                  <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#2a0c18" }}>
+                    <History size={14} color="#6e1e3b" />
                     <span>{SERVICE_LABEL[rebookCandidate.type]}</span>
                   </div>
-                  <div className="text-[10px] truncate" style={{ color: "#424844" }}>
+                  <div className="text-[10px] truncate" style={{ color: "#5e4752" }}>
                     {rebookCandidate.startTime ? rebookCandidate.startTime.toLocaleString("en-IN", { weekday: "long", hour: "numeric", minute: "2-digit" }) : ""}
                     {rebookCandidate.provider ? ` with ${rebookCandidate.provider.user.name}` : ""}
                     {rebookCandidate.priceAmount ? ` • ₹${(rebookCandidate.priceAmount / 100).toFixed(0)}` : ""}
                   </div>
                 </div>
-                <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
+                <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
                   <RotateCcw size={14} /> 1-Tap Rebook
                 </Link>
               </div>
             )}
           </section>
 
-          <section className="py-2.5">
-            <div className="flex items-center justify-between px-4 mb-2">
-              <div>
-                <h3 className="font-bold text-sm tracking-tight" style={{ ...H, color: "#02120a" }}>Instant On-Demand Care</h3>
-                <p className="text-[11px]" style={{ color: "#424844" }}>Book real appointments in a few taps</p>
-              </div>
-              <Link href="/walk-booking" onClick={gate} className="text-[11px] font-semibold flex items-center gap-0.5" style={{ color: "#904c2c" }}>
-                Explore All <ChevronRight size={13} />
-              </Link>
+          <section className="px-4 py-3">
+            <div className="mb-2.5">
+              <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Our Services</h2>
+              <p className="text-xs" style={{ color: "#5e4752" }}>Crafted for wagging tails</p>
             </div>
-            <div className="flex gap-2.5 px-4 overflow-x-auto pb-1.5">
-              {ON_DEMAND.map((o) => {
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+              {SERVICES.map((o) => {
                 const Icon = o.icon;
                 return (
-                  <Link key={o.label} href={o.href} onClick={gate} className="shrink-0 flex flex-col items-center text-center p-2 rounded-2xl tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)", minWidth: 76 }}>
-                    <div className="relative w-12 h-12 rounded-xl flex items-center justify-center mb-1.5" style={{ background: "#efeee3" }}>
-                      <Icon size={22} color="#02120a" />
-                      {o.badge && (
-                        <span className="absolute -top-1.5 -right-1 px-1 py-0.5 rounded-full text-[8px] font-extrabold uppercase" style={{ background: o.badgeBg, color: "white" }} title="Placeholder — no real instant-dispatch timing exists yet">
-                          {o.badge}
-                        </span>
-                      )}
+                  <Link key={o.label} href={o.href} onClick={gate} className="flex flex-col items-center text-center p-3 rounded-2xl tap-scale transition-shadow hover:shadow-md" style={{ background: "#ffffff", boxShadow: CARD_SHADOW }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-2" style={{ background: "#f8edd6" }}>
+                      <Icon size={21} color={PLUM} />
                     </div>
-                    <span className="font-bold text-[11px] leading-tight" style={{ ...H, color: "#02120a" }}>{o.label}</span>
+                    <span className="font-bold text-xs leading-tight" style={{ ...H, color: PLUM }}>{o.label}</span>
                   </Link>
                 );
               })}
@@ -232,15 +271,15 @@ export default function HomeUnified({
           </section>
 
           <section className="px-4 py-2.5">
-            <div className="p-4 rounded-2xl flex flex-col gap-3.5" style={{ background: "linear-gradient(135deg, #e9e9dd, #efeee3, #f5f4e8)", border: "1px solid rgba(194,200,194,0.3)" }}>
+            <div className="p-4 rounded-[1.75rem] flex flex-col gap-3.5" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-extrabold text-base tracking-tight leading-tight" style={{ ...H, color: "#02120a" }}>Grooming &amp; Training Care Bundles</h3>
-                  <p className="text-[11px] mt-0.5" style={{ color: "#424844" }}>
+                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Care Bundles</h2>
+                  <p className="text-[11px] mt-0.5" style={{ color: "#5e4752" }}>
                     {(groomingBundles.length > 0 || trainingBundles.length > 0) ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
                   </p>
                 </div>
-                <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#904c2c" }}>
+                <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#6e1e3b" }}>
                   All Bundles <ChevronRight size={14} />
                 </Link>
               </div>
@@ -248,38 +287,38 @@ export default function HomeUnified({
                 {(groomingBundles.length > 0 || trainingBundles.length > 0) ? (
                   <>
                     {groomingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
+                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(227,207,196,0.25)" }}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName}</p>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#f9dd8a", color: "#6e1e3b", ...H }}>Bundle</span>
+                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>{b.name}</h4>
+                            <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>{b.providerName}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
+                            <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
                           </div>
                         </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                          <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
+                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(227,207,196,0.15)" }}>
+                          <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
                             Choose Bundle <ArrowRight size={12} />
                           </Link>
                         </div>
                       </div>
                     ))}
                     {trainingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
+                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(227,207,196,0.25)" }}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#dbe5f3", color: "#24101a", ...H }}>Bundle</span>
+                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>{b.name}</h4>
+                            <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
+                            <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
                           </div>
                         </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                          <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
+                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(227,207,196,0.15)" }}>
+                          <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
                             Choose Bundle <ArrowRight size={12} />
                           </Link>
                         </div>
@@ -288,27 +327,27 @@ export default function HomeUnified({
                   </>
                 ) : (
                   <>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
+                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(227,207,196,0.5)" }} title="Sample — create real packages via a provider dashboard">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Groom &amp; Glow Ritual (4 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#f9dd8a", color: "#6e1e3b", ...H }}>Sample</span>
+                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>Groom &amp; Glow Ritual (4 Sessions)</h4>
+                          <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>Example only — no provider has created this yet</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹1,599</div>
+                          <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>from ₹1,599</div>
                         </div>
                       </div>
                     </div>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
+                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(227,207,196,0.5)" }} title="Sample — create real packages via a provider dashboard">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Master Manners &amp; Social (6 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#dbe5f3", color: "#24101a", ...H }}>Sample</span>
+                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>Master Manners &amp; Social (6 Sessions)</h4>
+                          <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>Example only — no provider has created this yet</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹3,899</div>
+                          <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>₹3,899</div>
                         </div>
                       </div>
                     </div>
@@ -322,34 +361,32 @@ export default function HomeUnified({
             <section className="px-4 py-3">
               <div className="flex items-center justify-between mb-2.5">
                 <div>
-                  <h3 className="font-bold text-base tracking-tight" style={{ ...H, color: "#02120a" }}>Artisanal Accessories &amp; Essentials</h3>
-                  <p className="text-[11px]" style={{ color: "#424844" }}>Handcrafted goods for your dog</p>
+                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Artisanal Accessories</h2>
+                  <p className="text-xs" style={{ color: "#5e4752" }}>Handcrafted goods for your dog</p>
                 </div>
-                <Link href="/accessories" className="text-xs font-bold flex items-center shrink-0" style={{ color: "#904c2c" }}>
-                  View All <ChevronRight size={14} />
+                <Link href="/accessories" className="text-xs font-bold underline underline-offset-2 shrink-0" style={{ color: PLUM }}>
+                  Catalog
                 </Link>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                 {products.slice(0, 6).map((p) => (
-                  <div key={p.id} className="shrink-0 rounded-2xl p-2.5 flex flex-col justify-between" style={{ width: 156, background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-                    <div>
-                      <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2" style={{ background: "#f5f4e8" }}>
-                        {p.imageUrls[0] && <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />}
-                      </div>
-                      <h4 className="font-bold text-xs line-clamp-1" style={{ ...H, color: "#02120a" }}>{p.name}</h4>
+                  <Link key={p.id} href={`/accessories/${p.id}`} className="shrink-0 rounded-[1.5rem] p-2.5 flex flex-col justify-between tap-scale" style={{ width: 160, background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
+                    <div className="img-frame relative w-full h-32 !rounded-2xl mb-2" style={{ background: IVORY }}>
+                      {p.imageUrls[0] ? <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><PawPrint size={26} color="rgba(110,30,59,0.25)" /></div>}
                     </div>
-                    <div className="flex items-center justify-between mt-2 pt-1" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                      <div className="flex flex-col">
-                        <span className="font-extrabold text-xs" style={{ ...H, color: "#02120a" }}>₹{(p.price / 100).toFixed(0)}</span>
+                    <h4 className="font-bold text-sm line-clamp-1 px-0.5" style={{ ...H, color: PLUM }}>{p.name}</h4>
+                    <div className="flex items-center justify-between mt-1.5 px-0.5">
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-bold text-sm" style={{ ...H, color: INK }}>₹{(p.price / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
                         {p.compareAtPrice && p.compareAtPrice > p.price && (
-                          <span className="text-[9px] line-through" style={{ color: "#737874" }}>₹{(p.compareAtPrice / 100).toFixed(0)}</span>
+                          <span className="text-[10px] line-through" style={{ color: "#735c68" }}>₹{(p.compareAtPrice / 100).toFixed(0)}</span>
                         )}
                       </div>
-                      <Link href={`/accessories/${p.id}`} className="px-2.5 py-1 rounded-lg font-bold text-[11px] tap-scale" style={{ background: "#e9e9dd", color: "#02120a", ...H }}>
-                        <Plus size={12} className="inline" /> ADD
-                      </Link>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true">
+                        <Plus size={16} />
+                      </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>
@@ -359,38 +396,38 @@ export default function HomeUnified({
             <section className="px-4 py-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="font-bold text-base tracking-tight" style={{ ...H, color: "#02120a" }}>Pros Ready Right Now</h3>
-                  <p className="text-[11px]" style={{ color: "#424844" }}>{verifiedCount} verified handlers in your network</p>
+                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Pros ready near you</h2>
+                  <p className="text-xs" style={{ color: "#5e4752" }}>{verifiedCount} verified caregiver{verifiedCount === 1 ? "" : "s"} in your network</p>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#efeee3", color: "#02120a", border: "1px solid rgba(194,200,194,0.3)" }}>
-                  <SlidersHorizontal size={13} /> Filter
-                </div>
+                <Link href="/walk-booking" onClick={gate} className="text-xs font-bold underline underline-offset-2 shrink-0" style={{ color: PLUM }}>
+                  View all
+                </Link>
               </div>
               <div className="flex flex-col gap-3">
                 {providers.map((p) => (
-                  <div key={p.id} className="p-3.5 rounded-2xl flex flex-col gap-3" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0" style={{ boxShadow: "0 0 0 2px rgba(2,18,10,0.2)" }}>
-                          {p.photoUrl ? <img src={p.photoUrl} alt={p.user.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ background: "#efeee3" }} />}
-                          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full" style={{ background: "#10b981", border: "2px solid white" }} />
+                  <div key={p.id} className="p-4 rounded-[1.75rem] flex flex-col gap-3" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0" style={{ boxShadow: `0 0 0 2px ${YELLOW}` }}>
+                        {p.photoUrl ? <img src={p.photoUrl} alt={p.user.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ background: "#f8edd6" }}><PawPrint size={20} color={PLUM} /></div>}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-bold text-base truncate" style={{ ...H, color: PLUM }}>{p.user.name}</h4>
+                          <BadgeCheck size={16} color="#a5bde1" className="shrink-0" aria-label="Verified" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-bold text-sm" style={{ ...H, color: "#02120a" }}>{p.user.name}</h4>
-                            <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#02120a", color: "white" }}>★ {p.ratingAvg.toFixed(2)}</span>
-                          </div>
-                          <p className="text-xs" style={{ color: "#424844" }}>{p._count.bookings} completed</p>
-                        </div>
+                        <p className="text-xs flex items-center gap-1" style={{ color: "#5e4752" }}>
+                          <Star size={12} fill="#e9b949" color="#e9b949" />
+                          <span className="font-semibold" style={{ color: INK }}>{p.ratingAvg > 0 ? p.ratingAvg.toFixed(2) : "New"}</span>
+                          <span>· {p._count.bookings} completed</span>
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-1" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md font-bold text-[11px]" style={{ background: "#d2e8d9", color: "#0d1f16" }}>
-                        <Clock size={14} />
-                        <span>Available now</span>
-                      </div>
-                      <Link href="/walk-booking" onClick={gate} className="px-4 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
-                        Book <Zap size={14} />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: YELLOW, color: INK }}>
+                        <ShieldCheck size={13} /> ID verified
+                      </span>
+                      <Link href="/walk-booking" onClick={gate} className="px-5 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: PLUM, color: "white", ...H }}>
+                        Book
                       </Link>
                     </div>
                   </div>
@@ -400,35 +437,26 @@ export default function HomeUnified({
           )}
 
           <section className="px-4 py-2">
-            <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={20} color="#904c2c" />
-                  <h3 className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>Barkado Assured Standard</h3>
+            {/* Trust strip (Stitch Home). Only claims the product backs today. */}
+            <div className="grid grid-cols-3 rounded-[1.75rem] py-3" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+              {[
+                { icon: ShieldCheck, label: "ID-verified pros" },
+                { icon: BadgeCheck, label: "Paw Passport records" },
+                { icon: Check, label: "Secure payments" },
+              ].map((b, i) => (
+                <div key={b.label} className="flex flex-col items-center text-center gap-1 px-1" style={i > 0 ? { borderLeft: "1px solid rgba(61,20,38,0.1)" } : undefined}>
+                  <b.icon size={18} color={PLUM} />
+                  <span className="font-semibold text-[11px] leading-tight" style={{ color: INK }}>{b.label}</span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Coming Soon</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {[
-                  { icon: BadgeCheck, label: "100% Vetted", sub: "Background checks" },
-                  { icon: Radar, label: "Live GPS", sub: "Not built yet" },
-                  { icon: HeartPulse, label: "Cashless Vet", sub: "Not built yet" },
-                ].map((b) => (
-                  <div key={b.label} className="p-2.5 rounded-xl flex flex-col items-center opacity-60" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)" }} title="Coming soon">
-                    <b.icon size={20} color="#02120a" className="mb-1" />
-                    <span className="font-bold text-[11px] leading-tight" style={{ ...H, color: "#02120a" }}>{b.label}</span>
-                    <span className="text-[9px] mt-0.5" style={{ color: "#424844" }}>{b.sub}</span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </section>
 
           <section className="px-4 py-2.5">
             <div className="flex items-center justify-between mb-2.5">
               <div>
-                <h3 className="font-bold text-sm tracking-tight" style={{ ...H, color: "#02120a" }}>Community Pack Meetups</h3>
-                <p className="text-[11px]" style={{ color: "#424844" }}>Socialize your pet with neighborhood dogs</p>
+                <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Community Pack Meetups</h2>
+                <p className="text-[11px]" style={{ color: "#5e4752" }}>Socialize your pet with neighborhood dogs</p>
               </div>
             </div>
           </section>

@@ -27,21 +27,21 @@ export default async function CartPage() {
   });
 
   return (
-    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fbfaee", minHeight: "100vh" }}>
+    <div className={`w-full ${themeClass}`} style={{ backgroundColor: "#fffaf0", minHeight: "100vh" }}>
       <main className="pb-10 max-w-lg mx-auto">
         <div className="px-4 pt-4 pb-3 flex items-start justify-between">
           <div className="flex items-start gap-3">
             <Link href="/" className="tap-scale mt-0.5">
-              <ArrowLeft size={20} color="#02120a" />
+              <ArrowLeft size={20} color="#2a0c18" />
             </Link>
             <div>
-              <h1 className="font-extrabold text-lg" style={{ fontFamily: "var(--font-heading)", color: "#02120a" }}>Your Cart &amp; Bookings</h1>
+              <h1 className="font-extrabold text-lg" style={{ fontFamily: "var(--font-heading)", color: "#2a0c18" }}>Your Cart &amp; Bookings</h1>
               <CartLocationPill userAddress={user?.address ?? null} />
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button className="w-8 h-8 rounded-full flex items-center justify-center" aria-label="More options">
-              <MoreVertical size={18} color="#424844" />
+              <MoreVertical size={18} color="#5e4752" />
             </button>
             <ProfileMenu />
           </div>

@@ -71,7 +71,7 @@ export default function PawPointsRewardsSection({ rewards, balance }: { rewards:
                   className="tap-scale flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg"
                   style={{
                     background: isClaimed ? "var(--cream)" : affordable ? "var(--panel-dark)" : "var(--muted)",
-                    color: isClaimed ? "var(--forest, #16281f)" : "white",
+                    color: isClaimed ? "var(--forest, #3d1426)" : "white",
                   }}
                 >
                   {isClaimed ? (<><Check size={12} /> Claimed</>) : !affordable ? (<><Lock size={12} /> Locked</>) : claimingId === r.id ? "…" : "Claim"}

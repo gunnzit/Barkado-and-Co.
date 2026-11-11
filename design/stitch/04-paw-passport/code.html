@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barkado &amp; Co. — Paw Passport™</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #fbf0d9;
+      color: #3d1426;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-sans-ui {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-script {
+      font-family: 'Caveat', cursive;
+    }
+    .bg-plum {
+      background-color: #6e1e3b;
+    }
+    .text-plum {
+      color: #6e1e3b;
+    }
+    .border-plum {
+      border-color: #6e1e3b;
+    }
+    .bg-golden {
+      background-color: #f9dd8a;
+    }
+    .text-golden {
+      color: #f9dd8a;
+    }
+    .bg-powder {
+      background-color: #a5bde1;
+    }
+    .text-powder-dark {
+      color: #344c68;
+    }
+    .bg-ivory {
+      background-color: #fbf0d9;
+    }
+    .bg-ivory-card {
+      background-color: #ffffff;
+    }
+    .wave-bottom {
+      background-image: radial-gradient(circle at 10px 0px, transparent 10px, #f9dd8a 11px);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fbf0d9] pb-32 flex justify-center selection:bg-[#f9dd8a] selection:text-[#6e1e3b]">
+  <div class="w-full max-w-md min-h-screen flex flex-col relative bg-[#fbf0d9] shadow-2xl">
+    
+    <!-- ONLY ONE HEADER: Back arrow, Title 'Paw Passport', Share icon -->
+    <header class="sticky top-0 z-30 bg-[#fbf0d9]/95 backdrop-blur-md px-5 py-3.5 flex items-center justify-between border-b border-[#ebd7be]">
+      <button class="w-10 h-10 rounded-full bg-white border border-[#ebd7be] flex items-center justify-center text-[#6e1e3b] shadow-sm hover:scale-105 transition-transform" aria-label="Go Back">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="text-center">
+        <div class="text-[10px] tracking-widest uppercase font-bold text-[#6e1e3b]/70 font-sans-ui">Pet Concierge ID</div>
+        <h1 class="text-xl font-extrabold text-[#6e1e3b] tracking-tight">Paw Passport™</h1>
+      </div>
+
+      <button class="w-10 h-10 rounded-full bg-white border border-[#ebd7be] flex items-center justify-center text-[#6e1e3b] shadow-sm hover:scale-105 transition-transform" aria-label="Share Passport">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- MAIN BODY CONTENT -->
+    <main class="flex-1 px-4 pt-3 pb-8 space-y-5">
+
+      <!-- PASSPORT-STYLE IDENTITY CARD ON DRIED PLUM WITH GOLDEN-YELLOW WAVE EDGE -->
+      <section class="relative rounded-3xl overflow-hidden shadow-lg border border-[#6e1e3b]/20 bg-[#6e1e3b] text-white">
+        <!-- Background subtle decorative pattern -->
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#f9dd8a_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none"></div>
+        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[#f9dd8a]/10 pointer-events-none blur-xl"></div>
+        
+        <div class="relative p-5 pb-6">
+          <!-- Top Passport metadata strip -->
+          <div class="flex items-center justify-between border-b border-white/15 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#f9dd8a] text-[#6e1e3b] font-black text-xs">B</span>
+              <span class="text-xs font-bold tracking-wider uppercase text-[#f9dd8a]">Official Pet Republic</span>
+            </div>
+            <span class="text-[11px] font-mono tracking-wider text-white/70 bg-white/10 px-2.5 py-0.5 rounded-full font-sans-ui">REG #CHD-2024-8921</span>
+          </div>
+
+          <!-- Main Pet ID details -->
+          <div class="mt-4 flex items-start gap-4">
+            <!-- Circular photo of Bruno with golden border -->
+            <div class="relative flex-shrink-0">
+              <div class="w-24 h-24 rounded-full p-1 bg-[#f9dd8a] shadow-md">
+                <img src="https://lh3.googleusercontent.com/aida/ALJJyrBULsFcHqzZMgkua4IUdk4mjQOFHNx9BwPy14Ih4uhMRgcowGP07lSUgQPUFZS7uBxX1RphONfdrQswvarpSV2VKN05VbCSK2D56EmegUv7b0o_jK23-N40dMO7ddn5AKgw1wk_TzeHsshzAkouhtGdgyDAOmbUJ5EZxYP250qu8OFxbpc-PKUK7GlWtjXBWFvn_9m4AefX9OFH_9bL6GGUiJ654qH1d65WVeLlMEU" alt="Bruno Golden Retriever" class="w-full h-full object-cover object-top rounded-full">
+              </div>
+              <div class="absolute -bottom-1 -right-1 bg-white text-[#6e1e3b] p-1 rounded-full shadow border border-[#f9dd8a]" title="Microchipped">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Pet Identity Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-1.5">
+                  Bruno
+                  <span class="text-base text-[#f9dd8a]">🐾</span>
+                </h2>
+              </div>
+              <p class="text-xs font-medium text-[#f9dd8a] font-sans-ui mt-0.5">Golden Retriever • 4 yrs</p>
+              
+              <!-- Passport Grid Attributes -->
+              <div class="mt-2.5 grid grid-cols-2 gap-2 text-[11px] font-sans-ui border-t border-white/10 pt-2 text-white/90">
+                <div>
+                  <span class="text-white/60 block text-[9px] uppercase tracking-wider">Sex / Status</span>
+                  <span class="font-semibold">Male (Neutered)</span>
+                </div>
+                <div>
+                  <span class="text-white/60 block text-[9px] uppercase tracking-wider">Weight</span>
+                  <span class="font-semibold text-[#f9dd8a]">32 kg</span>
+                </div>
+                <div class="col-span-2 pt-0.5">
+                  <span class="text-white/60 block text-[9px] uppercase tracking-wider">Microchip ID</span>
+                  <span class="font-mono text-[11px] tracking-wide text-white/95">985-141-002-8921-CHD</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Card Badges: Circular golden badge + script line -->
+          <div class="mt-4 pt-3 border-t border-white/15 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <!-- Circular Golden Badge: BARKADO & CO. VERIFIED -->
+              <div class="flex items-center space-x-1.5 bg-[#f9dd8a] text-[#6e1e3b] px-3 py-1.5 rounded-full shadow-sm">
+                <svg class="w-3.5 h-3.5 flex-shrink-0 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider font-sans-ui">Barkado Verified</span>
+                <span class="text-[9px]">🐾</span>
+              </div>
+            </div>
+
+            <!-- Hand-drawn script motto -->
+            <div class="text-right">
+              <span class="font-script text-lg text-[#f9dd8a] tracking-wide block leading-none">A Hug in every Paw</span>
+              <span class="text-[9px] text-white/60 font-sans-ui">Sector 17, Chandigarh</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wavy Golden Yellow bottom transition edge -->
+        <div class="w-full h-3 bg-[#f9dd8a] relative overflow-hidden">
+          <svg class="absolute -top-1 left-0 w-full h-4 text-[#6e1e3b]" preserveAspectRatio="none" viewBox="0 0 1200 120">
+            <path d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,60 L1200,0 L0,0 Z" fill="currentColor"></path>
+          </svg>
+        </div>
+      </section>
+
+      <!-- HEALTH SNAPSHOT TILES (4 TILES) -->
+      <section>
+        <div class="flex items-center justify-between mb-2.5 px-1">
+          <h3 class="text-base font-extrabold text-[#6e1e3b] tracking-tight">Health Snapshot</h3>
+          <span class="text-[11px] font-semibold text-[#6e1e3b]/70 font-sans-ui">Live sync • Today</span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2.5 font-sans-ui">
+          <!-- Tile 1: Weight -->
+          <div class="bg-white p-3.5 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#fef3dc] flex items-center justify-center text-[#6e1e3b] font-bold text-lg flex-shrink-0">
+              ⚖️
+            </div>
+            <div>
+              <div class="text-[11px] text-[#3d1426]/60 font-medium">Current Weight</div>
+              <div class="text-base font-extrabold text-[#6e1e3b]">32 kg</div>
+              <div class="text-[10px] text-emerald-700 font-semibold">Optimal range</div>
+            </div>
+          </div>
+
+          <!-- Tile 2: Next vaccine -->
+          <div class="bg-white p-3.5 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#f9dd8a]/60 flex items-center justify-center text-[#6e1e3b] text-lg flex-shrink-0">
+              💉
+            </div>
+            <div>
+              <div class="text-[11px] text-[#3d1426]/60 font-medium">Next Vaccine</div>
+              <div class="text-base font-extrabold text-[#6e1e3b]">In 12 days</div>
+              <div class="text-[10px] text-amber-700 font-bold">Rabies Booster</div>
+            </div>
+          </div>
+
+          <!-- Tile 3: Last groom -->
+          <div class="bg-white p-3.5 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#fef3dc] flex items-center justify-center text-[#6e1e3b] text-lg flex-shrink-0">
+              🛁
+            </div>
+            <div>
+              <div class="text-[11px] text-[#3d1426]/60 font-medium">Last Groom</div>
+              <div class="text-base font-extrabold text-[#6e1e3b]">9 days ago</div>
+              <div class="text-[10px] text-[#3d1426]/70">Home Spa Relax</div>
+            </div>
+          </div>
+
+          <!-- Tile 4: Walks this month -->
+          <div class="bg-white p-3.5 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#a5bde1]/30 flex items-center justify-center text-[#6e1e3b] text-lg flex-shrink-0">
+              🦮
+            </div>
+            <div>
+              <div class="text-[11px] text-[#3d1426]/60 font-medium">Walks in Oct</div>
+              <div class="text-base font-extrabold text-[#6e1e3b]">18 walks</div>
+              <div class="text-[10px] text-[#3d1426]/70">54 km total track</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VACCINATION TIMELINE LIST -->
+      <section class="bg-white p-4 rounded-3xl border border-[#ebd7be] shadow-sm space-y-3 font-sans-ui">
+        <div class="flex items-center justify-between pb-1 border-b border-[#ebd7be]/60">
+          <div>
+            <h3 class="text-base font-extrabold text-[#6e1e3b] font-serif tracking-tight" style="font-family:'Outfit', sans-serif;">Vaccination Timeline</h3>
+            <p class="text-[11px] text-[#3d1426]/65">Verified by Dr. Manpreet Gill, Chandigarh</p>
+          </div>
+          <span class="text-xs bg-[#fef3dc] text-[#6e1e3b] font-bold px-2.5 py-1 rounded-full">3 of 3 Logged</span>
+        </div>
+
+        <div class="space-y-3 pt-1">
+          <!-- Vaccine 1: Rabies Due soon (golden-yellow pill) -->
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#fffaf0] border border-[#f9dd8a]">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-full bg-[#f9dd8a] flex items-center justify-center text-[#6e1e3b] font-bold text-xs">
+                ⚠️
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#6e1e3b]">Rabies Annual Booster</h4>
+                <p class="text-[11px] text-[#3d1426]/70">Due 23 Nov 2024 • Sector 17 Vet Clinic</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-extrabold bg-[#f9dd8a] text-[#6e1e3b] px-3 py-1 rounded-full whitespace-nowrap shadow-xs">
+              Due soon
+            </span>
+          </div>
+
+          <!-- Vaccine 2: DHPP Done (powder-blue pill) -->
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#f8fbff] border border-[#a5bde1]/60">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-full bg-[#a5bde1]/40 flex items-center justify-center text-[#344c68] font-bold text-xs">
+                ✓
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#3d1426]">DHPP (Core 5-in-1)</h4>
+                <p class="text-[11px] text-[#3d1426]/70">Administered 14 Mar 2024</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold bg-[#a5bde1]/50 text-[#344c68] px-3 py-1 rounded-full whitespace-nowrap">
+              Up to date
+            </span>
+          </div>
+
+          <!-- Vaccine 3: Kennel Cough Done -->
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#f8fbff] border border-[#a5bde1]/60">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-full bg-[#a5bde1]/40 flex items-center justify-center text-[#344c68] font-bold text-xs">
+                ✓
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#3d1426]">Bordetella (Kennel Cough)</h4>
+                <p class="text-[11px] text-[#3d1426]/70">Administered 02 Feb 2024</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold bg-[#a5bde1]/50 text-[#344c68] px-3 py-1 rounded-full whitespace-nowrap">
+              Up to date
+            </span>
+          </div>
+        </div>
+
+        <!-- Upload certificate ghost button -->
+        <button class="w-full mt-2 py-2.5 px-4 rounded-full border-2 border-dashed border-[#6e1e3b]/35 text-[#6e1e3b] font-bold text-xs flex items-center justify-center space-x-2 hover:bg-[#6e1e3b]/5 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>Upload medical record or certificate</span>
+        </button>
+      </section>
+
+      <!-- CARE PREFERENCES CHIPS -->
+      <section class="bg-white p-4 rounded-3xl border border-[#ebd7be] shadow-sm space-y-2.5 font-sans-ui">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-extrabold text-[#6e1e3b] tracking-tight" style="font-family:'Outfit', sans-serif;">Care Preferences &amp; Quirks</h3>
+          <button class="text-xs font-bold text-[#6e1e3b] underline decoration-[#f9dd8a] decoration-2">Edit</button>
+        </div>
+        <p class="text-xs text-[#3d1426]/70">Auto-shared with assigned walkers, sitters, and spa groomers</p>
+        
+        <div class="flex flex-wrap gap-2 pt-1">
+          <!-- Chip 1: Loves fetch -->
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#fef3dc] border border-[#f9dd8a] text-xs font-bold text-[#6e1e3b]">
+            <span>🎾</span>
+            <span>Loves fetch</span>
+          </div>
+
+          <!-- Chip 2: Scared of scooters -->
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#fdf2f4] border border-[#6e1e3b]/20 text-xs font-bold text-[#6e1e3b]">
+            <span>🛵</span>
+            <span>Scared of scooters</span>
+          </div>
+
+          <!-- Chip 3: Chicken allergy -->
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#fff2e8] border border-amber-300 text-xs font-bold text-amber-900">
+            <span>🚫🍗</span>
+            <span>Chicken allergy</span>
+          </div>
+
+          <!-- Extra friendly chip -->
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#fef3dc] border border-[#f9dd8a] text-xs font-bold text-[#6e1e3b]">
+            <span>belly rubs 💛</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAWPOINTS REWARDS CARD (340 points + progress + Redeem pill) -->
+      <section class="relative rounded-3xl p-4 bg-gradient-to-r from-[#f9dd8a] to-[#fcebb6] border border-[#ebd7be] shadow-sm text-[#3d1426] font-sans-ui overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/30 pointer-events-none"></div>
+        
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🐾</span>
+            <span class="text-xs uppercase font-extrabold tracking-wider text-[#6e1e3b]">PawPoints Loyalty Club</span>
+          </div>
+          <button class="bg-[#6e1e3b] text-[#f9dd8a] px-3.5 py-1 rounded-full text-xs font-extrabold shadow-sm hover:scale-105 transition-transform">
+            Redeem
+          </button>
+        </div>
+
+        <div class="flex items-baseline space-x-1.5">
+          <span class="text-3xl font-black text-[#6e1e3b]" style="font-family:'Outfit', sans-serif;">340</span>
+          <span class="text-xs font-bold text-[#6e1e3b]">PawPoints available</span>
+        </div>
+
+        <!-- Progress bar toward next reward -->
+        <div class="mt-3 space-y-1">
+          <div class="flex justify-between text-[11px] font-bold text-[#3d1426]/80">
+            <span>Next tier: <strong>Free Organic Spa Bath</strong></span>
+            <span>340 / 500 pts</span>
+          </div>
+          <div class="w-full h-2.5 bg-white/70 rounded-full overflow-hidden p-0.5 border border-[#6e1e3b]/10">
+            <div class="h-full bg-[#6e1e3b] rounded-full" style="width: 68%;"></div>
+          </div>
+          <p class="text-[10px] text-[#3d1426]/70 pt-0.5">Earn 160 more points on walks or artisan shop drops!</p>
+        </div>
+      </section>
+
+      <!-- RECENT ACTIVITY FEED (Walk with Kabir, Spa with Riya) -->
+      <section class="space-y-2.5 font-sans-ui">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-base font-extrabold text-[#6e1e3b] tracking-tight" style="font-family:'Outfit', sans-serif;">Recent Pet Care Journeys</h3>
+          <span class="text-xs font-bold text-[#6e1e3b] cursor-pointer">View All</span>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- Journey 1: Adventure Walk with Kabir -->
+          <div class="bg-white p-3 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-[#ebd7be]">
+                <img src="https://lh3.googleusercontent.com/aida/ALJJyrBy4yfSgYjVx9bCwx3a-VEDyNmJapyd-rQ-km-Iv77g-bQ3LseToDU2vext9sQoVdSSj72cti7HFe4p0T97bSOunPgQ13-261gzLELOCe2hzCbW_Z-6Oha9VIDivf6GzoGOKsx9boqYI4egVT7S8FPsW6lK4YpHj9UV6-wP_jK65P7D0yY2Sy3DNeBc8GeenPxvoLKPl4ZpnuruNyoQwjCVDjBY8WXErsBxClcBmPMa" alt="Kabir Singh" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <div class="flex items-center space-x-1.5">
+                  <h4 class="text-sm font-bold text-[#6e1e3b]">Adventure Walk (60 min)</h4>
+                  <span class="text-[10px] bg-[#fef3dc] text-[#6e1e3b] font-bold px-1.5 py-0.5 rounded">Completed</span>
+                </div>
+                <p class="text-xs text-[#3d1426]/70 mt-0.5">With Kabir Singh • Sukhna Lake Trail</p>
+                <p class="text-[10px] text-[#3d1426]/50">Yesterday, 5:30 PM • 3.8 km tracked</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold text-[#6e1e3b] block">+30 pts</span>
+              <button class="text-[11px] text-[#6e1e3b] font-bold underline mt-1">Report</button>
+            </div>
+          </div>
+
+          <!-- Journey 2: Home Spa with Riya -->
+          <div class="bg-white p-3 rounded-2xl border border-[#ebd7be] shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-[#ebd7be]">
+                <img src="https://lh3.googleusercontent.com/aida/ALJJyrAm6J2UfTxUkc_axkCw2sBMoh4Atbr86NQuwmnbNHQTvuZaqfJotkbqR64jOTXlqhKvyxhhDhTfFWbESsz_dAvxFakqiXMWioI6qXW1Njd6iFDJYqN9Q0W-f9vSbipsrtUM26029cQMRoI0eQ3D7nCQciW4rKO9z0_26yqr33RbE57xzESZu1D8CmrUvBJ6_GFc_wFZ6a85dMblMUaD6a-YM18ATxCsWvX1C4EPZmwu" alt="Riya Sharma" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <div class="flex items-center space-x-1.5">
+                  <h4 class="text-sm font-bold text-[#6e1e3b]">Home Spa Aromatherapy</h4>
+                  <span class="text-[10px] bg-[#fef3dc] text-[#6e1e3b] font-bold px-1.5 py-0.5 rounded">Completed</span>
+                </div>
+                <p class="text-xs text-[#3d1426]/70 mt-0.5">With Riya Sharma • Nail trim &amp; chamomile bath</p>
+                <p class="text-[10px] text-[#3d1426]/50">15 Oct • Bruno fell asleep during massage</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold text-[#6e1e3b] block">+50 pts</span>
+              <button class="text-[11px] text-[#6e1e3b] font-bold underline mt-1">Photos</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRIMARY ACTION: Book Vet at Home Pill Button -->
+      <section class="pt-2">
+        <button class="w-full py-3.5 px-6 rounded-full bg-[#6e1e3b] text-[#f9dd8a] font-extrabold text-base shadow-lg shadow-[#6e1e3b]/25 hover:brightness-105 active:scale-[0.99] transition flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Book Vet at Home for Booster</span>
+          <span class="text-[#f9dd8a]/80 font-normal text-sm font-sans-ui">(₹799)</span>
+        </button>
+        <p class="text-center text-[11px] text-[#3d1426]/60 font-medium font-sans-ui mt-2">
+          🩺 Certified veterinary surgeons visit your doorstep in Sector 17 &amp; Chandigarh tricity
+        </p>
+      </section>
+
+    </main>
+
+    <!-- FLOATING ROUNDED BOTTOM NAVIGATION (PAW PASSPORT ACTIVE) -->
+    <nav class="fixed bottom-3 inset-x-4 max-w-[calc(28rem-2rem)] mx-auto z-40 bg-[#6e1e3b] text-white/70 rounded-full px-5 py-2.5 shadow-2xl border border-[#f9dd8a]/20 flex items-center justify-between font-sans-ui">
+      <!-- Home -->
+      <a href="#" class="flex flex-col items-center space-y-1 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span class="text-[10px] font-semibold">Home</span>
+      </a>
+
+      <!-- Walks -->
+      <a href="#" class="flex flex-col items-center space-y-1 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span class="text-[10px] font-semibold">Walks</span>
+      </a>
+
+      <!-- Passport (Active highlighted tab) -->
+      <a href="#" class="flex flex-col items-center -mt-3">
+        <div class="w-12 h-12 rounded-full bg-[#f9dd8a] text-[#6e1e3b] flex items-center justify-center shadow-lg border-2 border-[#6e1e3b] transform scale-105">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+        </div>
+        <span class="text-[10px] font-extrabold text-[#f9dd8a] mt-0.5">Passport</span>
+      </a>
+
+      <!-- Groom -->
+      <a href="#" class="flex flex-col items-center space-y-1 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.242-4.242 3 3 0 004.242 4.242z"/>
+        </svg>
+        <span class="text-[10px] font-semibold">Groom</span>
+      </a>
+
+      <!-- Shop -->
+      <a href="#" class="flex flex-col items-center space-y-1 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+        <span class="text-[10px] font-semibold">Shop</span>
+      </a>
+    </nav>
+
+  </div>
+</body>
+</html>

@@ -178,7 +178,7 @@ export default function ProviderBottomNav({
             onClick={() => onSelect(item.key)}
             ref={(el) => { itemRefs.current[i] = el; }}
             className="tap-scale bottom-nav-item"
-            style={{ color: isActive ? "var(--forest, #16281f)" : "var(--muted, #8a7f6f)", opacity: 1 }}
+            style={{ color: isActive ? "var(--forest, #3d1426)" : "var(--muted, #735c68)", opacity: 1 }}
           >
             <Icon size={19} strokeWidth={isActive ? 2.5 : 2} style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))" }} />
             <span style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.1))" }}>{item.label}</span>

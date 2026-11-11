@@ -80,12 +80,12 @@ export default function ProviderServicesEditor() {
 
       {/* ===== Adventure Walking — locked platform rate ===== */}
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        <div className="h-1.5" style={{ background: "var(--forest, #16281f)" }} />
+        <div className="h-1.5" style={{ background: "var(--forest, #3d1426)" }} />
         <div className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                <PawPrint size={20} color="var(--forest, #16281f)" />
+                <PawPrint size={20} color="var(--forest, #3d1426)" />
               </div>
               <div>
                 <p className="font-bold text-base">Adventure Walking</p>

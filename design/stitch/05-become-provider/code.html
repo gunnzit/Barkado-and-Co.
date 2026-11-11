@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barkado & Co. — Become a Provider</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            plum: '#6e1e3b',
+            'plum-dark': '#55172d',
+            'plum-light': '#8a2b4d',
+            'plum-ink': '#3d1426',
+            'golden-yellow': '#f9dd8a',
+            'golden-light': '#fef3dc',
+            'golden-hover': '#f5ce62',
+            'powder-blue': '#a5bde1',
+            'powder-blue-light': '#eaf1fb',
+            ivory: '#fbf0d9',
+            'ivory-card': '#fffbf3',
+            'ivory-darker': '#f3e5c8',
+          },
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #fbf0d9;
+      color: #3d1426;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wave-bottom {
+      border-radius: 0 0 50% 50% / 0 0 24px 24px;
+    }
+    /* Custom styling for inputs and checkboxes */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #6e1e3b !important;
+      box-shadow: 0 0 0 3px rgba(110, 30, 59, 0.15) !important;
+    }
+    /* Accordion animation */
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-ivory flex justify-center selection:bg-golden-yellow selection:text-plum-ink">
+
+  <!-- Mobile Container (phone width: max-w-md 420px approx) -->
+  <main class="w-full max-w-[430px] min-h-screen bg-ivory pb-12 shadow-2xl relative flex flex-col">
+
+    <!-- ONLY ONE HEADER: Logo and "Already a pro? Sign in" link -->
+    <header class="w-full px-5 py-3.5 bg-ivory flex items-center justify-between sticky top-0 z-40 border-b border-ivory-darker/60 backdrop-blur-md bg-ivory/95">
+      <!-- Logo: chunky rounded B with dog cut-out + wordmark -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-full bg-plum flex items-center justify-center text-golden-yellow font-extrabold text-xl shadow-sm relative overflow-hidden">
+          <span class="relative z-10 translate-x-[-1px]">B</span>
+          <svg class="absolute bottom-1 right-1 w-3.5 h-3.5 text-golden-yellow" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5c0 .83-.67 1.5-1.5 1.5S10 17.33 10 16.5c0-.83 1-2.5 1.5-2.5s1.5 1.67 1.5 2.5zm-3-5c-.83 0-1.5-.67-1.5-1.5S7.17 8.5 8 8.5s1.5.67 1.5 1.5S8.83 11.5 8 11.5zm6 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-3 1c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold tracking-tight text-plum text-sm leading-tight">BARKADO & CO.</span>
+          <span class="text-[10px] tracking-widest font-semibold uppercase text-plum/70">Chandigarh Pro</span>
+        </div>
+      </div>
+
+      <!-- Pro Sign In Link -->
+      <a href="#signin" class="text-xs font-semibold text-plum hover:text-plum-light transition-colors py-1.5 px-3 rounded-full bg-ivory-card border border-plum/20 shadow-xs flex items-center gap-1">
+        <span>Already a pro?</span>
+        <span class="underline font-bold text-plum">Sign in</span>
+      </a>
+    </header>
+
+    <!-- HERO SECTION ON DRIED PLUM WITH WARM PHOTO, HEADLINE & GOLDEN WAVE -->
+    <section class="relative bg-plum text-ivory pt-5 pb-7 px-5 overflow-hidden">
+      <!-- Background subtle dots decoration -->
+      <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#fff 1.5px, transparent 1.5px); background-size: 14px 14px;"></div>
+
+      <!-- Chandler exclusive pill tag -->
+      <div class="inline-flex items-center gap-1.5 bg-golden-yellow/20 border border-golden-yellow/30 px-3 py-1 rounded-full mb-3 text-golden-yellow text-[11px] font-bold tracking-wide">
+        <svg class="w-3.5 h-3.5 text-golden-yellow" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="7" r="3"/>
+          <path d="M12 11c-3 0-6 1.8-6 4v2h12v-2c0-2.2-3-4-6-4z"/>
+        </svg>
+        <span>CHANDIGARH PRO NETWORK • SECTOR 1 TO 49</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="text-2xl font-black tracking-tight leading-tight mb-2 text-ivory">
+        Turn your love for pets into a career
+      </h1>
+
+      <!-- Subline -->
+      <p class="text-xs text-ivory/85 font-normal leading-relaxed mb-4">
+        Walk, groom, train or host dogs in Chandigarh. Set your own hours.
+      </p>
+
+      <!-- Warm Photo & Hero CTA Container -->
+      <div class="relative w-full rounded-2xl overflow-hidden shadow-lg border-2 border-golden-yellow/30 mb-4 bg-plum-dark/40">
+        <img 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuClQtNd2N8pBah5gFeEuEXnPvCk2ekEIC0xI-yi9_joALTE9PhwAl-p6RjE48LmVIzH7Es5yqyXOLrogFFxTcYhsMhtRj526UgIwCit9i70M4s3YSxHVM2AuQbTJGU5tytdalcLb0aMsSjFcmQZ35spj9noNRMD5goKkfn_VZ2Bkg4e5znxD-GJGdnL8HihBoERuJQfeQ_Akpp4bfiomLEpAmJk2bn2pQcaAtQQpr8" 
+          alt="Smiling Indian dog walker kneeling with joyful golden retriever and beagle in sunny Chandigarh park" 
+          class="w-full h-56 object-cover object-center"
+        />
+        <!-- Trust badge overlaid on photo -->
+        <div class="absolute bottom-2.5 left-2.5 bg-plum/90 backdrop-blur-md px-3 py-1 rounded-full border border-golden-yellow/30 flex items-center gap-1.5 text-[11px] text-golden-yellow font-bold shadow-md">
+          <svg class="w-3 h-3 text-golden-yellow" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          </svg>
+          <span>Earn ₹25,000–₹55,000/mo</span>
+        </div>
+      </div>
+
+      <!-- Apply Now Pill Button -->
+      <a href="#apply-form" class="w-full inline-flex items-center justify-center gap-2 bg-golden-yellow hover:bg-golden-hover active:scale-[0.99] text-plum-ink font-bold py-3.5 px-6 rounded-full shadow-md text-sm transition-all transform duration-150">
+        <span>Apply now</span>
+        <svg class="w-4 h-4 text-plum-ink" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </a>
+
+      <!-- Golden-Yellow Wave at bottom of hero -->
+      <div class="absolute bottom-0 left-0 right-0 h-3 overflow-hidden pointer-events-none">
+        <svg class="w-full h-full text-golden-yellow" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,50 L1200,120 L0,120 Z" fill="#f9dd8a"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Transition wavy ribbon -->
+    <div class="w-full bg-golden-yellow py-1.5 px-5 flex items-center justify-between text-[11px] font-bold text-plum-ink">
+      <span class="flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+        </svg>
+        Over 180+ Active Pros in Tricity
+      </span>
+      <span>⭐ 4.93 Caregiver Avg</span>
+    </div>
+
+    <!-- MAIN BODY CONTENT -->
+    <div class="px-5 pt-6 space-y-7">
+
+      <!-- SECTION 1: THREE BENEFIT TILES WITH SIMPLE LINE ICONS -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-extrabold text-plum-ink tracking-tight flex items-center gap-2">
+            <span>Why Join Barkado & Co.?</span>
+          </h2>
+          <span class="text-[11px] font-semibold text-plum/70">Verified Perks</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2.5">
+          <!-- Benefit 1: Flexible Hours -->
+          <div class="bg-ivory-card border border-ivory-darker rounded-2xl p-3.5 flex items-start gap-3.5 shadow-xs">
+            <div class="w-10 h-10 rounded-full bg-golden-light border border-golden-yellow flex-shrink-0 flex items-center justify-center text-plum">
+              <!-- Simple line icon for clock / flexible hours -->
+              <svg class="w-5 h-5 text-plum" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-plum leading-snug">Flexible hours</h3>
+              <p class="text-xs text-plum-ink/80 mt-0.5 leading-relaxed">
+                Choose your own slots—mornings at Sukhna Lake, afternoon potty breaks, or weekend boarding. Work whenever fits your schedule.
+              </p>
+            </div>
+          </div>
+
+          <!-- Benefit 2: Weekly Payouts -->
+          <div class="bg-ivory-card border border-ivory-darker rounded-2xl p-3.5 flex items-start gap-3.5 shadow-xs">
+            <div class="w-10 h-10 rounded-full bg-golden-light border border-golden-yellow flex-shrink-0 flex items-center justify-center text-plum">
+              <!-- Simple line icon for wallet / weekly payouts -->
+              <svg class="w-5 h-5 text-plum" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                <circle cx="16" cy="13" r="2"/>
+                <path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-plum leading-snug">Weekly payouts</h3>
+              <p class="text-xs text-plum-ink/80 mt-0.5 leading-relaxed">
+                Direct UPI or bank transfer every Tuesday morning. Transparent rates with 100% of tips kept directly by you.
+              </p>
+            </div>
+          </div>
+
+          <!-- Benefit 3: Insurance on Every Booking -->
+          <div class="bg-ivory-card border border-ivory-darker rounded-2xl p-3.5 flex items-start gap-3.5 shadow-xs">
+            <div class="w-10 h-10 rounded-full bg-powder-blue-light border border-powder-blue flex-shrink-0 flex items-center justify-center text-plum">
+              <!-- Simple line icon for shield / insurance -->
+              <svg class="w-5 h-5 text-plum" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-plum leading-snug">Insurance on every booking</h3>
+              <p class="text-xs text-plum-ink/80 mt-0.5 leading-relaxed">
+                Up to ₹5,00,000 comprehensive coverage on accidental pet veterinary care and third-party liabilities during active reservations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: "WHAT YOU CAN OFFER" SELECTABLE SERVICE CHIPS -->
+      <section class="bg-ivory-card border border-ivory-darker rounded-2xl p-4 shadow-xs">
+        <div class="mb-2">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-plum/70">Specializations</span>
+          <h2 class="text-base font-extrabold text-plum-ink">What you can offer</h2>
+          <p class="text-xs text-plum-ink/75">Select the services you'd like to provide in Chandigarh:</p>
+        </div>
+
+        <!-- Selectable chips grid: Walking, Sitting, Grooming, Training, Boarding, Vet care -->
+        <div class="grid grid-cols-2 gap-2 mt-3" id="service-chips-group">
+          <!-- Walking (Active/Selected) -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="walking" checked class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🦮</span>
+              <span>Walking</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">₹300/hr</span>
+            </div>
+          </label>
+
+          <!-- Sitting (Active/Selected) -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="sitting" checked class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🏡</span>
+              <span>Sitting</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">₹500/day</span>
+            </div>
+          </label>
+
+          <!-- Grooming -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="grooming" class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🛁</span>
+              <span>Grooming</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">Spa</span>
+            </div>
+          </label>
+
+          <!-- Training -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="training" class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🎾</span>
+              <span>Training</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">K9</span>
+            </div>
+          </label>
+
+          <!-- Boarding -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="boarding" class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🛋️</span>
+              <span>Boarding</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">Overnight</span>
+            </div>
+          </label>
+
+          <!-- Vet care -->
+          <label class="cursor-pointer">
+            <input type="checkbox" name="services" value="vet_care" class="peer sr-only">
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-full border border-plum/20 bg-ivory text-plum font-semibold text-xs peer-checked:bg-plum peer-checked:text-golden-yellow peer-checked:border-plum transition-all shadow-xs">
+              <span class="text-base">🩺</span>
+              <span>Vet care</span>
+              <span class="ml-auto text-[10px] opacity-75 font-normal peer-checked:opacity-100">Licensed</span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- SECTION 3: "HOW IT WORKS" 4-STEP VERTICAL TIMELINE WITH NUMBERED GOLDEN CIRCLES -->
+      <section class="bg-ivory-card border border-ivory-darker rounded-2xl p-4 shadow-xs">
+        <div class="mb-4">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-plum/70">Onboarding Roadmap</span>
+          <h2 class="text-base font-extrabold text-plum-ink">How it works</h2>
+          <p class="text-xs text-plum-ink/75">From application to your first happy tail in 48 hours:</p>
+        </div>
+
+        <div class="relative pl-2">
+          <!-- Vertical connecting dashed line -->
+          <div class="absolute left-[19px] top-4 bottom-4 w-0.5 border-l-2 border-dashed border-golden-yellow"></div>
+
+          <!-- Step 1 -->
+          <div class="relative flex items-start gap-3.5 mb-5 group">
+            <div class="w-8 h-8 rounded-full bg-golden-yellow border-2 border-plum text-plum font-extrabold text-xs flex items-center justify-center flex-shrink-0 shadow-xs z-10">
+              1
+            </div>
+            <div class="pt-0.5">
+              <h3 class="text-xs font-bold text-plum">Apply in 5 minutes</h3>
+              <p class="text-[11px] text-plum-ink/80 mt-0.5 leading-snug">
+                Fill the quick form below with your contact details, preferred Chandigarh sectors, and pet experience.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative flex items-start gap-3.5 mb-5 group">
+            <div class="w-8 h-8 rounded-full bg-golden-yellow border-2 border-plum text-plum font-extrabold text-xs flex items-center justify-center flex-shrink-0 shadow-xs z-10">
+              2
+            </div>
+            <div class="pt-0.5">
+              <h3 class="text-xs font-bold text-plum">ID and background check</h3>
+              <p class="text-[11px] text-plum-ink/80 mt-0.5 leading-snug">
+                Fast Aadhaar and police verification via our encrypted portal to ensure 100% safety for pet parents.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="relative flex items-start gap-3.5 mb-5 group">
+            <div class="w-8 h-8 rounded-full bg-golden-yellow border-2 border-plum text-plum font-extrabold text-xs flex items-center justify-center flex-shrink-0 shadow-xs z-10">
+              3
+            </div>
+            <div class="pt-0.5">
+              <h3 class="text-xs font-bold text-plum">Short training session</h3>
+              <p class="text-[11px] text-plum-ink/80 mt-0.5 leading-snug">
+                A 45-minute orientation covering canine body language, leash safety, emergency protocol, and app usage.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="relative flex items-start gap-3.5 group">
+            <div class="w-8 h-8 rounded-full bg-golden-yellow border-2 border-plum text-plum font-extrabold text-xs flex items-center justify-center flex-shrink-0 shadow-xs z-10">
+              4
+            </div>
+            <div class="pt-0.5">
+              <h3 class="text-xs font-bold text-plum">Start getting bookings</h3>
+              <p class="text-[11px] text-plum-ink/80 mt-0.5 leading-snug">
+                Activate your profile, receive live booking requests from parents nearby, and get paid weekly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: APPLICATION FORM CARD -->
+      <section id="apply-form" class="bg-ivory-card border-2 border-plum/20 rounded-3xl p-5 shadow-md relative overflow-hidden">
+        <!-- Decorative golden wave line at card top -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-plum via-golden-yellow to-plum"></div>
+
+        <div class="mb-4">
+          <div class="inline-flex items-center gap-1 text-[10px] font-bold text-plum bg-golden-light px-2.5 py-0.5 rounded-full border border-golden-yellow mb-1.5">
+            <span>🐾 Join the Pack</span>
+          </div>
+          <h2 class="text-lg font-black text-plum-ink">Pro Application Form</h2>
+          <p class="text-xs text-plum-ink/75">Complete the details below to start your verification:</p>
+        </div>
+
+        <form class="space-y-3.5" onsubmit="event.preventDefault(); alert('Application submitted successfully! Our team will contact you within 24 hours.');">
+
+          <!-- Full Name -->
+          <div>
+            <label class="block text-xs font-bold text-plum mb-1" for="pro-name">
+              Full Name <span class="text-plum-light">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="pro-name" 
+              required
+              placeholder="e.g. Kabir Singh" 
+              class="w-full bg-ivory border border-plum/25 rounded-xl px-3.5 py-2.5 text-xs text-plum-ink placeholder-plum/40 transition"
+            />
+          </div>
+
+          <!-- Phone & Email (2 columns) -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold text-plum mb-1" for="pro-phone">
+                Phone (WhatsApp) <span class="text-plum-light">*</span>
+              </label>
+              <input 
+                type="tel" 
+                id="pro-phone" 
+                required
+                placeholder="+91 98765 43210" 
+                class="w-full bg-ivory border border-plum/25 rounded-xl px-3 py-2.5 text-xs text-plum-ink placeholder-plum/40 transition"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-plum mb-1" for="pro-email">
+                Email Address <span class="text-plum-light">*</span>
+              </label>
+              <input 
+                type="email" 
+                id="pro-email" 
+                required
+                placeholder="kabir@gmail.com" 
+                class="w-full bg-ivory border border-plum/25 rounded-xl px-3 py-2.5 text-xs text-plum-ink placeholder-plum/40 transition"
+              />
+            </div>
+          </div>
+
+          <!-- City/Area Dropdown -->
+          <div>
+            <label class="block text-xs font-bold text-plum mb-1" for="pro-area">
+              City / Primary Area in Chandigarh <span class="text-plum-light">*</span>
+            </label>
+            <div class="relative">
+              <select 
+                id="pro-area" 
+                required
+                class="w-full bg-ivory border border-plum/25 rounded-xl px-3.5 py-2.5 text-xs text-plum-ink appearance-none pr-9 transition cursor-pointer font-medium"
+              >
+                <option value="">Select your preferred sectors...</option>
+                <option value="sec-17" selected>Sector 17, 18, 19 (Central Chandigarh)</option>
+                <option value="sec-8">Sector 8, 9, 10, 11 (North Chandigarh)</option>
+                <option value="sec-35">Sector 34, 35, 36 (South Central)</option>
+                <option value="panchkula">Panchkula Sectors (MDC & 1–15)</option>
+                <option value="mohali">Mohali (Phase 3B2, Phase 7, Phase 8)</option>
+                <option value="all-tricity">All Chandigarh Tricity</option>
+              </select>
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-plum">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Years of Experience -->
+          <div>
+            <label class="block text-xs font-bold text-plum mb-1" for="pro-exp">
+              Years of Pet Care Experience <span class="text-plum-light">*</span>
+            </label>
+            <div class="relative">
+              <select 
+                id="pro-exp" 
+                required
+                class="w-full bg-ivory border border-plum/25 rounded-xl px-3.5 py-2.5 text-xs text-plum-ink appearance-none pr-9 transition cursor-pointer font-medium"
+              >
+                <option value="0-1">Less than 1 year (Personal pet parent)</option>
+                <option value="1-3" selected>1 – 3 years (Regular dog walking/sitting)</option>
+                <option value="3-5">3 – 5 years (Professional experience)</option>
+                <option value="5+">5+ years (Certified handler or trainer)</option>
+              </select>
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-plum">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Services Checkboxes -->
+          <div>
+            <label class="block text-xs font-bold text-plum mb-1.5">
+              Services you wish to offer <span class="text-plum-light">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" checked class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">Dog Walking</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" checked class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">Pet Sitting</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">Home Grooming</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">K9 Training</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">Staycation Host</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 bg-ivory rounded-lg border border-plum/20 cursor-pointer">
+                <input type="checkbox" class="rounded text-plum focus:ring-plum accent-plum w-4 h-4">
+                <span class="font-medium text-plum-ink">Vet at Home</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Upload ID Document Field (private, never shown publicly) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-plum" for="pro-id">
+                Upload Government ID <span class="text-plum-light">*</span>
+              </label>
+              <span class="text-[10px] text-plum/70 font-semibold bg-golden-light px-2 py-0.5 rounded-full border border-golden-yellow/70">
+                🔒 Private & Encrypted
+              </span>
+            </div>
+            
+            <div class="border-2 border-dashed border-plum/30 rounded-2xl p-4 bg-ivory text-center hover:border-plum transition cursor-pointer group">
+              <input type="file" id="pro-id" class="hidden" accept="image/*,.pdf">
+              <label for="pro-id" class="cursor-pointer block">
+                <div class="w-9 h-9 rounded-full bg-golden-yellow/40 mx-auto flex items-center justify-center text-plum group-hover:scale-105 transition mb-1.5">
+                  <!-- Simple upload icon -->
+                  <svg class="w-5 h-5 text-plum" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                </div>
+                <p class="text-xs font-bold text-plum">Tap to upload Aadhaar, PAN or Driving License</p>
+                <p class="text-[10px] text-plum-ink/65 mt-0.5">PDF, JPG, or PNG (Max 10MB) • Private, never shown publicly</p>
+              </label>
+            </div>
+          </div>
+
+          <!-- Short Bio Textarea -->
+          <div>
+            <label class="block text-xs font-bold text-plum mb-1" for="pro-bio">
+              Short Bio & Pet Experience <span class="text-plum-light">*</span>
+            </label>
+            <textarea 
+              id="pro-bio" 
+              rows="3" 
+              required
+              placeholder="Tell pet parents about yourself, your passion for dogs, and any special skills (e.g. trained large breeds, medication administration, patience with anxious rescues)..." 
+              class="w-full bg-ivory border border-plum/25 rounded-xl p-3 text-xs text-plum-ink placeholder-plum/40 transition resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Agree to Terms Checkbox -->
+          <div class="pt-1">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" required class="mt-0.5 rounded text-plum focus:ring-plum accent-plum w-4 h-4 flex-shrink-0">
+              <span class="text-[11px] text-plum-ink/80 leading-snug">
+                I agree to the <a href="#" class="underline text-plum font-bold">Barkado Provider Terms</a> and consent to standard background verification. I confirm I am 18+ years of age.
+              </span>
+            </label>
+          </div>
+
+          <!-- Plum 'Submit Application' Pill Button -->
+          <button 
+            type="submit" 
+            class="w-full mt-3 bg-plum hover:bg-plum-dark active:scale-[0.99] text-golden-yellow font-extrabold py-3.5 px-6 rounded-full shadow-md text-sm transition-all duration-150 flex items-center justify-center gap-2 border border-golden-yellow/30"
+          >
+            <span>Submit application</span>
+            <svg class="w-4 h-4 text-golden-yellow" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+      </section>
+
+      <!-- SECTION 5: FAQ ACCORDION WITH 3 QUESTIONS -->
+      <section class="bg-ivory-card border border-ivory-darker rounded-2xl p-4 shadow-xs">
+        <div class="mb-3">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-plum/70">Got Questions?</span>
+          <h2 class="text-base font-extrabold text-plum-ink">Frequently asked questions</h2>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <!-- Question 1 -->
+          <details class="group bg-ivory rounded-xl border border-plum/15 overflow-hidden transition" open>
+            <summary class="flex items-center justify-between p-3 cursor-pointer font-bold text-plum list-none select-none">
+              <span>How and when do I get paid?</span>
+              <span class="w-5 h-5 rounded-full bg-golden-light flex items-center justify-center text-plum font-black text-xs transition group-open:rotate-180">
+                ↓
+              </span>
+            </summary>
+            <div class="px-3 pb-3 text-plum-ink/80 text-[11px] leading-relaxed border-t border-plum/10 pt-2 bg-ivory/50">
+              Payouts are sent directly to your linked UPI address or bank account every Tuesday morning for all completed bookings from the preceding week. You retain 100% of pet parent cash tips and earn bonuses during festive seasons in Chandigarh.
+            </div>
+          </details>
+
+          <!-- Question 2 -->
+          <details class="group bg-ivory rounded-xl border border-plum/15 overflow-hidden transition">
+            <summary class="flex items-center justify-between p-3 cursor-pointer font-bold text-plum list-none select-none">
+              <span>Can I choose my own schedule and areas?</span>
+              <span class="w-5 h-5 rounded-full bg-golden-light flex items-center justify-center text-plum font-black text-xs transition group-open:rotate-180">
+                ↓
+              </span>
+            </summary>
+            <div class="px-3 pb-3 text-plum-ink/80 text-[11px] leading-relaxed border-t border-plum/10 pt-2 bg-ivory/50">
+              Yes, 100%! You have full control through the Pro app. Toggle your availability on or off anytime, set your preferred travel radius (e.g. only within 2 km of your home), and accept only the walks or sittings that match your routine.
+            </div>
+          </details>
+
+          <!-- Question 3 -->
+          <details class="group bg-ivory rounded-xl border border-plum/15 overflow-hidden transition">
+            <summary class="flex items-center justify-between p-3 cursor-pointer font-bold text-plum list-none select-none">
+              <span>What if a dog gets sick or injured during a walk?</span>
+              <span class="w-5 h-5 rounded-full bg-golden-light flex items-center justify-center text-plum font-black text-xs transition group-open:rotate-180">
+                ↓
+              </span>
+            </summary>
+            <div class="px-3 pb-3 text-plum-ink/80 text-[11px] leading-relaxed border-t border-plum/10 pt-2 bg-ivory/50">
+              Every Barkado reservation includes our ₹5,00,000 comprehensive pet care coverage. You also have 24/7 one-tap access to our Chandigarh on-call veterinary partner network and emergency concierge team to assist immediately.
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- SECTION 6: FOOTER LINE WITH PAW MOTIF -->
+      <footer class="pt-4 pb-6 text-center border-t border-ivory-darker">
+        <!-- Paw motif row -->
+        <div class="flex items-center justify-center gap-2 mb-2 text-plum/30">
+          <svg class="w-3.5 h-3.5 text-golden-yellow" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="8" cy="8" r="2.5"/>
+            <circle cx="16" cy="8" r="2.5"/>
+            <circle cx="4.5" cy="14" r="2"/>
+            <circle cx="19.5" cy="14" r="2"/>
+            <path d="M12 11c-2.5 0-4.5 2-4.5 4.5 0 2 2 4.5 4.5 4.5s4.5-2.5 4.5-4.5c0-2.5-2-4.5-4.5-4.5z"/>
+          </svg>
+          <span class="h-px w-10 bg-plum/20"></span>
+          <svg class="w-4 h-4 text-plum" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="8" cy="8" r="2.5"/>
+            <circle cx="16" cy="8" r="2.5"/>
+            <circle cx="4.5" cy="14" r="2"/>
+            <circle cx="19.5" cy="14" r="2"/>
+            <path d="M12 11c-2.5 0-4.5 2-4.5 4.5 0 2 2 4.5 4.5 4.5s4.5-2.5 4.5-4.5c0-2.5-2-4.5-4.5-4.5z"/>
+          </svg>
+          <span class="h-px w-10 bg-plum/20"></span>
+          <svg class="w-3.5 h-3.5 text-golden-yellow" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="8" cy="8" r="2.5"/>
+            <circle cx="16" cy="8" r="2.5"/>
+            <circle cx="4.5" cy="14" r="2"/>
+            <circle cx="19.5" cy="14" r="2"/>
+            <path d="M12 11c-2.5 0-4.5 2-4.5 4.5 0 2 2 4.5 4.5 4.5s4.5-2.5 4.5-4.5c0-2.5-2-4.5-4.5-4.5z"/>
+          </svg>
+        </div>
+
+        <p class="text-xs font-bold text-plum">Barkado & Co. Caregiver Network</p>
+        <p class="text-[10px] text-plum-ink/60 mt-0.5">Sector 17, Chandigarh, India • A Hug in every Paw™</p>
+        <p class="text-[10px] text-plum-ink/40 mt-1">© 2024 Barkado & Co. All rights reserved.</p>
+      </footer>
+
+    </div>
+
+  </main>
+
+</body>
+</html>

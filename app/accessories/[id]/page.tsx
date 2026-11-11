@@ -52,7 +52,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div className="px-4 py-2.5 flex items-center gap-1.5 text-xs overflow-x-auto no-scrollbar whitespace-nowrap" style={{ color: "var(--muted)" }}>
           <Link href="/accessories" className="hover:underline">Shop</Link>
           <ChevronRight size={13} />
-          <span className="font-semibold" style={{ color: "var(--forest, #16281f)" }}>{product.category}</span>
+          <span className="font-semibold" style={{ color: "var(--forest, #3d1426)" }}>{product.category}</span>
         </div>
 
         {/* Real two-column split from desktop up — gallery sticky on the
@@ -98,7 +98,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {hasDiscount && (
                   <>
                     <span className="text-base line-through" style={{ color: "var(--muted)" }}>₹{compareAtRupees}</span>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: "#e8f4ec", color: "#2f6fb0" }}>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: "#e4ebf6", color: "#2f6fb0" }}>
                       Save {percentOff}%
                     </span>
                   </>
@@ -115,7 +115,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <div className="mt-2 p-3 rounded-xl flex items-start gap-2.5" style={{ background: "var(--card)" }}>
                 <Truck size={20} color="var(--terracotta)" className="mt-0.5 shrink-0" />
                 <div className="text-xs" style={{ color: "var(--muted)" }}>
-                  <p className="font-medium flex items-center gap-1.5 mb-0.5" style={{ color: inStock ? "var(--forest, #16281f)" : "var(--muted)" }}>
+                  <p className="font-medium flex items-center gap-1.5 mb-0.5" style={{ color: inStock ? "var(--forest, #3d1426)" : "var(--muted)" }}>
                     {inStock && <span className="w-2 h-2 rounded-full" style={{ background: lowStock ? "var(--heritage-red, #c0392b)" : "#2f9e5f" }} />}
                     {inStock ? (lowStock ? `Only ${product.stock} left in stock` : "In stock — ships today") : "Out of stock"}
                   </p>

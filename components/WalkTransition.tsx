@@ -18,7 +18,7 @@ export default function WalkTransition({ onDone }: { onDone: () => void }) {
   return (
     <div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: "var(--forest, #16281f)" }}
+      style={{ background: "var(--forest, #3d1426)" }}
     >
       {/* Paw print trail */}
       <div className="absolute w-full" style={{ top: "48%" }}>
@@ -26,7 +26,7 @@ export default function WalkTransition({ onDone }: { onDone: () => void }) {
           <PawPrint
             key={i}
             size={14}
-            color="rgba(232,169,74,0.5)"
+            color="rgba(249,221,138,0.5)"
             className="absolute walk-pawprint"
             style={{
               left: `${8 + i * 13}%`,
@@ -48,7 +48,7 @@ export default function WalkTransition({ onDone }: { onDone: () => void }) {
       <div className="text-center px-8 mt-24">
         <p className="text-white text-xl font-bold walk-text-in">Booking a dog walker</p>
         {showText2 && (
-          <p className="text-2xl font-extrabold walk-text-in" style={{ color: "var(--gold, #e8a94a)" }}>
+          <p className="text-2xl font-extrabold walk-text-in" style={{ color: "var(--gold, #f9dd8a)" }}>
             in 10 minutes
           </p>
         )}

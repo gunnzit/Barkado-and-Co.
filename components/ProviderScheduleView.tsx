@@ -19,7 +19,7 @@ const SERVICE_ICON: Record<string, any> = {
 };
 
 const CATEGORY_COLOR: Record<string, string> = {
-  WALKING: "var(--forest, #16281f)",
+  WALKING: "var(--forest, #3d1426)",
   SITTING: "var(--terracotta)",
   GROOMING: "var(--gold)",
   TRAINING: "var(--heritage-red, #c0392b)",

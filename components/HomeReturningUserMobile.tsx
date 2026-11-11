@@ -83,15 +83,15 @@ export default function HomeReturningUserMobile({
         <h1 className="text-xl font-bold mb-4">Welcome back, {userName.split(" ")[0]}{activePet ? ` & ${activePet.name}` : ""}</h1>
 
         {cartCount > 0 && (
-          <Link href="/cart" className="rounded-xl p-4 mb-4 flex items-center justify-between tap-scale block" style={{ background: "#fdece5" }}>
+          <Link href="/cart" className="rounded-xl p-4 mb-4 flex items-center justify-between tap-scale block" style={{ background: "#fdf1d6" }}>
             <div className="flex items-center gap-3">
-              <ShoppingCart size={18} color="#a5652a" />
+              <ShoppingCart size={18} color="#8a2a4d" />
               <div>
-                <p className="text-sm font-bold" style={{ color: "#a5652a" }}>{cartCount} item{cartCount === 1 ? "" : "s"} waiting in your cart</p>
-                <p className="text-xs" style={{ color: "#a5652a" }}>₹{(cartTotalPaise / 100).toFixed(0)} total</p>
+                <p className="text-sm font-bold" style={{ color: "#8a2a4d" }}>{cartCount} item{cartCount === 1 ? "" : "s"} waiting in your cart</p>
+                <p className="text-xs" style={{ color: "#8a2a4d" }}>₹{(cartTotalPaise / 100).toFixed(0)} total</p>
               </div>
             </div>
-            <ChevronRight size={16} color="#a5652a" />
+            <ChevronRight size={16} color="#8a2a4d" />
           </Link>
         )}
 
@@ -243,7 +243,7 @@ export default function HomeReturningUserMobile({
                   <div className="w-full aspect-square relative" style={{ background: "var(--cream)" }}>
                     {photo && <img src={photo} alt={p.name} className="w-full h-full object-cover" />}
                     {priceDropped && (
-                      <span className="absolute top-2 left-2 flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: "#e8f4ec", color: "#2f6fb0" }}>
+                      <span className="absolute top-2 left-2 flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: "#e4ebf6", color: "#2f6fb0" }}>
                         <TrendingDown size={9} /> Price Drop
                       </span>
                     )}

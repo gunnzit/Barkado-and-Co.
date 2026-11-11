@@ -27,11 +27,11 @@ export async function sendAdminNewApplicationEmail(p: {
       subject: `New provider application: ${p.name}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #16281f;">New provider application</h2>
+          <h2 style="color: #6e1e3b;">New provider application</h2>
           <p><b>${esc(p.name)}</b><br/>${esc(p.email)} · ${esc(p.phone)}</p>
           <p>Services: ${esc(p.services.join(", "))}<br/>Area: ${esc(p.city)}</p>
           <p>
-            <a href="${appUrl}/admin/providers" style="display:inline-block;background:#904c2c;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
+            <a href="${appUrl}/admin/providers" style="display:inline-block;background:#6e1e3b;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
               Review application
             </a>
           </p>

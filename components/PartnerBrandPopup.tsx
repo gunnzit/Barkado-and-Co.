@@ -44,7 +44,7 @@ export default function PartnerBrandPopup({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0" style={{ background: "rgba(2,18,10,0.5)" }} onClick={onClose} />
+      <div className="absolute inset-0" style={{ background: "rgba(42,12,24,0.5)" }} onClick={onClose} />
       <div className="relative w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl" style={{ background: "var(--cream)" }}>
         <div className="sticky top-0 flex items-center justify-between p-4" style={{ background: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
           <h2 className="font-bold text-base">{partnerBrandName}</h2>

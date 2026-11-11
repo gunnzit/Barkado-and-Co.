@@ -53,13 +53,13 @@ export default function SplashScreen() {
           opacity: 0;
           transform: scale(0.5);
           animation: splashIconIn 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms forwards;
-          box-shadow: 0 0 0 0 rgba(232, 169, 74, 0.4);
+          box-shadow: 0 0 0 0 rgba(249, 221, 138, 0.4);
         }
         @keyframes splashIconIn {
-          0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0 0 rgba(232, 169, 74, 0.4); }
+          0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0 0 rgba(249, 221, 138, 0.4); }
           60% { opacity: 1; transform: scale(1.08); }
-          80% { box-shadow: 0 0 0 18px rgba(232, 169, 74, 0); }
-          100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 18px rgba(232, 169, 74, 0); }
+          80% { box-shadow: 0 0 0 18px rgba(249, 221, 138, 0); }
+          100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 18px rgba(249, 221, 138, 0); }
         }
         .splash-text {
           opacity: 0;

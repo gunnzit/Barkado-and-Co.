@@ -26,7 +26,7 @@ export default function ServicePageTopBar({
         <Link
           href="/owner/wallet"
           className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold tap-scale"
-          style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--forest, #16281f)" }}
+          style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--forest, #3d1426)" }}
         >
           <Sparkles size={13} color="var(--gold)" />
           {pawPointsBalance} pts
@@ -34,7 +34,7 @@ export default function ServicePageTopBar({
         <Link
           href="/cart"
           className="relative w-8 h-8 rounded-full flex items-center justify-center tap-scale"
-          style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--forest, #16281f)" }}
+          style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--forest, #3d1426)" }}
           aria-label="Shopping Cart"
         >
           <ShoppingBag size={15} />
@@ -47,7 +47,7 @@ export default function ServicePageTopBar({
             </span>
           )}
         </Link>
-        <Link href="/owner/profile" className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "var(--panel-dark)", boxShadow: "0 0 0 2px rgba(232,169,74,0.4)" }}>
+        <Link href="/owner/profile" className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "var(--panel-dark)", boxShadow: "0 0 0 2px rgba(249,221,138,0.4)" }}>
           {user?.imageUrl ? (
             <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
           ) : (
