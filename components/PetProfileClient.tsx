@@ -314,7 +314,7 @@ function EditSheet({ sheet, pet, onClose, onSaved }: { sheet: SheetKey; pet: Pet
 
 function Section({ title, icon: Icon, action, children, delay = 0 }: { title: string; icon: typeof PawPrint; action?: React.ReactNode; children: React.ReactNode; delay?: number }) {
   return (
-    <section className="enter-up rounded-[1.75rem] p-4" style={{ ["--d" as string]: `${delay}ms`, ...CARD }}>
+    <section className="reveal rounded-[1.75rem] p-4" style={{ ["--d" as string]: `${delay}ms`, ...CARD }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="flex items-center gap-2 font-bold text-[16px]" style={{ ...H, color: PLUM }}>
           <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#fef3dc" }}><Icon size={15} color={PLUM} /></span>

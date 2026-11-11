@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import {
@@ -105,6 +106,28 @@ export default function HomeUnified({
     }
   };
 
+  // The shop row nudges sideways once per visit, so it's clear it scrolls.
+  const shopRow = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = shopRow.current;
+    if (!row || row.scrollWidth <= row.clientWidth) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    try {
+      if (sessionStorage.getItem("bk_shop_nudged")) return;
+    } catch {}
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      try { sessionStorage.setItem("bk_shop_nudged", "1"); } catch {}
+      row.animate(
+        [{ transform: "translateX(0)" }, { transform: "translateX(-56px)", offset: 0.45 }, { transform: "translateX(0)" }],
+        { duration: 1100, delay: 500, easing: "cubic-bezier(0.77, 0, 0.175, 1)" },
+      );
+    }, { threshold: 0.6 });
+    io.observe(row);
+    return () => io.disconnect();
+  }, []);
+
   const isReturning = isSignedIn && (!!upcoming || !!lastCompleted);
   const petName = activePet?.name ?? null;
   const firstName = userName?.split(" ")[0] ?? null;
@@ -165,7 +188,7 @@ export default function HomeUnified({
           <section className="px-4 pt-2 pb-2">
             <div className="enter-up flex items-end justify-between gap-3 mb-3">
               <div className="min-w-0">
-                <p className="text-[13px]" style={{ color: MUTED }}>{firstName ? `Hi ${firstName},` : "Hello,"}</p>
+                <p className="text-[13px] flex items-center gap-1.5" style={{ color: MUTED }}>{firstName ? `Hi ${firstName},` : "Hello,"} <span className="paw-wave" aria-hidden="true"><PawPrint size={14} color={PLUM} /></span></p>
                 <h1 className="font-bold text-[24px] leading-tight tracking-tight truncate" style={{ ...H, color: PLUM }}>
                   {petName ? `What does ${petName} need today?` : "What does your dog need today?"}
                 </h1>
@@ -185,7 +208,7 @@ export default function HomeUnified({
                   className="enter-up hover-lift tap-scale flex flex-col items-center rounded-[1.25rem] pt-2 pb-2.5 px-1"
                   style={{ ["--d" as string]: `${40 + i * 40}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}
                 >
-                  <span className="w-14 h-14 rounded-full overflow-hidden" style={{ boxShadow: `0 0 0 2px ${t.label === "Shop" ? PLUM : YELLOW}` }}>
+                  <span className="photo-pop w-14 h-14 rounded-full overflow-hidden" style={{ ["--d" as string]: `${120 + i * 70}ms`, boxShadow: `0 0 0 2px ${t.label === "Shop" ? PLUM : YELLOW}` }}>
                     <img src={t.img} alt="" className="w-full h-full object-cover" />
                   </span>
                   <span className="mt-1.5 font-bold text-[13px] leading-tight" style={{ ...H, color: PLUM }}>{t.label}</span>
@@ -199,7 +222,7 @@ export default function HomeUnified({
                   First walk <span style={{ color: PLUM }}>{rupees(prices.walkFirstPaise)}</span> <span className="line-through opacity-60">{rupees(prices.walkFromPaise)}</span> · 10% off
                 </span>
                 <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold" style={{ background: PLUM, color: "white", ...H }}>
-                  Book <ArrowRight size={12} />
+                  Book <span className="nudge-x"><ArrowRight size={12} /></span>
                 </span>
               </Link>
             )}
@@ -249,7 +272,7 @@ export default function HomeUnified({
           {/* ===== PawPassport: one slim row, what only Barkado has ===== */}
           <section className="px-4 py-2">
             {activePet && passport ? (
-              <div className="enter-up relative overflow-hidden flex items-center gap-3 rounded-[1.5rem] p-3 pr-2" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
+              <div className="enter-up shine relative overflow-hidden flex items-center gap-3 rounded-[1.5rem] p-3 pr-2" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
                 <Link href={`/owner/pets/${activePet.id}`} className="flex items-center gap-3 min-w-0 flex-1 tap-scale" aria-label={`Open ${activePet.name}'s PawPassport`}>
                   <span className="block w-12 h-12 rounded-full p-[2px] shrink-0" style={{ background: YELLOW }}>
                     {activePet.photoUrl ? (
@@ -278,7 +301,7 @@ export default function HomeUnified({
                 )}
               </div>
             ) : (
-              <Link href={isSignedIn ? "/owner/pets/new" : "/owner/pets"} onClick={gate} className="enter-up tap-scale flex items-center gap-3 rounded-[1.5rem] p-3 pr-3.5" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
+              <Link href={isSignedIn ? "/owner/pets/new" : "/owner/pets"} onClick={gate} className="enter-up shine tap-scale flex items-center gap-3 rounded-[1.5rem] p-3 pr-3.5" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
                 <span className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}><QrCode size={20} color={PLUM} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: YELLOW }}>Free · only at Barkado</span>
@@ -301,7 +324,7 @@ export default function HomeUnified({
                   cta={counts.products > products.length ? `See all ${counts.products}` : "See all"}
                 />
               </div>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 scroll-px-4 pb-2 snap-x">
+              <div ref={shopRow} className="flex gap-3 overflow-x-auto no-scrollbar px-4 scroll-px-4 pb-2 snap-x">
                 {products.map((p, i) => (
                   <Link key={p.id} href={`/accessories/${p.id}`} className="enter-up hover-lift tap-scale shrink-0 snap-start w-[138px] rounded-[1.25rem] p-2" style={{ ["--d" as string]: `${120 + i * 40}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
                     <div className="relative img-frame aspect-square !rounded-[0.9rem] flex items-center justify-center" style={{ background: "#fef3dc" }}>
@@ -331,7 +354,7 @@ export default function HomeUnified({
           )}
 
           {/* ===== The three services ===== */}
-          <section className="px-4 py-3">
+          <section className="reveal px-4 py-3">
             <SectionTitle title={isReturning ? "Book again" : "Care at your door"} sub="Walking, grooming and training, booked in a few taps" />
 
             {/* Walking leads — the most frequent, most repeatable service */}
@@ -389,7 +412,7 @@ export default function HomeUnified({
 
           {/* ===== How it works + real guarantees (new visitors) ===== */}
           {!isReturning && (
-            <section className="px-4 py-3">
+            <section className="reveal px-4 py-3">
               <div className="enter-up relative overflow-hidden rounded-[1.75rem] p-5" style={{ ["--d" as string]: "280ms", background: "#e4ebf6", border: "1px solid rgba(61,20,38,0.06)" }}>
                 {/* Paw-print trail walking across the corner (brand motif) */}
                 <span className="absolute right-3 top-3 flex gap-1.5 rotate-[-18deg] pointer-events-none" aria-hidden="true">
@@ -432,7 +455,7 @@ export default function HomeUnified({
 
           {/* ===== Pros — only with real photos and real ratings ===== */}
           {featuredPros.length > 0 ? (
-            <section className="px-4 py-3">
+            <section className="reveal px-4 py-3">
               <SectionTitle title="Top-rated pros" sub="Real ratings from Barkado bookings" />
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                 {featuredPros.map((p) => (
