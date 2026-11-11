@@ -159,7 +159,7 @@ export default function HomeUnified({
 
           {/* ===== Returning customer: what's next for their dog ===== */}
           {isSignedIn && (upcoming || lastCompleted || nextVaccine) && (
-            <section className="px-4 pt-2 pb-1 space-y-2.5">
+            <section className="enter-up px-4 pt-2 pb-1 space-y-2.5">
               {upcoming && (
                 <Link href="/owner/bookings" className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: `1.5px solid ${PLUM}`, boxShadow: CARD_SHADOW }}>
                   <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}>
@@ -225,7 +225,7 @@ export default function HomeUnified({
           {/* ===== Hero: one job — book a walk ===== */}
           {!isReturning && (
             <section className="px-4 pt-2 pb-4">
-              <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+              <div className="enter-up relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
                 <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
                 <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-9">
                   <div className="flex-1 min-w-0">
@@ -247,7 +247,7 @@ export default function HomeUnified({
                       Book a walk <ArrowRight size={15} />
                     </Link>
                   </div>
-                  <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)" }} />
+                  <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="enter-pop w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)", ["--d" as string]: "80ms" }} />
                 </div>
                 <WaveEdge />
               </div>
@@ -259,7 +259,7 @@ export default function HomeUnified({
             <SectionTitle title={isReturning ? "Book again" : "What we do"} sub="Walking, grooming and training, booked in a few taps" />
 
             {/* Walking leads — the most frequent, most repeatable service */}
-            <Link href={walk.href} onClick={gate} className="block relative overflow-hidden rounded-[1.75rem] mb-3 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+            <Link href={walk.href} onClick={gate} className="enter-up hover-lift block relative overflow-hidden rounded-[1.75rem] mb-3 tap-scale" style={{ ["--d" as string]: "120ms", background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
               <div className="img-frame !rounded-none relative h-40">
                 <img src={walk.img} alt={walk.imgAlt} className="w-full h-full object-cover object-[center_78%]" />
                 <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: YELLOW, color: INK }}>
@@ -285,8 +285,8 @@ export default function HomeUnified({
             </Link>
 
             <div className="grid grid-cols-2 gap-3">
-              {otherServices.map((s) => (
-                <Link key={s.key} href={s.href} onClick={gate} className="flex flex-col overflow-hidden rounded-[1.5rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+              {otherServices.map((s, i) => (
+                <Link key={s.key} href={s.href} onClick={gate} className="enter-up hover-lift flex flex-col overflow-hidden rounded-[1.5rem] tap-scale" style={{ ["--d" as string]: `${180 + i * 50}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
                   <div className="img-frame !rounded-none h-28">
                     <img src={s.img} alt={s.imgAlt} className="w-full h-full object-cover" />
                   </div>
@@ -312,7 +312,7 @@ export default function HomeUnified({
           {/* ===== How it works + real guarantees (new visitors) ===== */}
           {!isReturning && (
             <section className="px-4 py-3">
-              <div className="rounded-[1.75rem] p-5" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+              <div className="enter-up rounded-[1.75rem] p-5" style={{ ["--d" as string]: "280ms", background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
                 <h2 className="font-bold text-[20px] leading-7 tracking-tight mb-3" style={{ ...H, color: PLUM }}>How it works</h2>
                 <ol className="space-y-3">
                   {[
@@ -352,7 +352,7 @@ export default function HomeUnified({
               <SectionTitle title="Top-rated pros" sub="Real ratings from Barkado bookings" />
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                 {featuredPros.map((p) => (
-                  <Link key={p.id} href={`/provider/${p.id}`} className="shrink-0 w-40 p-3 rounded-[1.5rem] text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                  <Link key={p.id} href={`/provider/${p.id}`} className="hover-lift shrink-0 w-40 p-3 rounded-[1.5rem] text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
                     <img src={p.photoUrl} alt={p.name} className="w-16 h-16 rounded-full object-cover mx-auto" style={{ boxShadow: `0 0 0 2px ${YELLOW}` }} />
                     <p className="font-bold text-sm mt-2 flex items-center justify-center gap-1 truncate" style={{ ...H, color: PLUM }}>
                       {p.name.split(" ")[0]} <BadgeCheck size={14} color="#a5bde1" />
@@ -386,7 +386,7 @@ export default function HomeUnified({
                 <SectionTitle title="From the Shop" sub="Collars, beds, treats and toys" href="/accessories" cta="Shop all" />
                 <div className="grid grid-cols-2 gap-3">
                   {products.slice(0, 4).map((p) => (
-                    <Link key={p.id} href={`/accessories/${p.id}`} className="rounded-[1.5rem] p-2 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                    <Link key={p.id} href={`/accessories/${p.id}`} className="hover-lift rounded-[1.5rem] p-2 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
                       <div className="img-frame aspect-square !rounded-[1.1rem]" style={{ background: IVORY }}>
                         <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
                       </div>
@@ -402,7 +402,7 @@ export default function HomeUnified({
                 </div>
               </>
             ) : counts.products > 0 ? (
-              <Link href="/accessories" className="relative flex items-center gap-3 overflow-hidden rounded-[1.75rem] p-4 pb-6 tap-scale" style={{ background: PLUM }}>
+              <Link href="/accessories" className="hover-lift relative flex items-center gap-3 overflow-hidden rounded-[1.75rem] p-4 pb-6 tap-scale" style={{ background: PLUM }}>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: YELLOW }}>The Artisan Shelf</p>
                   <p className="font-script text-[26px] leading-tight text-white">Spoil them a little EXTRA</p>
@@ -420,7 +420,7 @@ export default function HomeUnified({
           {/* ===== Paw Passport — free with every account ===== */}
           {!activePet && (
             <section className="px-4 py-3">
-              <Link href="/owner/pets" onClick={gate} className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+              <Link href="/owner/pets" onClick={gate} className="hover-lift flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
                 <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
                   <BadgeCheck size={22} color={PLUM} />
                 </span>

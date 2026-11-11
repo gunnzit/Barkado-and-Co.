@@ -219,22 +219,80 @@ h1, h2, h3 {
   border-bottom: 1px solid var(--border);
 }
 
+/* ===== Motion =====
+   Curves from the animation guidelines (Emil Kowalski): strong ease-out for
+   anything entering or responding, ease-in-out for things moving on screen.
+   Only transform and opacity animate; colour changes use plain transitions.
+   Reduced-motion users keep the fades and colour changes, not the movement. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 .img-frame {
   overflow: hidden;
   border-radius: 1.5rem;
 }
 .img-frame img {
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 300ms ease;
 }
-.img-frame:hover img {
-  transform: scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+  .img-frame:hover img {
+    transform: scale(1.03);
+  }
 }
 
+/* Press feedback for anything tappable. */
 .tap-scale {
-  transition: transform 0.15s ease;
+  transition: transform 160ms var(--ease-out);
 }
 .tap-scale:active {
   transform: scale(0.97);
+}
+
+/* Cards that lead somewhere lift a little on hover (mouse only). */
+.hover-lift {
+  transition: transform 200ms var(--ease-out), box-shadow 200ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px -8px rgba(110, 30, 59, 0.16);
+  }
+}
+
+/* Selection state (picked dog, length, day, time, pro): colour eases instead of snapping. */
+.motion-select {
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+/* Entrances. Stagger with style={{ "--d": "80ms" }}. Never block interaction. */
+@keyframes enterUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes enterPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes enterFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes barIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* fill-mode "backwards": hold the start state during the delay, then release the
+   element so hover-lift and tap-scale transforms still work afterwards. */
+.enter-up { animation: enterUp 300ms var(--ease-out) var(--d, 0ms) backwards; }
+.enter-pop { animation: enterPop 200ms var(--ease-out) var(--d, 0ms) backwards; }
+.enter-fade { animation: enterFade 200ms var(--ease-out) var(--d, 0ms) backwards; }
+.bar-in { animation: barIn 300ms var(--ease-out) 150ms backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-scale, .tap-scale:active, .hover-lift, .hover-lift:hover, .img-frame img { transform: none !important; }
+  .enter-up, .enter-pop, .bar-in, .animate-fade-up { animation-name: enterFade !important; }
 }
 
 /* Form fields default to plain white regardless of theme unless styled —
@@ -258,11 +316,11 @@ input::placeholder, textarea::placeholder {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fadeInUp 300ms var(--ease-out) both;
 }
 
 @keyframes heroDotFill {

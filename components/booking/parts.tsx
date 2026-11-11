@@ -130,7 +130,7 @@ export function Radio({ on }: { on: boolean }) {
 
 export function Section({ n, title, sub, children, right }: { n: number; title: string; sub?: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <section className="rounded-[1.75rem] p-4 sm:p-5" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD }}>
+    <section className="enter-up rounded-[1.75rem] p-4 sm:p-5" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD, ["--d" as string]: `${120 + n * 50}ms` }}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-2.5">
           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5" style={{ background: YELLOW, color: INK, ...H }}>{n}</span>
@@ -152,7 +152,7 @@ export function BookingHero({
 }: { eyebrow?: string | null; title: string; line: React.ReactNode; img: string; imgAlt: string; imgPosition?: string }) {
   return (
     <section className="px-4 pt-2 pb-4">
-      <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+      <div className="enter-up relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
         <div className="relative z-10 flex items-end gap-3 pl-5 pr-3 pt-5 pb-9">
           <div className="flex-1 min-w-0">
             {eyebrow && (
@@ -163,11 +163,11 @@ export function BookingHero({
             <h1 className="font-script mt-2 text-[28px] leading-[1.05] text-white">{title}</h1>
             <p className="mt-1.5 text-xs leading-snug" style={{ color: "rgba(251,240,217,0.88)" }}>{line}</p>
           </div>
-          <img src={img} alt={imgAlt} className="w-28 h-36 object-cover rounded-2xl shrink-0" style={{ objectPosition: imgPosition, boxShadow: "0 8px 16px rgba(0,0,0,0.25)" }} />
+          <img src={img} alt={imgAlt} className="enter-pop w-28 h-36 object-cover rounded-2xl shrink-0" style={{ objectPosition: imgPosition, boxShadow: "0 8px 16px rgba(0,0,0,0.25)", ["--d" as string]: "80ms" }} />
         </div>
         <span className="brand-wave" aria-hidden="true" />
       </div>
-      <div className="grid grid-cols-3 gap-1.5 mt-3">
+      <div className="enter-fade grid grid-cols-3 gap-1.5 mt-3" style={{ ["--d" as string]: "160ms" }}>
         {[
           { icon: ShieldCheck, t: "ID-verified" },
           { icon: Undo2, t: "Cancel anytime" },
@@ -196,11 +196,11 @@ export function PetPicker({ n, title, pets, petId, onChange }: { n: number; titl
             const on = p.id === petId;
             return (
               <button key={p.id} type="button" onClick={() => onChange(p.id)} aria-pressed={on} className="shrink-0 flex flex-col items-center w-[68px] tap-scale">
-                <span className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "#fef3dc", boxShadow: on ? `0 0 0 3px ${PLUM}` : "0 0 0 1px rgba(61,20,38,0.12)" }}>
+                <span className="motion-select relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "#fef3dc", boxShadow: on ? `0 0 0 3px ${PLUM}` : "0 0 0 1px rgba(61,20,38,0.12)" }}>
                   {p.photoUrl ? <img src={p.photoUrl} alt="" className="w-full h-full object-cover" /> : <PawPrint size={22} color={PLUM} />}
                 </span>
                 {on && (
-                  <span className="-mt-3 relative w-5 h-5 rounded-full flex items-center justify-center" style={{ background: PLUM, border: "2px solid white" }}>
+                  <span className="enter-pop -mt-3 relative w-5 h-5 rounded-full flex items-center justify-center" style={{ background: PLUM, border: "2px solid white" }}>
                     <Check size={11} color="white" />
                   </span>
                 )}
@@ -248,7 +248,7 @@ export function DayTimePicker({
               disabled={gone}
               onClick={() => onDay(d.iso)}
               aria-pressed={on}
-              className="shrink-0 w-[54px] py-2.5 rounded-2xl flex flex-col items-center tap-scale"
+              className="motion-select shrink-0 w-[54px] py-2.5 rounded-2xl flex flex-col items-center tap-scale"
               style={{ background: on ? PLUM : "#fffaf0", color: on ? "white" : INK, border: `1.5px solid ${on ? PLUM : "rgba(61,20,38,0.1)"}`, opacity: gone ? 0.35 : 1 }}
             >
               <span className="text-[10px] font-bold uppercase tracking-wide" style={{ opacity: 0.8 }}>{d.top}</span>
@@ -258,7 +258,19 @@ export function DayTimePicker({
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-full mt-3" style={{ background: "#fef3dc" }} role="tablist">
+      <div className="relative grid grid-cols-3 p-1 rounded-full mt-3" style={{ background: "#fef3dc" }} role="tablist">
+        {/* Indicator slides to the chosen period (state indication). */}
+        <span
+          aria-hidden="true"
+          className="absolute top-1 bottom-1 left-1 rounded-full"
+          style={{
+            width: "calc((100% - 8px) / 3)",
+            background: "#ffffff",
+            boxShadow: "0 2px 8px rgba(61,20,38,0.08)",
+            transform: `translateX(${periods.findIndex((p) => p.key === period) * 100}%)`,
+            transition: "transform 250ms var(--ease-in-out)",
+          }}
+        />
         {periods.map((p) => {
           const on = p.key === period;
           const open = p.slots.some((sl) => !isPast(day, sl));
@@ -270,8 +282,8 @@ export function DayTimePicker({
               aria-selected={on}
               disabled={!open}
               onClick={() => setPeriod(p.key)}
-              className="flex items-center justify-center gap-1 py-2 rounded-full text-xs font-bold"
-              style={{ background: on ? "#ffffff" : "transparent", color: open ? INK : "rgba(61,20,38,0.35)", boxShadow: on ? "0 2px 8px rgba(61,20,38,0.08)" : undefined }}
+              className="motion-select relative z-10 flex items-center justify-center gap-1 py-2 rounded-full text-xs font-bold"
+              style={{ color: open ? (on ? INK : MUTED) : "rgba(61,20,38,0.35)" }}
             >
               <p.icon size={13} /> {p.label}
             </button>
@@ -290,7 +302,7 @@ export function DayTimePicker({
               disabled={past}
               onClick={() => onSlot(sl)}
               aria-pressed={on}
-              className={`py-2.5 rounded-full text-sm font-semibold ${past ? "line-through" : "tap-scale"}`}
+              className={`motion-select py-2.5 rounded-full text-sm font-semibold ${past ? "line-through" : "tap-scale"}`}
               style={{ background: on ? YELLOW : "#ffffff", border: `1.5px solid ${on ? PLUM : "rgba(61,20,38,0.12)"}`, color: INK, opacity: past ? 0.35 : 1 }}
             >
               {sl.label}
@@ -335,12 +347,12 @@ export function ProPicker<T extends Pro>({
           No {noun} is free at {slotLabel}. Try another time.
         </div>
       ) : (
-        <div className="space-y-2">
+        <div key={slotLabel} className="enter-fade space-y-2">
           <button
             type="button"
             onClick={() => onPick(null)}
             aria-pressed={pickedId === null}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl text-left tap-scale"
+            className="motion-select w-full flex items-center gap-3 p-3 rounded-2xl text-left tap-scale"
             style={{ background: pickedId === null ? "#fef3dc" : "#fffaf0", border: `1.5px solid ${pickedId === null ? PLUM : "rgba(61,20,38,0.1)"}` }}
           >
             <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: PLUM }}>
@@ -362,13 +374,13 @@ export function ProPicker<T extends Pro>({
 
           {showAll && (
             <ul className="space-y-2">
-              {pros.map((p) => {
+              {pros.map((p, i) => {
                 const on = pickedId === p.id;
                 const away = p.availableAtRequestedTime === false;
                 const price = priceOf?.(p) ?? null;
                 return (
-                  <li key={p.id}>
-                    <div className="flex items-start gap-3 p-3 rounded-2xl" style={{ background: on ? "#fef3dc" : "#ffffff", border: `1.5px solid ${on ? PLUM : "rgba(61,20,38,0.1)"}`, opacity: away ? 0.6 : 1 }}>
+                  <li key={p.id} className="enter-up" style={{ ["--d" as string]: `${Math.min(i, 6) * 40}ms` }}>
+                    <div className="motion-select flex items-start gap-3 p-3 rounded-2xl" style={{ background: on ? "#fef3dc" : "#ffffff", border: `1.5px solid ${on ? PLUM : "rgba(61,20,38,0.1)"}`, opacity: away ? 0.6 : 1 }}>
                       <button type="button" disabled={away} onClick={() => onPick(p.id)} className="flex items-start gap-3 flex-1 min-w-0 text-left" aria-pressed={on}>
                         <Avatar name={p.user.name} photoUrl={p.photoUrl} />
                         <span className="min-w-0 flex-1">
@@ -434,9 +446,9 @@ export function BookBar({
   return (
     <>
       <style>{BAR_CSS}</style>
-      <div className="bk-book-bar fixed left-0 right-0 z-[45] px-3">
+      <div className="bk-book-bar bar-in fixed left-0 right-0 z-[45] px-3">
         <div className="max-w-lg mx-auto">
-          {error && <p className="mb-2 text-xs font-semibold text-center px-3 py-2 rounded-xl" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>{error}</p>}
+          {error && <p className="enter-fade mb-2 text-xs font-semibold text-center px-3 py-2 rounded-xl" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>{error}</p>}
           <div className="flex items-center gap-3 pl-5 pr-2 py-2 rounded-full" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(61,20,38,0.45)" }}>
             <div className="min-w-0 flex-1 text-white">
               <p className="leading-tight">
@@ -449,7 +461,7 @@ export function BookBar({
               type="button"
               onClick={onBook}
               disabled={!ready || busy}
-              className="shrink-0 inline-flex items-center gap-1.5 h-11 px-5 rounded-full text-sm font-bold tap-scale"
+              className="motion-select shrink-0 inline-flex items-center gap-1.5 h-11 px-5 rounded-full text-sm font-bold tap-scale"
               style={{ background: ready ? YELLOW : "rgba(249,221,138,0.35)", color: INK, ...H }}
             >
               {busy ? <><Loader2 size={15} className="animate-spin" /> Booking…</> : missing ?? <>{cta} <ArrowRight size={15} /></>}
