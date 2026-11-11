@@ -51,18 +51,14 @@ plum on ivory works; yellow or powder blue text on ivory does not.
 | Logo and campaign lines | **Sugar Loved** | Wordmark and playful taglines only, never body text |
 | Body (as used in the document) | Corbel (Light / Bold) | Long text in the document |
 
-These are not Google Fonts. The site is already wired for them in `app/globals.css`
-(`@font-face` + the `--font-heading`, `--font-ui` and `--font-script` stacks, and the `.font-script`
-and `.font-ui` classes). To switch them on, put licensed web font files in `public/fonts/` with these
-exact names:
+**Decision (2026-11-11): keep the stand-ins.** The website uses **Outfit** for headings and
+taglines and **Plus Jakarta Sans** for UI and body text. Do not add other fonts without asking.
 
-- `GulfsDisplay.woff2` (variable, or the bold weight)
-- `ArtifaktElement-Black.woff2` and `ArtifaktElement-Regular.woff2`
-- `SugarLoved.woff2`
-
-Until those files exist, headings fall back to Outfit, UI text to Plus Jakarta Sans, and taglines
-to Outfit. The fonts embedded in the branding PDF are partial subsets and must not be used as web
-fonts.
+The brand stacks are still wired in `app/globals.css` (`--font-heading`, `--font-ui`,
+`--font-script`, plus the `.font-script` and `.font-ui` classes), using `local()` only. That means a
+device with a brand font installed shows it, and everyone else gets the stand-in. To host the real
+fonts later, add licensed `.woff2` files to `public/fonts/` and an `url(...)` to each `@font-face`.
+The fonts embedded in the branding PDF are partial subsets and must not be used as web fonts.
 
 ## Voice and taglines
 

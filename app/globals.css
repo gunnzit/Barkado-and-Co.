@@ -5,30 +5,31 @@
 /* ===== Brand typefaces (BRAND.md) =====
    Primary: Gulfs Display (headlines). Secondary: Artifakt Element (labels, strong UI).
    Script: Sugar Loved (logo-style taglines only, never body text).
-   Drop the licensed web files into public/fonts/ with these exact names and the
-   whole site switches over. Until then each family falls back to the stand-in
-   loaded by next/font in app/layout.tsx (Outfit / Plus Jakarta Sans). */
+   Decision (2026-11-11): no web font files are hosted; the site uses the
+   stand-ins loaded by next/font in app/layout.tsx (Outfit / Plus Jakarta Sans).
+   These faces only use a copy already installed on the visitor's device.
+   To host the real fonts later, add url("/fonts/<file>.woff2") to each src. */
 @font-face {
   font-family: "Gulfs Display";
-  src: local("Gulfs Display"), url("/fonts/GulfsDisplay.woff2") format("woff2");
+  src: local("Gulfs Display");
   font-weight: 100 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Artifakt Element";
-  src: local("Artifakt Element Black"), url("/fonts/ArtifaktElement-Black.woff2") format("woff2");
+  src: local("Artifakt Element Black");
   font-weight: 800 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Artifakt Element";
-  src: local("Artifakt Element"), url("/fonts/ArtifaktElement-Regular.woff2") format("woff2");
+  src: local("Artifakt Element");
   font-weight: 400 700;
   font-display: swap;
 }
 @font-face {
   font-family: "Sugar Loved";
-  src: local("Sugar Loved"), url("/fonts/SugarLoved.woff2") format("woff2");
+  src: local("Sugar Loved");
   font-display: swap;
 }
 

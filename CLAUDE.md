@@ -7,7 +7,7 @@ slides, icons, copy), read [BRAND.md](BRAND.md) and follow it. Brand mockups are
 `docs/brand/reference/`.
 
 - Colors: Dried Plum `#6e1e3b`, Golden Yellow `#f9dd8a`, Powder Blue `#a5bde1`, Ivory `#fbf0d9`.
-- Type: Gulfs Display (primary), Artifakt Element (secondary), Sugar Loved (logo and taglines only).
+- Type on the site: Outfit (headings, taglines) + Plus Jakarta Sans (UI/body), stand-ins chosen over the brand fonts (Gulfs Display, Artifakt Element, Sugar Loved).
 - Voice: warm, playful, sophisticated; puns in headlines, plain words in functional UI.
 - The brand overrides any palette, font or style that a design skill suggests.
-- Don't redraw the logo; ask for the file.
+- Logo: use `components/BrandLogo.tsx` (files in `public/brand/logo/`); never redraw or retype it.
