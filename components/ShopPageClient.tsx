@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ShopHeader from "@/components/ShopHeader";
+import HomeMobileHeader from "@/components/HomeMobileHeader";
 import ShopHighlights from "@/components/ShopHighlights";
 import AccessoriesListClient from "@/components/AccessoriesListClient";
 import PartnerBrandBanner from "@/components/PartnerBrandBanner";
@@ -18,6 +18,9 @@ type Bundle = {
 
 export default function ShopPageClient({
   userAddress,
+  userPhone = null,
+  cartCount = 0,
+  pawPointsBalance = 0,
   products,
   featuredProduct,
   tailoredProducts,
@@ -25,8 +28,12 @@ export default function ShopPageClient({
   bundles,
   impulseProducts,
   partnerBrandName,
+  petSize = null,
 }: {
   userAddress: string | null;
+  userPhone?: string | null;
+  cartCount?: number;
+  pawPointsBalance?: number;
   products: Accessory[];
   featuredProduct: (Product & { percentOff: number }) | null;
   tailoredProducts: Product[];
@@ -34,12 +41,15 @@ export default function ShopPageClient({
   bundles: Bundle[];
   impulseProducts: Product[];
   partnerBrandName?: string | null;
+  petSize?: string | null;
 }) {
   const [query, setQuery] = useState("");
 
   return (
     <>
-      <ShopHeader userAddress={userAddress} query={query} onQueryChange={setQuery} />
+      {/* Same top bar as the homepage: monogram + wordmark, PawPoints, cart, profile, delivery address. */}
+      <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} showSearch={false} />
+      <div className="h-3" />
 
       {/* Hero from the Stitch Shop design (design/stitch/03-shop) */}
       <section className="px-4 pt-1 pb-5">
@@ -66,14 +76,17 @@ export default function ShopPageClient({
       </section>
 
       {partnerBrandName && <PartnerBrandBanner partnerBrandName={partnerBrandName} />}
-      <ShopHighlights
-        featuredProduct={featuredProduct}
-        tailoredProducts={tailoredProducts}
-        petName={petName}
-        bundles={bundles}
-        impulseProducts={impulseProducts}
-      />
-      <AccessoriesListClient products={products} query={query} />
+      {/* Products first: shoppers came to browse. Deals, bundles and add-ons follow. */}
+      <AccessoriesListClient products={products} query={query} onQueryChange={setQuery} petName={petName} petSize={petSize} />
+      <div className="mt-8">
+        <ShopHighlights
+          featuredProduct={featuredProduct}
+          tailoredProducts={tailoredProducts}
+          petName={petName}
+          bundles={bundles}
+          impulseProducts={impulseProducts}
+        />
+      </div>
     </>
   );
 }

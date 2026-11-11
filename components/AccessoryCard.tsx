@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Sparkles, Check, Plus } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 import PartnerBrandTag from "@/components/PartnerBrandTag";
+import { flyToCart, bumpCart } from "@/lib/cartMotion";
 
 export type Accessory = {
   id: string;
@@ -23,6 +24,8 @@ export type Accessory = {
   // Real partner tagging — set only when this product actually belongs
   // to a real PartnerBrand record. Null/undefined for everything else.
   partnerBrand?: { id: string; name: string } | null;
+  // Real sizes this product suits; empty means it suits every dog.
+  suitableSizes?: string[];
 };
 
 const ICONS = {
@@ -52,7 +55,7 @@ function stockLabel(stock: number): { text: string; color: string } {
  * one-line description, price and a round plum add button.
  * Cart, stock and colour/size logic is unchanged.
  */
-export function AccessoryCard({ item }: { item: Accessory }) {
+export function AccessoryCard({ item, fitsPetName = null }: { item: Accessory; fitsPetName?: string | null }) {
   const { quantities, setQuantity } = useCart();
   const qty = quantities[item.id] ?? 0;
   const Icon = ICONS[item.icon];
@@ -71,6 +74,13 @@ export function AccessoryCard({ item }: { item: Accessory }) {
 
   const needsOptions = colorOptions.length > 0 || sizeOptions.length > 0;
   const soldOut = item.stock <= 0;
+  const photoRef = useRef<HTMLDivElement>(null);
+  const altPhoto = item.imageUrls?.[1];
+
+  const quickAdd = () => {
+    flyToCart(photoRef.current);
+    setQuantity(item.id, 1);
+  };
 
   const addToCart = async () => {
     setAdding(true);
@@ -88,6 +98,7 @@ export function AccessoryCard({ item }: { item: Accessory }) {
     setAdding(false);
     if (res.ok) {
       setJustAdded(true);
+      flyToCart(photoRef.current);
     } else {
       const body = await res.json().catch(() => ({}));
       setError(body.error || "Couldn't add to cart.");
@@ -100,9 +111,12 @@ export function AccessoryCard({ item }: { item: Accessory }) {
       style={{ background: "var(--card)", border: "1px solid rgba(61,20,38,0.07)", boxShadow: "0 8px 24px -4px rgba(61,20,38,0.06)" }}
     >
       <Link href={`/accessories/${item.id}`} className="block relative p-2 pb-0">
-        <div className="img-frame w-full aspect-square flex items-center justify-center relative !rounded-[1.1rem]" style={{ background: "var(--cream)" }}>
+        <div ref={photoRef} className={`img-frame w-full aspect-square flex items-center justify-center relative !rounded-[1.1rem] ${altPhoto ? "card-has-alt" : ""}`} style={{ background: "var(--cream)" }}>
           {photo ? (
-            <img src={photo} alt={item.name} className="w-full h-full object-cover" />
+            <>
+              <img src={photo} alt={item.name} className="w-full h-full object-cover" />
+              {altPhoto && <img src={altPhoto} alt="" aria-hidden="true" className="card-alt-photo absolute inset-0 w-full h-full object-cover" />}
+            </>
           ) : (
             <Icon size={36} color="var(--tan)" strokeWidth={1.5} />
           )}
@@ -114,9 +128,18 @@ export function AccessoryCard({ item }: { item: Accessory }) {
               <Sparkles size={10} /> Bestseller
             </span>
           )}
-          {hasDiscount && (
-            <span className="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbe5f3", color: "#3d1426" }}>
-              {percentOff}% off
+          {(hasDiscount || fitsPetName) && (
+            <span className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+              {fitsPetName && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#ffffff", color: "#6e1e3b" }}>
+                  Fits {fitsPetName}
+                </span>
+              )}
+              {hasDiscount && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbe5f3", color: "#3d1426" }}>
+                  {percentOff}% off
+                </span>
+              )}
             </span>
           )}
         </div>
@@ -195,7 +218,7 @@ export function AccessoryCard({ item }: { item: Accessory }) {
             </button>
           ) : qty === 0 ? (
             <button
-              onClick={() => setQuantity(item.id, 1)}
+              onClick={quickAdd}
               disabled={soldOut}
               className="tap-scale shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white"
               style={{ background: "var(--panel-dark)", opacity: soldOut ? 0.4 : 1 }}
@@ -204,10 +227,13 @@ export function AccessoryCard({ item }: { item: Accessory }) {
               <Plus size={17} />
             </button>
           ) : (
-            <div className="flex items-center gap-0.5 rounded-full p-0.5 shrink-0" style={{ background: "var(--panel-dark)" }}>
+            // The + grows into this stepper (state indication); the number rolls on change.
+            <div className="enter-pop flex items-center gap-0.5 rounded-full p-0.5 shrink-0 origin-right" style={{ background: "var(--panel-dark)" }}>
               <button onClick={() => setQuantity(item.id, qty - 1)} className="tap-scale w-7 h-7 rounded-full flex items-center justify-center text-white font-bold" aria-label="Decrease quantity">−</button>
-              <span className="text-xs font-bold text-white w-4 text-center">{qty}</span>
-              <button onClick={() => setQuantity(item.id, qty + 1)} className="tap-scale w-7 h-7 rounded-full flex items-center justify-center text-white font-bold" aria-label="Increase quantity">+</button>
+              <span className="text-xs font-bold text-white w-4 text-center overflow-hidden" aria-live="polite">
+                <span key={qty} className="num-roll">{qty}</span>
+              </span>
+              <button onClick={() => { bumpCart(); setQuantity(item.id, qty + 1); }} className="tap-scale w-7 h-7 rounded-full flex items-center justify-center text-white font-bold" aria-label="Increase quantity">+</button>
             </div>
           )}
         </div>

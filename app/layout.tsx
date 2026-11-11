@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/CartProvider";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import CartPill from "@/components/CartPill";
 import BottomNav from "@/components/BottomNav";
+import { NavTracker } from "@/lib/navHistory";
 import ActivityTracker from "@/components/ActivityTracker";
 import OwnerSideMenu from "@/components/OwnerSideMenu";
 import "./globals.css";
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <CartPill />
               <BottomNav />
+              <NavTracker />
             </FavoritesProvider>
           </CartProvider>
         </ClerkProvider>

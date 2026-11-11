@@ -8,7 +8,9 @@ export type CartItem = {
   kind: "PRODUCT" | "SERVICE";
   quantity: number;
   productId: string | null;
-  product: { id: string; name: string; price: number; icon: string | null } | null;
+  product: { id: string; name: string; price: number; icon: string | null; imageUrls?: string[]; compareAtPrice?: number | null } | null;
+  selectedColor?: string | null;
+  selectedSize?: string | null;
   serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING" | null;
   providerId: string | null;
   provider: { id: string; user: { name: string } } | null;
@@ -26,6 +28,8 @@ type CartContextType = {
   quantities: Record<string, number>; // productId -> quantity, for AccessoryCard
   totalCount: number;
   loading: boolean;
+  /** True once the real cart has been fetched at least once. */
+  ready: boolean;
   setQuantity: (productId: string, quantity: number) => Promise<void>;
   addService: (data: {
     serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING";
@@ -51,6 +55,7 @@ export function CartProvider({
 }) {
   const [items, setItems] = useState<CartItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const { isSignedIn } = useUser();
   const { openSignIn } = useClerk();
   const [pendingAdd, setPendingAdd] = useState<{ productId: string; quantity: number } | null>(null);
@@ -65,7 +70,10 @@ export function CartProvider({
     setLoading(true);
     try {
       const res = await fetch("/api/cart");
-      if (res.ok) setItems(await res.json());
+      if (res.ok) {
+        setItems(await res.json());
+        setReady(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -163,7 +171,7 @@ export function CartProvider({
   }, [isSignedIn]);
 
   return (
-    <CartContext.Provider value={{ items, quantities, totalCount, loading, setQuantity, addService, removeItem, refresh }}>
+    <CartContext.Provider value={{ items, quantities, totalCount, loading, ready, setQuantity, addService, removeItem, refresh }}>
       {children}
     </CartContext.Provider>
   );

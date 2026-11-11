@@ -290,9 +290,47 @@ h1, h2, h3 {
 .enter-fade { animation: enterFade 200ms var(--ease-out) var(--d, 0ms) backwards; }
 .bar-in { animation: barIn 300ms var(--ease-out) 150ms backwards; }
 
+/* Quantity number rolls up when it changes (state indication). Re-key the element. */
+@keyframes numRoll {
+  from { opacity: 0; transform: translateY(60%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.num-roll { display: inline-block; animation: numRoll 160ms var(--ease-out) backwards; }
+
+/* Favourite: heart pops, a few golden paws burst out (delight; only on save). */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.heart-pop { animation: heartPop 380ms var(--ease-out); }
+@keyframes pawBurst {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--r)) translateY(0) scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--r)) translateY(-22px) scale(1); }
+}
+.paw-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  animation: pawBurst 460ms var(--ease-out) forwards;
+}
+
+/* Second product photo cross-fades in on hover (mouse only). */
+.card-alt-photo { opacity: 0; transition: opacity 250ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .card-has-alt:hover .card-alt-photo { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tap-scale, .tap-scale:active, .hover-lift, .hover-lift:hover, .img-frame img { transform: none !important; }
-  .enter-up, .enter-pop, .bar-in, .animate-fade-up { animation-name: enterFade !important; }
+  .enter-up, .enter-pop, .bar-in, .animate-fade-up, .num-roll { animation-name: enterFade !important; }
+  .heart-pop { animation: none !important; }
+  .paw-burst { display: none; }
 }
 
 /* Form fields default to plain white regardless of theme unless styled —

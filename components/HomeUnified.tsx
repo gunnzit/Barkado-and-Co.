@@ -5,9 +5,10 @@ import { useClerk } from "@clerk/nextjs";
 import {
   ArrowRight, ChevronRight, ShieldCheck, BadgeCheck, RotateCcw, CalendarClock,
   Syringe, Sparkles, Plus, Star, PawPrint, Lock, Undo2, Footprints, Scissors,
-  GraduationCap, ShoppingBag, Phone, Mail,
+  GraduationCap, ShoppingBag,
 } from "lucide-react";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
+import { WagglesStrip, EarnBanner, ReviewsSection, SiteFooter, type HomeReview } from "@/components/HomeExtras";
 
 /*
  * Home page — rebuilt around the four things Barkado & Co. actually sells:
@@ -24,9 +25,6 @@ const YELLOW = "#f9dd8a";
 const IVORY = "#fbf0d9";
 const MUTED = "#5e4752";
 const CARD_SHADOW = "0 8px 24px -4px rgba(61,20,38,0.06)";
-const SUPPORT_PHONE_DISPLAY = "+91 99888 75745";
-const SUPPORT_PHONE_TEL = "+919988875745";
-const SUPPORT_EMAIL = "hello@barkadoandco.com";
 
 const SERVICE_NAME: Record<string, string> = { WALKING: "Walk", GROOMING: "Grooming", TRAINING: "Training", SITTING: "Sitting" };
 const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", GROOMING: "/grooming", TRAINING: "/training", SITTING: "/sitting" };
@@ -76,6 +74,7 @@ export default function HomeUnified({
   counts,
   featuredPros,
   products,
+  reviews = [],
 }: {
   isSignedIn: boolean;
   userName: string | null;
@@ -92,6 +91,7 @@ export default function HomeUnified({
   counts: Counts;
   featuredPros: Pro[];
   products: Product[];
+  reviews?: HomeReview[];
 }) {
   const { openSignIn } = useClerk();
   const gate = (e: React.MouseEvent) => {
@@ -154,7 +154,7 @@ export default function HomeUnified({
     <div style={{ background: IVORY }}>
       <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-      <main className="w-full pt-2 pb-28" style={{ background: IVORY }}>
+      <main className="w-full pt-2 pb-2" style={{ background: IVORY }}>
         <div className="max-w-2xl mx-auto w-full">
 
           {/* ===== Returning customer: what's next for their dog ===== */}
@@ -309,10 +309,18 @@ export default function HomeUnified({
             </div>
           </section>
 
+          <WagglesStrip />
+
           {/* ===== How it works + real guarantees (new visitors) ===== */}
           {!isReturning && (
             <section className="px-4 py-3">
-              <div className="enter-up rounded-[1.75rem] p-5" style={{ ["--d" as string]: "280ms", background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+              <div className="enter-up relative overflow-hidden rounded-[1.75rem] p-5" style={{ ["--d" as string]: "280ms", background: "#e4ebf6", border: "1px solid rgba(61,20,38,0.06)" }}>
+                {/* Paw-print trail walking across the corner (brand motif) */}
+                <span className="absolute right-3 top-3 flex gap-1.5 rotate-[-18deg] pointer-events-none" aria-hidden="true">
+                  {[0, 1, 2, 3].map((n) => (
+                    <PawPrint key={n} size={14} color="rgba(110,30,59,0.18)" style={{ transform: `translateY(${n % 2 ? 6 : 0}px) rotate(${n % 2 ? 12 : -12}deg)` }} />
+                  ))}
+                </span>
                 <h2 className="font-bold text-[20px] leading-7 tracking-tight mb-3" style={{ ...H, color: PLUM }}>How it works</h2>
                 <ol className="space-y-3">
                   {[
@@ -329,7 +337,7 @@ export default function HomeUnified({
                     </li>
                   ))}
                 </ol>
-                <div className="grid grid-cols-3 gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(61,20,38,0.1)" }}>
+                <div className="grid grid-cols-3 gap-2 mt-4 p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.7)" }}>
                   {[
                     { icon: ShieldCheck, t: "ID-verified pros", d: "Checked before going live" },
                     { icon: Undo2, t: "Cancel any time", d: "Full refund before it starts" },
@@ -378,6 +386,8 @@ export default function HomeUnified({
               </p>
             </section>
           ) : null}
+
+          <ReviewsSection reviews={reviews} />
 
           {/* ===== Shop ===== */}
           <section className="px-4 py-3">
@@ -433,26 +443,10 @@ export default function HomeUnified({
             </section>
           )}
 
-          {/* ===== Help ===== */}
-          <section className="px-4 pt-4 pb-2">
-            <div className="rounded-[1.75rem] p-4 flex items-center justify-between gap-3" style={{ background: "#fef3dc" }}>
-              <div className="min-w-0">
-                <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>Questions? We&rsquo;re here.</p>
-                <p className="text-xs" style={{ color: MUTED }}>Talk to a real person at Barkado &amp; Co.</p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <a href={`tel:${SUPPORT_PHONE_TEL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: PLUM, color: "white" }} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
-                  <Phone size={16} />
-                </a>
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: "#ffffff", color: PLUM, border: "1px solid rgba(61,20,38,0.1)" }} aria-label={`Email ${SUPPORT_EMAIL}`}>
-                  <Mail size={16} />
-                </a>
-              </div>
-            </div>
-            <p className="font-script text-center text-lg mt-5" style={{ color: PLUM }}>A Hug in every Paw</p>
-          </section>
+          <EarnBanner />
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

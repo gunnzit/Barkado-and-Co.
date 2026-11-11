@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ShieldCheck, Undo2, Lock, Sun, CloudSun, Moon, Plus, PawPrint, MapPin, Phone,
   Sparkles, Star, Check, ChevronDown, ChevronRight, Clock, ArrowRight, Loader2,
@@ -417,15 +418,17 @@ export function ProPicker<T extends Pro>({
 
 export function MeetingPoint({ n, title, noun, address, phone }: { n: number; title: string; noun: string; address: string | null; phone: string | null }) {
   const has = !!(address && phone);
+  // Opens the details sheet on Profile and comes straight back here after saving.
+  const editHref = `/owner/profile?edit=details&next=${encodeURIComponent(usePathname() ?? "/")}`;
   return (
-    <Section n={n} title={title} right={<Link href="/owner/profile" className="text-xs font-bold underline underline-offset-2" style={{ color: PLUM }}>{has ? "Edit" : "Add"}</Link>}>
+    <Section n={n} title={title} right={<Link href={editHref} className="text-xs font-bold underline underline-offset-2" style={{ color: PLUM }}>{has ? "Edit" : "Add"}</Link>}>
       {has ? (
         <div className="space-y-1.5 text-sm" style={{ color: INK }}>
           <p className="flex items-start gap-2"><MapPin size={15} color={PLUM} className="mt-0.5 shrink-0" /> {address}</p>
           <p className="flex items-center gap-2" style={{ color: MUTED }}><Phone size={14} color={PLUM} className="shrink-0" /> {phone}</p>
         </div>
       ) : (
-        <Link href="/owner/profile" className="block p-3 rounded-2xl text-sm font-semibold" style={{ background: "#fdf1d6", color: INK }}>
+        <Link href={editHref} className="block p-3 rounded-2xl text-sm font-semibold" style={{ background: "#fdf1d6", color: INK }}>
           Add your address and phone so your {noun} can find you →
         </Link>
       )}

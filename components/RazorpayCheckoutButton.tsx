@@ -39,10 +39,17 @@ export default function RazorpayCheckoutButton({
   amountLabel,
   disabled,
   checkoutExtras,
+  label,
+  className = "btn-primary w-full tap-scale flex items-center justify-center gap-2",
+  style,
 }: {
   amountLabel: string;
   disabled?: boolean;
   checkoutExtras?: CheckoutExtras;
+  /** Button text; defaults to "Place Order · {amount}". */
+  label?: string;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -129,15 +136,15 @@ export default function RazorpayCheckoutButton({
       <button
         onClick={payNow}
         disabled={disabled || status === "loading"}
-        className="btn-primary w-full tap-scale flex items-center justify-center gap-2"
-        style={{ opacity: disabled ? 0.5 : 1 }}
+        className={className}
+        style={{ ...style, opacity: disabled ? 0.5 : 1 }}
       >
         {status === "loading" ? (
           <>
             <Loader2 size={16} className="animate-spin" /> Opening payment…
           </>
         ) : (
-          `Place Order · ${amountLabel}`
+          label ?? `Place Order · ${amountLabel}`
         )}
       </button>
       {status === "error" && (

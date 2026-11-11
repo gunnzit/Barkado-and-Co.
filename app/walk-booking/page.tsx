@@ -23,7 +23,7 @@ export default async function WalkBookingPage() {
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
       <main className="max-w-lg mx-auto">
-        <TaskHeader title="Book a walk" />
+        <TaskHeader title="Book a walk" showBack={false} />
 
         <WalkBookingFlow
           pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl, breed: p.breed }))}
