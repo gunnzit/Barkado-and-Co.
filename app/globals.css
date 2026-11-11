@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Brand typefaces (BRAND.md) =====
+   Primary: Gulfs Display (headlines). Secondary: Artifakt Element (labels, strong UI).
+   Script: Sugar Loved (logo-style taglines only, never body text).
+   Drop the licensed web files into public/fonts/ with these exact names and the
+   whole site switches over. Until then each family falls back to the stand-in
+   loaded by next/font in app/layout.tsx (Outfit / Plus Jakarta Sans). */
+@font-face {
+  font-family: "Gulfs Display";
+  src: local("Gulfs Display"), url("/fonts/GulfsDisplay.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Artifakt Element";
+  src: local("Artifakt Element Black"), url("/fonts/ArtifaktElement-Black.woff2") format("woff2");
+  font-weight: 800 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Artifakt Element";
+  src: local("Artifakt Element"), url("/fonts/ArtifaktElement-Regular.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sugar Loved";
+  src: local("Sugar Loved"), url("/fonts/SugarLoved.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
   /* Barkado & Co. brand palette (see BRAND.md): Dried Plum #6e1e3b,
      Golden Yellow #f9dd8a, Powder Blue #a5bde1, Ivory #fbf0d9.
@@ -10,6 +40,11 @@
   --brand-yellow: #f9dd8a;
   --brand-blue: #a5bde1;
   --brand-ivory: #fbf0d9;
+
+  /* Brand type stacks. --font-outfit / --font-body come from next/font. */
+  --font-heading: "Gulfs Display", var(--font-outfit), system-ui, sans-serif;
+  --font-ui: "Artifakt Element", var(--font-body), system-ui, sans-serif;
+  --font-script: "Sugar Loved", var(--font-outfit), system-ui, sans-serif;
 
   --cream: #fbf0d9;          /* page background: Ivory */
   --forest: #3d1426;         /* body text / headings: deep plum ink */
@@ -54,6 +89,16 @@ body {
 h1, h2, h3 {
   font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
   letter-spacing: -0.02em;
+}
+
+/* Playful campaign lines ("A Hug in every Paw", "Woof it All!") in Sugar Loved. */
+.font-script {
+  font-family: var(--font-script);
+  letter-spacing: 0;
+}
+/* Small uppercase labels and badges in Artifakt Element. */
+.font-ui {
+  font-family: var(--font-ui);
 }
 .btn-primary {
   background: var(--terracotta);

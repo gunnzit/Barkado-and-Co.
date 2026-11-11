@@ -457,7 +457,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
               <div className="truncate">{buildMrzLine(pet)}</div>
             </div>
 
-            <p className="mt-3 text-right text-sm italic relative z-10" style={{ color: "#f9dd8a", fontFamily: "var(--font-heading)" }}>A Hug in every Paw</p>
+            <p className="mt-3 text-right text-sm italic relative z-10" style={{ color: "#f9dd8a", fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
           </div>
         </div>
       </div>

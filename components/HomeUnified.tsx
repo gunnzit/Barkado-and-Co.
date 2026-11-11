@@ -121,7 +121,7 @@ export default function HomeUnified({
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
                     <PawPrint size={11} /> Chandigarh
                   </span>
-                  <h1 className="mt-2 text-[28px] leading-[1.1] font-bold tracking-tight text-white" style={H}>
+                  <h1 className="font-script mt-2 text-[30px] leading-[1.05] text-white">
                     A Hug in every Paw
                   </h1>
                   <p className="mt-1.5 text-xs leading-snug" style={{ color: "rgba(251,240,217,0.85)" }}>

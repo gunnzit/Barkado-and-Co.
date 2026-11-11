@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { ArrowLeft } from "lucide-react";
 
 /**
@@ -15,7 +16,7 @@ export default function ProviderJoinHero({ compact = false }: { compact?: boolea
         <Link href="/" className="w-9 h-9 rounded-full flex items-center justify-center tap-scale" style={{ background: "var(--card)", border: "1px solid var(--border)" }} aria-label="Back to home">
           <ArrowLeft size={18} />
         </Link>
-        <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--terracotta)" }}>Barkado &amp; Co. Pro</span>
+        <span className="flex items-center gap-1.5"><BrandLogo variant="wordmark" className="h-7 w-auto" /><span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: "#f9dd8a", color: "#3d1426" }}>Pro</span></span>
       </div>
 
       <section className="relative overflow-hidden rounded-[2rem]" style={{ background: "#6e1e3b", boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>

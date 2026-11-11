@@ -24,7 +24,11 @@ celebrate the bond between pets and their humans, not just a service.
   (waves, hearts, tags).
 - The wordmark is set in Sugar Loved. One playful detail: the "A" in "BARKADO" is often a lowercase,
   tilted "a" ("BARKaDO").
-- No vector logo file is in the repo yet. Ask for the SVG/PNG instead of redrawing it.
+- **Logo files (vector, extracted from the branding PDF):** `public/brand/logo/`:
+  `emblem-*`, `wordmark-*`, `combination-*`, `monogram-*`, each as `-plum` (for light grounds)
+  and `-ivory` (for plum/dark grounds). Use `components/BrandLogo.tsx`
+  (`<BrandLogo variant="wordmark" tone="plum" />`). The favicon is `app/icon.svg` (ivory
+  monogram on a plum rounded square). Never redraw or retype the logo.
 
 ## Colors
 
@@ -47,8 +51,18 @@ plum on ivory works; yellow or powder blue text on ivory does not.
 | Logo and campaign lines | **Sugar Loved** | Wordmark and playful taglines only, never body text |
 | Body (as used in the document) | Corbel (Light / Bold) | Long text in the document |
 
-These are not Google Fonts. The font files have to be supplied and self-hosted (`next/font/local`),
-with a license check first. Until then, pick fallbacks close in feel and say so explicitly.
+These are not Google Fonts. The site is already wired for them in `app/globals.css`
+(`@font-face` + the `--font-heading`, `--font-ui` and `--font-script` stacks, and the `.font-script`
+and `.font-ui` classes). To switch them on, put licensed web font files in `public/fonts/` with these
+exact names:
+
+- `GulfsDisplay.woff2` (variable, or the bold weight)
+- `ArtifaktElement-Black.woff2` and `ArtifaktElement-Regular.woff2`
+- `SugarLoved.woff2`
+
+Until those files exist, headings fall back to Outfit, UI text to Plus Jakarta Sans, and taglines
+to Outfit. The fonts embedded in the branding PDF are partial subsets and must not be used as web
+fonts.
 
 ## Voice and taglines
 

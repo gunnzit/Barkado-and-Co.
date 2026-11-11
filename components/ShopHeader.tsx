@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { useEffect } from "react";
 import { Search, SlidersHorizontal, ShoppingBag, User, MapPin, ChevronDown } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
@@ -50,7 +51,7 @@ export default function ShopHeader({
     <div className="px-4 pt-3 pb-3" style={{ background: "#fffaf0" }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <h1 className="font-extrabold text-lg" style={{ ...H, color: "#2a0c18" }}>Barkado &amp; Co.</h1>
+          <h1><BrandLogo variant="wordmark" className="h-8 w-auto" /></h1>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#f9dd8a", color: "#6e1e3b" }}>SHOP</span>
         </div>
         <div className="flex items-center gap-2">

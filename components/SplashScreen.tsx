@@ -1,7 +1,7 @@
 "use client";
 
+import BrandLogo from "@/components/BrandLogo";
 import { useEffect, useState } from "react";
-import { PawPrint } from "lucide-react";
 
 export default function SplashScreen() {
   const [phase, setPhase] = useState<"hidden" | "showing" | "leaving">("hidden");
@@ -26,12 +26,12 @@ export default function SplashScreen() {
       className={`fixed inset-0 flex flex-col items-center justify-center splash-overlay ${phase === "leaving" ? "splash-leaving" : ""}`}
       style={{ background: "var(--panel-dark)", zIndex: 300 }}
     >
-      <div className="splash-icon w-24 h-24 rounded-full flex items-center justify-center mb-5" style={{ background: "rgba(255,255,255,0.08)" }}>
-        <PawPrint size={44} color="var(--gold)" />
+      <div className="splash-icon mb-4">
+        <BrandLogo variant="monogram" tone="ivory" className="w-24 h-auto" alt="" />
       </div>
-      <p className="splash-text text-white text-2xl font-extrabold tracking-tight">Barkado & Co.</p>
-      <p className="splash-tagline text-sm mt-2" style={{ color: "rgba(255,255,255,0.6)" }}>
-        Everything your dog needs. One passport.
+      <p className="splash-text"><BrandLogo variant="wordmark" tone="ivory" className="h-14 w-auto" /></p>
+      <p className="splash-tagline font-script text-lg mt-3" style={{ color: "var(--brand-yellow)" }}>
+        A Hug in every Paw
       </p>
 
       <style jsx>{`

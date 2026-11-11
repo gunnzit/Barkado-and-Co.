@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
 import LocationPickerModal from "@/components/LocationPickerModal";
 
@@ -94,12 +95,10 @@ export default function HomeMobileHeader({
     <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(255,250,240,0.95)", borderBottom: "1px solid rgba(227,207,196,0.2)" }}>
       <div className="px-4 pt-2.5 pb-3 flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1.5">
-            <h1 className="font-extrabold text-[21px] tracking-tight" style={{ ...H, color: "#2a0c18" }}>
-              Barkado <span className="font-normal italic text-lg" style={{ fontFamily: "serif", color: "#6e1e3b" }}>&amp; Co.</span>
-            </h1>
-            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: "#6e1e3b" }} />
-          </div>
+          <h1 className="flex items-center gap-1.5">
+            <BrandLogo variant="monogram" className="h-9 w-auto" alt="" />
+            <BrandLogo variant="wordmark" className="h-8 w-auto" />
+          </h1>
           <div className="flex items-center gap-2">
             <Link href="/owner/wallet" className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tap-scale" style={{ background: "#f3e2c4", border: "1px solid rgba(227,207,196,0.4)", ...H, color: "#2a0c18" }}>
               <Sparkles size={13} color="#f9dd8a" />

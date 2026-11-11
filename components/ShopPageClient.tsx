@@ -49,7 +49,7 @@ export default function ShopPageClient({
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: "#f9dd8a", color: "#3d1426" }}>
                 The Artisan Shelf
               </span>
-              <h1 className="mt-2 text-[34px] leading-[1.02] font-bold tracking-tight" style={{ color: "#f9dd8a" }}>
+              <h1 className="font-script mt-2 text-[36px] leading-[1.0]" style={{ color: "#f9dd8a" }}>
                 Woof<br />it All!
               </h1>
               <p className="mt-2 text-xs leading-snug" style={{ color: "rgba(251,240,217,0.85)" }}>

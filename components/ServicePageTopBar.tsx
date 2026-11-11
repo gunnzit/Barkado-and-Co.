@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { useUser } from "@clerk/nextjs";
 import { Sparkles, ShoppingBag, User } from "lucide-react";
 
@@ -21,7 +22,7 @@ export default function ServicePageTopBar({
 
   return (
     <div className="px-5 py-2.5 flex items-center justify-between">
-      <h1 className="text-[13px] tracking-wider uppercase font-extrabold" style={{ color: "var(--muted)" }}>Barkado &amp; Co.</h1>
+      <Link href="/" aria-label="Barkado & Co. home"><BrandLogo variant="wordmark" className="h-8 w-auto" /></Link>
       <div className="flex items-center gap-2.5">
         <Link
           href="/owner/wallet"
