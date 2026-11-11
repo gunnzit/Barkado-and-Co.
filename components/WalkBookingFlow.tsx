@@ -254,7 +254,7 @@ export default function WalkBookingFlow({
   return (
     <div className="pb-[calc(env(safe-area-inset-bottom)+190px)] lg:pb-28">
       {/* ===== Hero ===== */}
-      <section className="px-4 pt-1 pb-4">
+      <section className="px-4 pt-2 pb-4">
         <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
           <div className="relative z-10 flex items-end gap-3 pl-5 pr-3 pt-5 pb-9">
             <div className="flex-1 min-w-0">
@@ -275,14 +275,14 @@ export default function WalkBookingFlow({
           </div>
           <span className="brand-wave" aria-hidden="true" />
         </div>
-        <div className="flex justify-between gap-2 mt-3 px-1">
+        <div className="grid grid-cols-3 gap-1.5 mt-3">
           {[
-            { icon: ShieldCheck, t: "ID-verified walkers" },
-            { icon: Undo2, t: "Cancel any time" },
-            { icon: Lock, t: "Secure payment" },
+            { icon: ShieldCheck, t: "ID-verified" },
+            { icon: Undo2, t: "Cancel anytime" },
+            { icon: Lock, t: "Secure pay" },
           ].map((g) => (
-            <span key={g.t} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: INK }}>
-              <g.icon size={13} color={PLUM} /> {g.t}
+            <span key={g.t} className="inline-flex items-center justify-center gap-1 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap" style={{ color: INK, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(61,20,38,0.06)" }}>
+              <g.icon size={12} color={PLUM} /> {g.t}
             </span>
           ))}
         </div>
