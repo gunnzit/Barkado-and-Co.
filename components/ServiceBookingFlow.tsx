@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Camera, Plus, Sun, CloudSun, Moon, GraduationCap, Undo2, Lock } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
@@ -232,6 +232,7 @@ export default function ServiceBookingFlow({
 }) {
   const { addService } = useCart();
   const router = useRouter();
+  const pathname = usePathname();
   const [phase, setPhase] = useState<"intro" | "details" | "providers" | "done">(
     showStartButton ? "intro" : "details"
   );
@@ -789,7 +790,7 @@ export default function ServiceBookingFlow({
               <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Meeting at</p>
               <p className="text-sm mb-1">{address}</p>
               <p className="text-sm" style={{ color: "var(--muted)" }}>{phone}</p>
-              <Link href="/owner/profile" className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
+              <Link href={`/owner/profile?edit=details&next=${encodeURIComponent(pathname ?? "/")}`} className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
                 Edit in profile
               </Link>
             </div>
@@ -801,7 +802,7 @@ export default function ServiceBookingFlow({
               <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
                 Your {serviceType === "TRAINING" ? "trainer" : serviceType === "GROOMING" ? "groomer" : "walker"} needs to know where and how to reach you.
               </p>
-              <Link href="/owner/profile" className="btn-primary inline-block text-sm">
+              <Link href={`/owner/profile?edit=details&next=${encodeURIComponent(pathname ?? "/")}`} className="btn-primary inline-block text-sm">
                 Add in profile
               </Link>
             </div>
@@ -858,7 +859,7 @@ export default function ServiceBookingFlow({
             <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted)" }}>Meeting at</p>
             <p className="text-sm mb-1">{address || "No address on file"}</p>
             <p className="text-sm" style={{ color: "var(--muted)" }}>{phone || "No phone on file"}</p>
-            <Link href="/owner/profile" className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
+            <Link href={`/owner/profile?edit=details&next=${encodeURIComponent(pathname ?? "/")}`} className="text-xs font-semibold inline-block mt-2" style={{ color: "var(--terracotta)" }}>
               Edit in profile
             </Link>
           </div>
