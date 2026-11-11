@@ -1,81 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
-  PawPrint,
-  Weight,
-  Cake,
-  ShieldAlert,
-  FileText,
-  Cookie,
-  Cpu,
-  ShieldCheck,
-  Syringe,
-  Pencil,
-  Camera,
-  Check,
-  Clock,
-  BadgeCheck,
-  QrCode,
-  User as UserIcon,
-  Share2,
-  Download,
-  ClipboardList,
-  Plus,
-  AlertTriangle,
-  Award,
-  Sparkles,
-  Hand,
-  HeartPulse,
-  Hospital,
-  Phone,
-  Siren,
-  PhoneCall,
-  Footprints,
-  Scissors,
-  Brain,
-  Home as HomeIcon,
-  Star,
-  Route,
-  Camera as CameraIcon,
-  History,
+  PawPrint, Camera, Pencil, Plus, Syringe, AlertTriangle, HeartHandshake, Stethoscope, Phone,
+  ShieldCheck, Cpu, Pill, Users, Footprints, Scissors, GraduationCap, Home as HomeIcon, Check,
+  ChevronRight, X, Loader2, Star, CalendarClock, Sparkles, Share2,
 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import PetSwitcher from "@/components/PetSwitcher";
-import ProfileMenu from "@/components/ProfileMenu";
-import ThemeToggle from "@/components/ThemeToggle";
+import TaskHeader from "@/components/TaskHeader";
+import { derivePassportNumber } from "@/lib/passportId";
+import PassportShareSheet from "@/components/PassportShareSheet";
+import { passportChecklist, type PassportStepKey } from "@/lib/passportProgress";
 
-type Vaccination = {
-  id: string;
-  vaccineName: string;
-  nextDueDate: string;
-  dateGiven: string;
-  lotNumber: string | null;
-  administeringVet: string | null;
-  clinicName: string | null;
-};
-type WalkReport = {
-  distanceKm: number | null;
-  durationMin: number | null;
-  photos: string[];
-  notes: string | null;
-};
-type Review = {
-  rating: number;
-  comment: string | null;
-};
+/* ---------- Types ---------- */
+
+type Vaccination = { id: string; vaccineName: string; nextDueDate: string | null; dateGiven: string; clinicName: string | null; administeringVet: string | null };
 type Booking = {
   id: string;
   type: string;
   status: string;
   startTime: string;
   provider: { user: { name: string } };
-  report: WalkReport | null;
-  review: Review | null;
+  report: { distanceKm: number | null; photos: string[]; notes: string | null } | null;
+  review: { rating: number } | null;
 };
+type Medication = { id: string; name: string; dosage: string | null; schedule: string | null; active: boolean };
+type Contact = { id: string; name: string; phone: string; relationship: string | null };
 
 type Pet = {
   id: string;
@@ -86,10 +37,12 @@ type Pet = {
   neutered: boolean | null;
   coatColor: string | null;
   temperament: string | null;
+  temperamentTags: string[];
   notes: string | null;
   birthday: string | null;
   weightKg: number | null;
   allergies: string | null;
+  allergyTags: string[];
   medicalHistory: string | null;
   favoriteTreats: string | null;
   microchipId: string | null;
@@ -97,921 +50,730 @@ type Pet = {
   insurancePolicy: string | null;
   insuranceCoveragePaise: number | null;
   insuranceExpiryDate: string | null;
+  vetHospitalName: string | null;
+  vetHospitalAddress: string | null;
+  attendingVetName: string | null;
+  vetEmergencyPhone: string | null;
   photoUrl: string | null;
+  shareToken: string | null;
+  createdAt: string;
   updatedAt: string;
   owner: { name: string; phone: string | null };
   vaccinations: Vaccination[];
+  medications: Medication[];
+  emergencyContacts: Contact[];
   bookings: Booking[];
 };
 
-function ageFromBirthday(birthday: string | null) {
+/* ---------- Brand + helpers ---------- */
+
+const PLUM = "#6e1e3b";
+const INK = "#3d1426";
+const MUTED = "#5e4752";
+const YELLOW = "#f9dd8a";
+const BLUE = "#a5bde1";
+const H = { fontFamily: "var(--font-heading)" } as const;
+const CARD = { background: "#ffffff", border: "1px solid rgba(61,20,38,0.08)", boxShadow: "0 8px 24px -6px rgba(61,20,38,0.07)" } as const;
+
+const has = (v: string | null | undefined) => Boolean(v && v.trim());
+const fmtDate = (iso: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) =>
+  new Date(iso).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", ...opts });
+
+function ageLabel(birthday: string | null) {
   if (!birthday) return null;
-  const years = (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-  return years < 1 ? `${Math.round(years * 12)}mo` : `${Math.floor(years)}y ${Math.round((years % 1) * 12)}m`;
+  const months = Math.floor((Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+  if (months < 1) return "Under a month";
+  if (months < 12) return `${months} mo`;
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  return m ? `${y} yr ${m} mo` : `${y} yr`;
 }
 
-function timeAgo(dateStr: string) {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  const years = Math.floor(months / 12);
-  return `${years}y ago`;
+type VaxStatus = "OK" | "DUE_SOON" | "OVERDUE";
+function vaxStatus(v: Vaccination): { status: VaxStatus; days: number | null } {
+  if (!v.nextDueDate) return { status: "OK", days: null };
+  const days = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86_400_000);
+  return { status: days < 0 ? "OVERDUE" : days <= 30 ? "DUE_SOON" : "OK", days };
 }
 
-function paiseToRupeeString(paise: number | null) {
-  if (paise === null || paise === undefined) return "";
-  return (paise / 100).toString();
-}
+const SIZE_LABEL: Record<string, string> = { SMALL: "Small", MEDIUM: "Medium", LARGE: "Large", GIANT: "Giant" };
 
-function buildMrzLine(pet: Pet) {
-  const nameCode = pet.name.toUpperCase().replace(/[^A-Z]/g, "").padEnd(14, "<").slice(0, 14);
-  const idCode = pet.id.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 9).padEnd(9, "<");
-  return `P<BKD${nameCode}<<${idCode}`;
-}
-
-function passportNumber(petId: string) {
-  return `#BKD-${petId.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(-6)}`;
-}
-
-function formatDate(dateStr: string, opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" }) {
-  return new Date(dateStr).toLocaleDateString("en-GB", opts);
-}
-
-type VaxStatus = "VALID" | "DUE_SOON" | "OVERDUE";
-function vaccinationStatus(v: Vaccination): VaxStatus {
-  if (!v.nextDueDate) return "VALID";
-  const days = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86400000);
-  if (days < 0) return "OVERDUE";
-  if (days <= 60) return "DUE_SOON";
-  return "VALID";
-}
-
-const SERVICE_LABEL: Record<string, string> = {
-  WALKING: "Adventure Walk",
-  SITTING: "Home Staycation",
-  GROOMING: "Luxury Spa Session",
-  TRAINING: "Good Manners Session",
+const SERVICE: Record<string, { label: string; icon: typeof PawPrint; href: string }> = {
+  WALKING: { label: "Walk", icon: Footprints, href: "/walk-booking" },
+  GROOMING: { label: "Grooming", icon: Scissors, href: "/grooming" },
+  TRAINING: { label: "Training", icon: GraduationCap, href: "/training" },
+  SITTING: { label: "Home stay", icon: HomeIcon, href: "/" },
 };
 
-const SERVICE_STYLE: Record<string, { bg: string; fg: string; Icon: any }> = {
-  WALKING: { bg: "#6e1e3b", fg: "#dbe5f3", Icon: Footprints },
-  SITTING: { bg: "#6e1e3b", fg: "#ffffff", Icon: HomeIcon },
-  GROOMING: { bg: "#f9dd8a", fg: "#3d1426", Icon: Scissors },
-  TRAINING: { bg: "#fcebb8", fg: "#624000", Icon: Brain },
+/* ---------- Edit sheet ---------- */
+
+type FieldDef = { key: string; label: string; type?: "text" | "textarea" | "date" | "number" | "select"; options?: { value: string; label: string }[]; placeholder?: string; inputMode?: "decimal" | "tel" | "numeric" };
+type SheetKey = "basics" | "health" | "care" | "vet" | "ids";
+
+const SHEETS: Record<SheetKey, { title: string; fields: FieldDef[] }> = {
+  basics: {
+    title: "Basics",
+    fields: [
+      { key: "name", label: "Name" },
+      { key: "breed", label: "Breed", placeholder: "e.g. Indie, Labrador" },
+      { key: "size", label: "Size", type: "select", options: [{ value: "SMALL", label: "Small" }, { value: "MEDIUM", label: "Medium" }, { value: "LARGE", label: "Large" }, { value: "GIANT", label: "Giant" }] },
+      { key: "gender", label: "Sex", type: "select", options: [{ value: "", label: "Not set" }, { value: "MALE", label: "Boy" }, { value: "FEMALE", label: "Girl" }] },
+      { key: "neutered", label: "Neutered or spayed", type: "select", options: [{ value: "", label: "Not set" }, { value: "true", label: "Yes" }, { value: "false", label: "No" }] },
+      { key: "birthday", label: "Birthday", type: "date" },
+      { key: "weightKg", label: "Weight (kg)", type: "number", inputMode: "decimal", placeholder: "e.g. 18.5" },
+      { key: "coatColor", label: "Coat colour", placeholder: "e.g. Black and white" },
+    ],
+  },
+  health: {
+    title: "Health",
+    fields: [
+      { key: "allergies", label: "Allergies", type: "textarea", placeholder: "e.g. Chicken, grass pollen. Write 'None' if there are none." },
+      { key: "medicalHistory", label: "Medical history", type: "textarea", placeholder: "Past conditions, surgeries, anything a vet should know" },
+    ],
+  },
+  care: {
+    title: "Care notes",
+    fields: [
+      { key: "temperament", label: "Personality", placeholder: "e.g. Friendly, shy with big dogs" },
+      { key: "notes", label: "Handling notes", type: "textarea", placeholder: "e.g. Pulls on the leash, scared of bikes, loves belly rubs" },
+      { key: "favoriteTreats", label: "Favourite treats", placeholder: "e.g. Peanut butter biscuits" },
+    ],
+  },
+  vet: {
+    title: "Vet",
+    fields: [
+      { key: "vetHospitalName", label: "Clinic or hospital", placeholder: "e.g. Sector 17 Pet Clinic" },
+      { key: "attendingVetName", label: "Vet's name", placeholder: "e.g. Dr. Mehta" },
+      { key: "vetEmergencyPhone", label: "Clinic phone", inputMode: "tel", placeholder: "Number to call in an emergency" },
+      { key: "vetHospitalAddress", label: "Clinic address", type: "textarea" },
+    ],
+  },
+  ids: {
+    title: "Microchip and insurance",
+    fields: [
+      { key: "microchipId", label: "Microchip number", inputMode: "numeric" },
+      { key: "insuranceProvider", label: "Insurance company" },
+      { key: "insurancePolicy", label: "Policy number" },
+      { key: "insuranceCoverageRupees", label: "Cover amount (₹)", type: "number", inputMode: "numeric" },
+      { key: "insuranceExpiryDate", label: "Policy ends", type: "date" },
+    ],
+  },
 };
 
-const REBOOK_HREF: Record<string, string | null> = {
-  WALKING: "/walk-booking",
-  SITTING: "/sitting",
-  GROOMING: null,
-  TRAINING: null,
-};
-
-const FIELD_META: { key: keyof Pet; label: string; icon: any; placeholder: string; multiline?: boolean }[] = [
-  { key: "allergies", label: "Allergies", icon: ShieldAlert, placeholder: "e.g. chicken, pollen" },
-  { key: "medicalHistory", label: "Medical history", icon: FileText, placeholder: "Past conditions, surgeries, medications", multiline: true },
-  { key: "favoriteTreats", label: "Favorite treats", icon: Cookie, placeholder: "e.g. peanut butter biscuits" },
-  { key: "microchipId", label: "Microchip ID", icon: Cpu, placeholder: "Chip number" },
-  { key: "insuranceProvider", label: "Insurance provider", icon: ShieldCheck, placeholder: "e.g. PetSecure" },
-  { key: "insurancePolicy", label: "Insurance policy #", icon: ShieldCheck, placeholder: "Policy number" },
-];
-
-type CareFilter = "all" | "walks" | "grooming" | "training";
-
-export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
-  const [pet, setPet] = useState(initialPet);
-  const [editing, setEditing] = useState(false);
-  const router = useRouter();
-  const [deleting, setDeleting] = useState(false);
-  const [careFilter, setCareFilter] = useState<CareFilter>("all");
-  const [form, setForm] = useState({
+function formFromPet(pet: Pet): Record<string, string> {
+  return {
     name: pet.name,
     breed: pet.breed ?? "",
-    weightKg: pet.weightKg?.toString() ?? "",
-    birthday: pet.birthday ? pet.birthday.slice(0, 10) : "",
+    size: pet.size,
     gender: pet.gender ?? "",
-    neutered: pet.neutered === null ? "" : pet.neutered ? "true" : "false",
+    neutered: pet.neutered === null ? "" : String(pet.neutered),
+    birthday: pet.birthday?.slice(0, 10) ?? "",
+    weightKg: pet.weightKg?.toString() ?? "",
     coatColor: pet.coatColor ?? "",
     allergies: pet.allergies ?? "",
     medicalHistory: pet.medicalHistory ?? "",
+    temperament: pet.temperament ?? "",
+    notes: pet.notes ?? "",
     favoriteTreats: pet.favoriteTreats ?? "",
+    vetHospitalName: pet.vetHospitalName ?? "",
+    attendingVetName: pet.attendingVetName ?? "",
+    vetEmergencyPhone: pet.vetEmergencyPhone ?? "",
+    vetHospitalAddress: pet.vetHospitalAddress ?? "",
     microchipId: pet.microchipId ?? "",
     insuranceProvider: pet.insuranceProvider ?? "",
     insurancePolicy: pet.insurancePolicy ?? "",
-    insuranceCoverageRupees: paiseToRupeeString(pet.insuranceCoveragePaise),
-    insuranceExpiryDate: pet.insuranceExpiryDate ? pet.insuranceExpiryDate.slice(0, 10) : "",
-  });
-  const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    insuranceCoverageRupees: pet.insuranceCoveragePaise != null ? String(pet.insuranceCoveragePaise / 100) : "",
+    insuranceExpiryDate: pet.insuranceExpiryDate?.slice(0, 10) ?? "",
+  };
+}
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 4 * 1024 * 1024) {
-      alert("Please choose an image under 4MB.");
-      return;
+function payloadFor(sheet: SheetKey, f: Record<string, string>) {
+  const out: Record<string, unknown> = {};
+  for (const field of SHEETS[sheet].fields) {
+    const v = f[field.key]?.trim() ?? "";
+    switch (field.key) {
+      case "weightKg":
+        if (v && Number(v) > 0) out.weightKg = Number(v);
+        break;
+      case "birthday":
+      case "insuranceExpiryDate":
+        if (v) out[field.key] = v;
+        break;
+      case "gender":
+        if (v) out.gender = v;
+        break;
+      case "neutered":
+        if (v) out.neutered = v === "true";
+        break;
+      case "insuranceCoverageRupees":
+        if (v && Number(v) >= 0) out.insuranceCoveragePaise = Math.round(Number(v) * 100);
+        break;
+      default:
+        out[field.key] = v;
     }
-    setUploadingPhoto(true);
+  }
+  return out;
+}
+
+function EditSheet({ sheet, pet, onClose, onSaved }: { sheet: SheetKey; pet: Pet; onClose: () => void; onSaved: (p: Partial<Pet>) => void }) {
+  const def = SHEETS[sheet];
+  const [form, setForm] = useState(() => formFromPet(pet));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
+  const first = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
+
+  const close = () => {
+    setClosing(true);
+    setTimeout(onClose, 220);
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => first.current?.focus(), 320);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (sheet === "basics" && form.name.trim().length < 1) return setError("Your dog needs a name.");
+    setSaving(true);
+    const res = await fetch(`/api/pets/${pet.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payloadFor(sheet, form)) });
+    setSaving(false);
+    if (!res.ok) return setError("Couldn't save. Please check the details and try again.");
+    onSaved(await res.json());
+    close();
+  };
+
+  const inputStyle = { background: "#ffffff", border: "1px solid rgba(61,20,38,0.12)", color: INK } as const;
+
+  return (
+    <div className="fixed inset-0 z-[400]" role="dialog" aria-modal="true" aria-labelledby="pp-sheet-title">
+      <style>{`
+        @keyframes ppIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes ppOut { from { transform: translateY(0); } to { transform: translateY(100%); } }
+        @keyframes ppFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ppFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .pp-sheet { animation: ppIn 300ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+        .pp-sheet.out { animation: ppOut 220ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+        .pp-scrim { animation: ppFadeIn 200ms ease both; }
+        .pp-scrim.out { animation: ppFadeOut 200ms ease both; }
+        @media (prefers-reduced-motion: reduce) { .pp-sheet { animation-name: ppFadeIn; } .pp-sheet.out { animation-name: ppFadeOut; } }
+      `}</style>
+      <button type="button" aria-label="Close" onClick={close} className={`pp-scrim ${closing ? "out" : ""} absolute inset-0`} style={{ background: "rgba(42,12,24,0.45)" }} />
+      <form onSubmit={save} className={`pp-sheet ${closing ? "out" : ""} absolute left-0 right-0 bottom-0 max-w-lg mx-auto rounded-t-[2rem] px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+20px)] max-h-[88vh] overflow-y-auto`} style={{ background: "#fffaf0", boxShadow: "0 -12px 40px -10px rgba(61,20,38,0.35)" }}>
+        <span className="block w-10 h-1.5 rounded-full mx-auto mb-4" style={{ background: "rgba(61,20,38,0.15)" }} aria-hidden="true" />
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="pp-sheet-title" className="font-bold text-[20px]" style={{ ...H, color: PLUM }}>{def.title}</h2>
+          <button type="button" onClick={close} aria-label="Close" className="tap-scale w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.1)" }}>
+            <X size={17} color={INK} />
+          </button>
+        </div>
+        <div className="space-y-3.5">
+          {def.fields.map((f, i) => {
+            const id = `pp-${f.key}`;
+            const common = {
+              id,
+              value: form[f.key] ?? "",
+              ref: i === 0 ? (el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null) => { first.current = el; } : undefined,
+            };
+            return (
+              <div key={f.key}>
+                <label htmlFor={id} className="block text-xs font-bold mb-1.5" style={{ color: MUTED }}>{f.label}</label>
+                {f.type === "textarea" ? (
+                  <textarea {...common} rows={3} placeholder={f.placeholder} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} className="w-full px-4 py-3 rounded-2xl text-[15px] outline-none resize-none" style={inputStyle} />
+                ) : f.type === "select" ? (
+                  <select {...common} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none" style={inputStyle}>
+                    {f.options!.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : (
+                  <input {...common} type={f.type === "number" ? "text" : f.type ?? "text"} inputMode={f.inputMode} placeholder={f.placeholder} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none" style={inputStyle} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {error && <p className="enter-fade text-xs font-semibold mt-3 px-3 py-2 rounded-xl" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>{error}</p>}
+        <button type="submit" disabled={saving} className="tap-scale mt-5 w-full h-12 rounded-full text-[15px] font-bold inline-flex items-center justify-center gap-2" style={{ ...H, background: PLUM, color: "white", opacity: saving ? 0.8 : 1 }}>
+          {saving ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : "Save"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/* ---------- Small parts ---------- */
+
+function Section({ title, icon: Icon, action, children, delay = 0 }: { title: string; icon: typeof PawPrint; action?: React.ReactNode; children: React.ReactNode; delay?: number }) {
+  return (
+    <section className="enter-up rounded-[1.75rem] p-4" style={{ ["--d" as string]: `${delay}ms`, ...CARD }}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="flex items-center gap-2 font-bold text-[16px]" style={{ ...H, color: PLUM }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#fef3dc" }}><Icon size={15} color={PLUM} /></span>
+          {title}
+        </h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EditButton({ onClick, label, empty }: { onClick: () => void; label: string; empty?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} className="tap-scale inline-flex items-center gap-1 px-3 h-8 rounded-full text-xs font-bold" style={{ background: "#fffaf0", color: PLUM, border: "1px solid rgba(61,20,38,0.12)" }}>
+      {empty ? <><Plus size={12} /> Add</> : <><Pencil size={11} /> Edit</>}
+    </button>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5" style={{ borderTop: "1px solid rgba(61,20,38,0.06)" }}>
+      <dt className="text-xs shrink-0 pt-0.5" style={{ color: MUTED }}>{label}</dt>
+      <dd className="text-sm text-right font-semibold min-w-0" style={{ color: INK }}>{value}</dd>
+    </div>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm" style={{ color: MUTED }}>{children}</p>;
+}
+
+/* ---------- Page ---------- */
+
+export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
+  const router = useRouter();
+  const [pet, setPet] = useState(initialPet);
+  const [sheet, setSheet] = useState<SheetKey | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  // Homepage "Share" opens the share sheet straight away (?share=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("share") === "1") {
+      setShareOpen(true);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+
+  const passportNo = derivePassportNumber(pet.id);
+  const age = ageLabel(pet.birthday);
+  const allergyText = [...pet.allergyTags, ...(has(pet.allergies) ? [pet.allergies!.trim()] : [])].join(", ");
+  const noAllergies = /^(none|no|nil|na|n\/a)\.?$/i.test(allergyText.trim());
+  const hasAllergies = has(allergyText) && !noAllergies;
+  const personality = [...pet.temperamentTags, ...(has(pet.temperament) ? [pet.temperament!.trim()] : [])];
+  const activeMeds = pet.medications.filter((m) => m.active);
+  const vaxSorted = [...pet.vaccinations].sort((a, b) => (vaxStatus(a).days ?? 1e9) - (vaxStatus(b).days ?? 1e9));
+  const overdue = vaxSorted.filter((v) => vaxStatus(v).status === "OVERDUE").length;
+  const dueSoon = vaxSorted.filter((v) => vaxStatus(v).status === "DUE_SOON").length;
+
+  // Completeness: what makes the passport useful to a vet, a pro or a boarder.
+  const ACTIONS: Record<PassportStepKey, () => void> = {
+    photo: () => document.getElementById("pp-photo")?.click(),
+    birthday: () => setSheet("basics"),
+    weight: () => setSheet("basics"),
+    vaccine: () => router.push("/owner/vaccines"),
+    allergies: () => setSheet("health"),
+    care: () => setSheet("care"),
+    vet: () => setSheet("vet"),
+    emergency: () => router.push(`/owner/pets/${pet.id}/step-2`),
+  };
+  const checklist = passportChecklist({
+    ...pet,
+    vaccinationCount: pet.vaccinations.length,
+    emergencyContactCount: pet.emergencyContacts.length,
+  }).map((c) => ({ ...c, act: ACTIONS[c.key] }));
+  const doneCount = checklist.filter((c) => c.done).length;
+  const pct = Math.round((doneCount / checklist.length) * 100);
+  const nextStep = checklist.find((c) => !c.done);
+
+  // Stamps are earned from completed visits; nothing is awarded for free.
+  const completed = pet.bookings.filter((b) => b.status === "COMPLETED");
+  const stampCount = (type: string) => completed.filter((b) => b.type === type).length;
+  const upcoming = pet.bookings
+    .filter((b) => ["REQUESTED", "ACCEPTED", "IN_PROGRESS"].includes(b.status) && new Date(b.startTime).getTime() > Date.now() - 3 * 3600_000)
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  const history = completed.slice(0, 5);
+
+  const onSaved = (p: Partial<Pet>) => setPet((prev) => ({ ...prev, ...p }));
+
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError(null);
+    if (file.size > 4 * 1024 * 1024) return setPhotoError("Please choose a photo under 4 MB.");
+    setUploading(true);
     const reader = new FileReader();
     reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      const res = await fetch(`/api/pets/${pet.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrl: dataUrl }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setPet((prev) => ({ ...prev, photoUrl: updated.photoUrl, updatedAt: updated.updatedAt }));
-      }
-      setUploadingPhoto(false);
+      const res = await fetch(`/api/pets/${pet.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photoUrl: reader.result as string }) });
+      if (res.ok) onSaved(await res.json());
+      else setPhotoError("Couldn't upload that photo. Please try another.");
+      setUploading(false);
     };
     reader.readAsDataURL(file);
   };
 
-  const save = async () => {
-    setSaving(true);
-    const { insuranceCoverageRupees, insuranceExpiryDate, neutered, gender, ...restForm } = form;
-    const res = await fetch(`/api/pets/${pet.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...restForm,
-        weightKg: form.weightKg ? parseFloat(form.weightKg) : undefined,
-        birthday: form.birthday || undefined,
-        gender: gender || undefined,
-        neutered: neutered === "" ? undefined : neutered === "true",
-        insuranceCoveragePaise: insuranceCoverageRupees ? Math.round(parseFloat(insuranceCoverageRupees) * 100) : undefined,
-        insuranceExpiryDate: insuranceExpiryDate || undefined,
-      }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
-      setPet({ ...pet, ...updated });
-      setEditing(false);
-    }
-    setSaving(false);
-  };
-
   const removePet = async () => {
-    if (!confirm(`Remove ${pet.name}? This can't be undone.`)) return;
+    if (!window.confirm(`Remove ${pet.name} from Barkado & Co.? This deletes the PawPassport and can't be undone.`)) return;
     setDeleting(true);
     const res = await fetch(`/api/pets/${pet.id}`, { method: "DELETE" });
-    if (res.ok) {
-      router.push("/owner/pets");
-    } else {
-      setDeleting(false);
-    }
+    if (res.ok) router.push("/owner/pets");
+    else setDeleting(false);
   };
 
-  const age = ageFromBirthday(pet.birthday);
-
-  const isVerified = Boolean(
-    pet.breed &&
-    pet.weightKg != null &&
-    pet.birthday &&
-    pet.insuranceProvider &&
-    pet.insurancePolicy &&
-    pet.vaccinations.length > 0
-  );
-
-  const dobFormatted = pet.birthday ? formatDate(pet.birthday) : null;
-  const ageDobLine = [age, dobFormatted].filter(Boolean).join(" • ") || "—";
-  const weightCoatLine = [pet.weightKg ? `${pet.weightKg} kg` : null, pet.coatColor].filter(Boolean).join(" • ") || "—";
-  const genderLabel = pet.gender ? (pet.gender === "MALE" ? "Male" : "Female") : null;
-  const neuteredLabel = pet.neutered === true ? "Neutered" : pet.neutered === false ? "Intact" : null;
-  const genderNeuteredLabel = genderLabel && neuteredLabel ? `${genderLabel} (${neuteredLabel})` : genderLabel;
-  const subtitle = [pet.breed, genderNeuteredLabel].filter(Boolean).join(" • ") || pet.size;
-  const microchipDisplay = pet.microchipId ? pet.microchipId.replace(/(.{4})/g, "$1 ").trim() : "Not on file";
-  const guardianDisplay = pet.owner.phone ? `${pet.owner.name} (${pet.owner.phone})` : pet.owner.name;
-
-  const vaxCounts = pet.vaccinations.reduce(
-    (acc, v) => {
-      acc[vaccinationStatus(v)]++;
-      return acc;
-    },
-    { VALID: 0, DUE_SOON: 0, OVERDUE: 0 } as Record<VaxStatus, number>
-  );
-
-  const hasAllergyAlert = Boolean(pet.allergies);
-  const hasHandlingNotes = Boolean(pet.notes);
-  const stampsIssued = [hasAllergyAlert, true, true, hasHandlingNotes].filter(Boolean).length;
-
-  const hasInsurance = Boolean(pet.insuranceProvider && pet.insurancePolicy);
-  const insuranceExpired = pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate) < new Date() : false;
-  const knownClinic = [...pet.vaccinations].reverse().find((v) => v.clinicName);
-
-  const completedCount = pet.bookings.filter((b) => b.status === "COMPLETED").length;
-  const filteredBookings = pet.bookings.filter((b) => {
-    if (careFilter === "all") return true;
-    if (careFilter === "walks") return b.type === "WALKING";
-    if (careFilter === "grooming") return b.type === "GROOMING";
-    return b.type === "TRAINING";
-  });
+  const facts = [
+    { k: "Age", v: age },
+    { k: "Weight", v: pet.weightKg != null ? `${pet.weightKg} kg` : null },
+    { k: "Size", v: SIZE_LABEL[pet.size] ?? null },
+  ];
+  const subtitle = [pet.breed, pet.gender === "MALE" ? "Boy" : pet.gender === "FEMALE" ? "Girl" : null, pet.neutered ? (pet.gender === "FEMALE" ? "Spayed" : "Neutered") : null].filter(Boolean).join(" · ");
 
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
-    <main className="pb-28 max-w-2xl mx-auto">
-      <div className="px-6 pt-4 flex items-center justify-between">
-        <PetSwitcher />
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <ProfileMenu />
-        </div>
-      </div>
+      <main className="max-w-lg mx-auto pb-12">
+        <TaskHeader title="PawPassport" fallbackHref="/owner/pets" showCart={false} />
 
-      <div className="flex items-center justify-between px-6 py-5">
-        <Link href="/owner/pets" className="flex items-center gap-2 tap-scale">
-          <ArrowLeft size={20} />
-          <span className="text-sm font-medium">Back to pets</span>
-        </Link>
-        <button
-          onClick={() => (editing ? save() : setEditing(true))}
-          disabled={saving}
-          className="btn-secondary text-sm tap-scale flex items-center gap-1.5"
-        >
-          {editing ? <Check size={14} /> : <Pencil size={14} />}
-          {editing ? (saving ? "Saving…" : "Save") : "Edit"}
-        </button>
-      </div>
-
-      <div className="px-4 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#f9dd8a] text-[#3d1426] text-[11px] font-bold tracking-wider">01</span>
-          <span className="font-bold text-xs tracking-wider uppercase text-[#5e4752]">Authenticated Canine Dossier</span>
-        </div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f3e2c4] text-[#3d1426] text-xs font-semibold shadow-sm">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-          <span>Live Sync Active</span>
-        </div>
-      </div>
-
-      <div className="px-4 py-2">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#6e1e3b] text-[#fffaf0]" style={{ boxShadow: "0 12px 28px -6px rgba(110,30,59,0.28)" }}>
-          <span className="brand-wave" aria-hidden="true" />
-          <div className="absolute -right-12 -top-12 w-64 h-64 opacity-5 pointer-events-none">
-            <svg className="w-full h-full text-[#f9dd8a]" fill="currentColor" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="6"></circle>
-              <path d="M100 40 C115 40 125 55 125 70 C125 85 110 95 100 95 C90 95 75 85 75 70 C75 55 85 40 100 40 Z"></path>
-              <ellipse cx="65" cy="85" rx="14" ry="22"></ellipse>
-              <ellipse cx="135" cy="85" rx="14" ry="22"></ellipse>
-              <ellipse cx="45" cy="125" rx="13" ry="18"></ellipse>
-              <ellipse cx="155" cy="125" rx="13" ry="18"></ellipse>
-              <path d="M70 145 C70 120 85 110 100 110 C115 110 130 120 130 145 C130 165 118 175 100 175 C82 175 70 165 70 145 Z"></path>
-            </svg>
-          </div>
-
-          <div className="p-5 pb-8 sm:p-6 sm:pb-9">
-            <div className="flex items-start justify-between relative z-10">
-              <div className="flex items-center gap-2">
-                <BadgeCheck size={20} color="#f9dd8a" />
-                <div>
-                  <span className="tracking-widest text-[10px] font-bold uppercase text-[#f9dd8a] block">PawPassport™ • Official Document</span>
-                  <p className="text-[11px] text-[#dbe5f3] tracking-widest uppercase font-mono mt-0.5">Barkado &amp; Co. • Chandigarh</p>
-                </div>
-              </div>
-              <span className="inline-block px-2.5 py-1 rounded-full bg-[#6e1e3b] text-[#f9dd8a] text-[11px] font-mono font-bold tracking-wider shadow-inner border border-[#f9dd8a]/20 shrink-0">
-                {passportNumber(pet.id)}
-              </span>
+        <div className="px-4 pt-2 space-y-4">
+          {/* ---------- Passport card ---------- */}
+          <section className="enter-up relative overflow-hidden rounded-[2rem] p-5 pb-7" style={{ background: PLUM, boxShadow: "0 18px 36px -14px rgba(110,30,59,0.55)" }}>
+            <span className="brand-wave" aria-hidden="true" />
+            <div className="relative flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: YELLOW }}>PawPassport</p>
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider" style={{ background: "rgba(249,221,138,0.14)", color: YELLOW, border: "1px solid rgba(249,221,138,0.3)" }}>{passportNo}</span>
             </div>
 
-            <div className="w-full h-0.5 bg-gradient-to-r from-[#f9dd8a]/0 via-[#f9dd8a] to-[#f9dd8a]/0 my-3.5 opacity-70"></div>
-
-            <div className="flex gap-4 items-center relative z-10">
-              <div className="relative shrink-0">
-                <label
-                  className="w-24 h-24 rounded-full p-1 block relative cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #f9dd8a, #f9dd8a, #6e1e3b)" }}
-                >
+            <div className="relative flex items-center gap-4 mt-4">
+              <label className="relative shrink-0 cursor-pointer tap-scale" aria-label={pet.photoUrl ? `Change ${pet.name}'s photo` : `Add a photo of ${pet.name}`}>
+                <span className="block w-[92px] h-[92px] rounded-full p-[3px]" style={{ background: YELLOW }}>
                   {pet.photoUrl ? (
-                    <img className="w-full h-full object-cover rounded-full" src={pet.photoUrl} alt={pet.name} />
+                    <img src={pet.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-[#6e1e3b] flex items-center justify-center">
-                      <PawPrint size={30} color="#f9dd8a" />
-                    </div>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                  <span className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#6e1e3b] flex items-center justify-center shadow-md border border-[#f9dd8a]/30">
-                    <Camera size={12} color="#f9dd8a" />
-                  </span>
-                </label>
-                {uploadingPhoto && <p className="text-[9px] mt-1 text-center text-[#dbe5f3]">Uploading…</p>}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  {editing ? (
-                    <input
-                      className="text-lg font-bold rounded-lg px-2 py-1 text-[#2a0c18]"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    />
-                  ) : (
-                    <h2 className="font-bold text-xl text-[#fffaf0] tracking-tight truncate">{pet.name}</h2>
-                  )}
-                  {isVerified && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ffffff] text-[#2a0c18] text-[10px] font-bold tracking-tight shadow-sm shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      VERIFIED
+                    <span className="w-full h-full rounded-full flex items-center justify-center" style={{ background: "#5a1830" }}>
+                      <PawPrint size={30} color={YELLOW} />
                     </span>
                   )}
-                </div>
-                <p className="text-xs text-[#dbe5f3] font-medium mt-0.5">{subtitle}</p>
-                <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-                  <div>
-                    <span className="text-[#fbf0d9]/60 block text-[9px] uppercase tracking-wider font-semibold">Age / DOB</span>
-                    <span className="font-semibold text-[#ffffff]">{ageDobLine}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#fbf0d9]/60 block text-[9px] uppercase tracking-wider font-semibold">Weight &amp; Coat</span>
-                    <span className="font-semibold text-[#ffffff]">{weightCoatLine}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3.5 pt-2.5 rounded-lg bg-[#6e1e3b]/80 p-3 relative z-10 flex flex-col gap-2 shadow-inner border border-[#e3cfc4]/10">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5">
-                  <QrCode size={16} color="#f9dd8a" />
-                  <span className="text-[10px] uppercase font-bold text-[#fbf0d9]/60 tracking-wider">ISO Microchip</span>
-                </div>
-                <span className="font-mono text-xs font-semibold tracking-wider text-[#ffffff]">{microchipDisplay}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#f3e2c4]/10">
-                <div className="flex items-center gap-1.5">
-                  <UserIcon size={16} color="#f9dd8a" />
-                  <span className="text-[10px] uppercase font-bold text-[#fbf0d9]/60 tracking-wider">Guardian</span>
-                </div>
-                <span className="text-xs font-medium text-[#fbf0d9] truncate">{guardianDisplay}</span>
-              </div>
-            </div>
-
-            <div className="mt-3.5 pt-2.5 pb-1 px-3 rounded bg-black/40 border border-[#f9dd8a]/20 font-mono text-[9px] tracking-widest text-[#f9dd8a]/90 uppercase overflow-hidden leading-relaxed">
-              <div className="truncate">{buildMrzLine(pet)}</div>
-            </div>
-
-            <p className="mt-3 text-right text-sm italic relative z-10" style={{ color: "#f9dd8a", fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-2.5">
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => alert("Share Pass is coming soon.")}
-            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#e3cfc4]/30 active:scale-95"
-          >
-            <Share2 size={22} color="#6e1e3b" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#2a0c18] leading-tight">Share Pass</span>
-            <span className="text-[9px] text-[#5e4752] font-medium">Public link</span>
-          </button>
-          <button
-            onClick={() => alert("Travel Dossier PDF is coming soon.")}
-            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#e3cfc4]/30 active:scale-95"
-          >
-            <Download size={22} color="#2a0c18" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#2a0c18] leading-tight">Travel Dossier</span>
-            <span className="text-[9px] text-[#5e4752] font-medium">Official PDF</span>
-          </button>
-          <button
-            disabled
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#fbf0d9] shadow-sm text-center border border-dashed border-[#735c68]/30 relative"
-          >
-            <ClipboardList size={22} color="#5e4752" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#5e4752] leading-tight">Vet Summary</span>
-            <span className="text-[9px] font-bold text-[#6e1e3b] bg-[#f9dd8a] px-1.5 py-0.5 rounded-full mt-0.5">Coming Soon</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="px-6 mb-2 flex items-center gap-1.5">
-        <Clock size={12} color="var(--muted)" />
-        <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-          Updated {timeAgo(pet.updatedAt)}
-        </p>
-      </div>
-
-      {editing && (
-        <div className="px-6 mb-6">
-          <div className="card p-4 grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Breed</label>
-              <input className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} placeholder="Breed" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Coat color</label>
-              <input className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.coatColor} onChange={(e) => setForm({ ...form, coatColor: e.target.value })} placeholder="e.g. Honey" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Weight (kg)</label>
-              <input type="number" step="0.1" className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} placeholder="kg" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Birthday</label>
-              <input type="date" className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Gender</label>
-              <select className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as any })}>
-                <option value="">—</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--muted)" }}>Neutered / Spayed</label>
-              <select className="w-full text-sm border rounded-lg px-2 py-1.5" style={{ borderColor: "var(--border)" }} value={form.neutered} onChange={(e) => setForm({ ...form, neutered: e.target.value })}>
-                <option value="">—</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="px-4 pt-3 pb-2 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20">
-          <div className="flex items-center justify-between pb-3 border-b border-[#f6e6c8]">
-            <div className="flex items-center gap-2">
-              <Syringe size={22} color="#2a0c18" />
-              <div>
-                <h3 className="font-bold text-sm text-[#2a0c18]">Vaccination &amp; Health Records</h3>
-                <p className="text-[10px] text-[#5e4752]">Certified Medical Ledger</p>
-              </div>
-            </div>
-            <Link
-              href="/owner/vaccines"
-              className="px-2.5 py-1 rounded-lg bg-[#dbe5f3] text-[#2a0c18] text-xs font-bold flex items-center gap-1 hover:bg-[#6e1e3b] hover:text-white transition-colors"
-            >
-              <Plus size={14} />
-              <span>Add Record</span>
-            </Link>
-          </div>
-
-          <div className="my-3 p-2.5 rounded-xl bg-[#f6e6c8] flex items-center justify-around text-center text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-              <span className="font-bold text-[#2a0c18]">{vaxCounts.VALID} Valid</span>
-            </div>
-            <div className="h-3 w-px bg-[#e3cfc4]"></div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#f9dd8a]"></span>
-              <span className="font-bold text-[#352000]">{vaxCounts.DUE_SOON} Booster Due</span>
-            </div>
-            <div className="h-3 w-px bg-[#e3cfc4]"></div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#ba1a1a]"></span>
-              <span className="font-medium text-[#5e4752]">{vaxCounts.OVERDUE} Overdue</span>
-            </div>
-          </div>
-
-          {pet.vaccinations.length === 0 ? (
-            <p className="text-sm text-center py-4" style={{ color: "var(--muted)" }}>No vaccination records yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {pet.vaccinations.map((v) => {
-                const status = vaccinationStatus(v);
-                const detailLine = [
-                  v.lotNumber ? `Lot #${v.lotNumber}` : null,
-                  v.administeringVet ? `Dr. ${v.administeringVet}` : null,
-                ].filter(Boolean).join(" • ");
-
-                if (status === "OVERDUE") {
-                  return (
-                    <div key={v.id} className="p-3.5 rounded-xl bg-[#ffdad6] border border-[#ba1a1a]/40 flex flex-col gap-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-xs text-[#93000a]">{v.vaccineName}</h4>
-                            <span className="px-2 py-0.5 rounded bg-[#ba1a1a] text-white text-[10px] font-bold">Overdue</span>
-                          </div>
-                          {detailLine && <p className="text-[10px] text-[#93000a]/80 font-mono mt-0.5">{detailLine}</p>}
-                        </div>
-                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#ba1a1a] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
-                          Book Now
-                        </Link>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#ba1a1a]/20">
-                        <span className="text-[#93000a]/80">Was due:</span>
-                        <span className="font-bold text-[#93000a]">{formatDate(v.nextDueDate)}</span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (status === "DUE_SOON") {
-                  const daysUntil = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86400000);
-                  return (
-                    <div key={v.id} className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f9dd8a]/40 flex flex-col gap-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-xs text-[#2a0c18]">{v.vaccineName}</h4>
-                            <span className="px-2 py-0.5 rounded bg-[#f9dd8a] text-[#291800] text-[10px] font-bold">Due in {daysUntil}d</span>
-                          </div>
-                          {detailLine && <p className="text-[10px] text-[#5e4752] font-mono mt-0.5">{detailLine}</p>}
-                        </div>
-                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#6e1e3b] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
-                          Book Booster
-                        </Link>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#f6e6c8]">
-                        <span className="text-[#5e4752]">Scheduled window:</span>
-                        <span className="font-bold text-[#352000]">{formatDate(v.nextDueDate, { month: "long", year: "numeric" })}</span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={v.id} className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8] flex flex-col gap-2.5">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-bold text-xs text-[#2a0c18]">{v.vaccineName}</h4>
-                          <span className="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-800 text-[10px] font-bold border border-emerald-600/20">Valid</span>
-                        </div>
-                        {detailLine && <p className="text-[10px] text-[#5e4752] font-mono mt-0.5">{detailLine}</p>}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-[#f6e6c8]">
-                      <div>
-                        <span className="text-[9px] uppercase font-semibold text-[#5e4752] block">Administered</span>
-                        <span className="font-bold text-[#2a0c18]">{formatDate(v.dateGiven)}</span>
-                      </div>
-                      {v.nextDueDate && (
-                        <div>
-                          <span className="text-[9px] uppercase font-semibold text-[#5e4752] block">Expires</span>
-                          <span className="font-bold text-emerald-700">{formatDate(v.nextDueDate)}</span>
-                        </div>
-                      )}
-                    </div>
-                    {v.clinicName && <p className="text-[10px] text-[#5e4752] italic">{v.clinicName}</p>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="px-4 pt-3 pb-2 mb-2">
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2">
-            <Award size={20} color="#6e1e3b" />
-            <h3 className="font-bold text-sm text-[#2a0c18]">Care Profile &amp; Passport Endorsements</h3>
-          </div>
-          <span className="text-[10px] font-mono uppercase text-[#5e4752]">{stampsIssued} Stamps Issued</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {hasAllergyAlert && (
-            <div className="col-span-2 p-4 rounded-xl bg-[#ffdad6] text-[#93000a] border-2 border-dashed border-[#ba1a1a] relative overflow-hidden shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle size={24} color="#ba1a1a" />
-                  <span className="font-bold text-xs tracking-wider uppercase text-[#93000a]">Critical Allergy Alert Stamp</span>
-                </div>
-                <span className="text-[9px] font-bold uppercase bg-[#ba1a1a] text-white px-2 py-0.5 rounded">Strict Compliance</span>
-              </div>
-              <p className="text-[11px] leading-snug mt-2 opacity-90">{pet.allergies}</p>
-            </div>
-          )}
-
-          <div className="p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex flex-col justify-between -rotate-1">
-            <div>
-              <div className="w-9 h-9 rounded-full bg-emerald-600/10 text-emerald-700 flex items-center justify-center mb-2">
-                <ShieldCheck size={18} />
-              </div>
-              <h4 className="font-bold text-xs text-[#2a0c18]">Pack Social Certified</h4>
-              <p className="text-[10px] text-[#5e4752] mt-1 leading-snug">Temperament evaluation not yet available — coming soon.</p>
-            </div>
-            <span className="text-[9px] font-mono text-[#6e1e3b] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex flex-col justify-between rotate-1">
-            <div>
-              <div className="w-9 h-9 rounded-full bg-[#fcebb8] text-[#624000] flex items-center justify-center mb-2">
-                <Sparkles size={18} />
-              </div>
-              <h4 className="font-bold text-xs text-[#2a0c18]">Approved Rewards</h4>
-              <p className="text-[10px] text-[#5e4752] mt-1 leading-snug">Reward tracking not yet available — coming soon.</p>
-            </div>
-            <span className="text-[9px] font-mono text-[#6e1e3b] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
-          </div>
-
-          {hasHandlingNotes && (
-            <div className="col-span-2 p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#6e1e3b] text-[#dbe5f3] flex items-center justify-center shrink-0 mt-0.5">
-                <Hand size={18} />
-              </div>
-              <div>
-                <h4 className="font-bold text-xs text-[#2a0c18]">Handling &amp; Leash Protocols</h4>
-                <p className="text-[11px] text-[#5e4752] mt-0.5 leading-snug">{pet.notes}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="px-4 pt-3 pb-2 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HeartPulse size={22} color="#2a0c18" />
-              <h3 className="font-bold text-sm text-[#2a0c18]">Insurance &amp; Medical Coverage</h3>
-            </div>
-            {hasInsurance ? (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${insuranceExpired ? "bg-[#ffdad6] text-[#93000a]" : "bg-[#dbe5f3] text-[#2a0c18]"}`}>
-                {insuranceExpired ? "Policy Expired" : "Active Policy"}
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f3e2c4] text-[#5e4752]">No Policy on File</span>
-            )}
-          </div>
-
-          {hasInsurance ? (
-            <div className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8]">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs font-bold text-[#2a0c18]">{pet.insuranceProvider}</p>
-                  <p className="text-[10px] font-mono text-[#5e4752] mt-0.5">
-                    Policy #{pet.insurancePolicy}
-                    {pet.insuranceExpiryDate ? ` • Valid thru ${formatDate(pet.insuranceExpiryDate, { month: "short", year: "numeric" })}` : ""}
-                  </p>
-                </div>
-                {pet.insuranceCoveragePaise != null && (
-                  <span className="text-xs font-bold text-[#2a0c18] shrink-0">₹{(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}</span>
-                )}
-              </div>
-              <div className="mt-2 pt-2 border-t border-[#f6e6c8] flex items-center justify-end text-[11px]">
-                <button onClick={() => setEditing(true)} className="font-bold text-[#6e1e3b] hover:underline text-xs">
-                  Edit Insurance Details
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setEditing(true)} className="w-full p-3.5 rounded-xl bg-[#fbf0d9] border border-dashed border-[#735c68]/30 text-xs font-semibold text-[#5e4752] hover:text-[#2a0c18]">
-              No insurance on file — tap to add policy details
-            </button>
-          )}
-
-          <div className="space-y-2 pt-1">
-            <span className="text-[10px] uppercase font-bold text-[#5e4752] tracking-wider block">Emergency Dispatch Hotlines</span>
-
-            {knownClinic ? (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f6e6c8]">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#ba1a1a] text-white flex items-center justify-center shrink-0">
-                    <Hospital size={16} />
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold text-[#2a0c18]">{knownClinic.clinicName}</p>
-                    <p className="text-[10px] text-[#5e4752]">From latest vaccination record • no phone on file</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[11px] px-1" style={{ color: "var(--muted)" }}>No clinic on file yet — logged when a vaccination record includes a clinic name.</p>
-            )}
-
-            {pet.owner.phone ? (
-              <a href={`tel:${pet.owner.phone}`} className="flex items-center justify-between p-3 rounded-lg bg-[#f6e6c8] hover:bg-[#f3e2c4] transition-colors">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#f9dd8a] text-[#3d1426] flex items-center justify-center shrink-0">
-                    <Phone size={16} />
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold text-[#2a0c18]">{pet.owner.name} (Guardian)</p>
-                    <p className="text-[10px] text-[#5e4752]">{pet.owner.phone}</p>
-                  </div>
-                </div>
-                <PhoneCall size={18} color="#2a0c18" />
-              </a>
-            ) : (
-              <p className="text-[11px] px-1" style={{ color: "var(--muted)" }}>No guardian phone on file yet.</p>
-            )}
-
-            <div className="p-3 rounded-lg bg-[#6e1e3b] text-[#fffaf0] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-[#f9dd8a] text-[#78391b] flex items-center justify-center shrink-0">
-                  <Siren size={16} />
                 </span>
-                <div>
-                  <p className="text-xs font-bold text-[#fffaf0]">Barkado Concierge Pet Ambulance</p>
-                  <p className="text-[10px] text-[#dbe5f3]">Not yet available</p>
-                </div>
+                <span className="absolute bottom-0.5 right-0.5 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: YELLOW, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+                  {uploading ? <Loader2 size={13} className="animate-spin" color={PLUM} /> : <Camera size={13} color={PLUM} />}
+                </span>
+                <input id="pp-photo" type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </label>
+              <div className="min-w-0 flex-1">
+                <h1 className="font-bold text-[26px] leading-tight truncate" style={{ ...H, color: "#fffaf0" }}>{pet.name}</h1>
+                <p className="text-[13px] mt-0.5" style={{ color: BLUE }}>{subtitle || "Add breed and details"}</p>
+                <p className="text-[11px] mt-1.5" style={{ color: "rgba(251,240,217,0.65)" }}>Member since {fmtDate(pet.createdAt, { month: "short", year: "numeric" })}</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-[#6e1e3b] text-white text-[10px] font-bold">Coming Soon</span>
             </div>
-          </div>
-        </div>
-      </div>
+            {photoError && <p className="relative text-xs mt-2" style={{ color: YELLOW }}>{photoError}</p>}
 
-      <div className="px-4 pt-3 pb-6 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <History size={22} color="#2a0c18" />
-              <h3 className="font-bold text-sm text-[#2a0c18]">{pet.name}'s Care Timeline</h3>
-            </div>
-            <span className="text-[10px] font-bold text-[#f9dd8a] bg-[#6e1e3b] px-2 py-0.5 rounded-full">{completedCount} Completed</span>
-          </div>
+            <dl className="relative grid grid-cols-3 gap-2 mt-5">
+              {facts.map((f) => (
+                <div key={f.k} className="rounded-2xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(251,240,217,0.6)" }}>{f.k}</dt>
+                  <dd className="text-sm font-bold mt-0.5 truncate" style={{ ...H, color: f.v ? "#fffaf0" : "rgba(251,240,217,0.45)" }}>{f.v ?? "Not set"}</dd>
+                </div>
+              ))}
+            </dl>
 
-          <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
-            {([
-              { key: "all", label: "All" },
-              { key: "walks", label: "Walks" },
-              { key: "grooming", label: "Grooming" },
-              { key: "training", label: "Training" },
-            ] as { key: CareFilter; label: string }[]).map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setCareFilter(f.key)}
-                className={`px-3 py-1 rounded-full text-xs shrink-0 ${
-                  careFilter === f.key
-                    ? "bg-[#6e1e3b] text-[#fffaf0] font-bold shadow-sm"
-                    : "bg-[#f6e6c8] text-[#5e4752] font-semibold hover:text-[#2a0c18]"
-                }`}
-              >
-                {f.label}
+            <div className="relative grid grid-cols-2 gap-2 mt-4">
+              <button type="button" onClick={() => setShareOpen(true)} className="tap-scale inline-flex items-center justify-center gap-1.5 h-11 rounded-full text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
+                <Share2 size={14} /> {pet.shareToken ? "Shared" : "Share"}
               </button>
-            ))}
-          </div>
+              <button type="button" onClick={() => setSheet("basics")} className="tap-scale inline-flex items-center justify-center gap-1.5 h-11 rounded-full text-sm font-bold" style={{ ...H, background: "rgba(255,255,255,0.1)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.25)" }}>
+                <Pencil size={13} /> Edit basics
+              </button>
+            </div>
+            <p className="relative text-right mt-3 text-[15px]" style={{ color: YELLOW, fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
+          </section>
 
-          {filteredBookings.length === 0 ? (
-            <p className="text-sm text-center py-4" style={{ color: "var(--muted)" }}>No bookings in this category yet.</p>
+          {/* ---------- Completeness ---------- */}
+          {pct < 100 ? (
+            <section className="enter-up rounded-[1.75rem] p-4" style={{ ["--d" as string]: "40ms", background: YELLOW }}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-bold text-[15px]" style={{ ...H, color: INK }}>{pet.name}&rsquo;s passport is {pct}% done</p>
+                <span className="text-xs font-bold" style={{ color: PLUM }}>{doneCount}/{checklist.length}</span>
+              </div>
+              <div className="mt-2.5 h-2 rounded-full overflow-hidden" style={{ background: "rgba(61,20,38,0.12)" }} aria-hidden="true">
+                <div className="h-full rounded-full origin-left bar-in" style={{ background: PLUM, transform: `scaleX(${pct / 100})` }} />
+              </div>
+              <p className="text-xs mt-2.5" style={{ color: INK }}>A complete passport helps your pro and your vet look after {pet.name} properly.</p>
+              {nextStep && (
+                <button type="button" onClick={nextStep.act} className="tap-scale mt-3 inline-flex items-center gap-1 px-4 h-10 rounded-full text-sm font-bold" style={{ ...H, background: PLUM, color: "white" }}>
+                  Next: {nextStep.label.toLowerCase()} <ChevronRight size={15} />
+                </button>
+              )}
+            </section>
           ) : (
-            <div className="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-[#f6e6c8]">
-              {filteredBookings.map((b) => {
-                const style = SERVICE_STYLE[b.type] ?? SERVICE_STYLE.WALKING;
-                const Icon = style.Icon;
-                const rebookHref = REBOOK_HREF[b.type];
-                return (
-                  <div key={b.id} className="flex items-start gap-3 relative z-10">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-                      style={{ background: style.bg, color: style.fg }}
+            <section className="enter-pop rounded-[1.75rem] p-4 flex items-center gap-3" style={{ background: YELLOW }}>
+              <span className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: PLUM }}><Sparkles size={18} color={YELLOW} /></span>
+              <p className="font-bold text-sm" style={{ ...H, color: INK }}>{pet.name}&rsquo;s passport is complete. Good human!</p>
+            </section>
+          )}
+
+          {/* ---------- Allergy alert ---------- */}
+          {hasAllergies && (
+            <section className="enter-up rounded-[1.75rem] p-4 flex items-start gap-3" style={{ ["--d" as string]: "60ms", background: "#fde7dc", border: "1.5px dashed #c2410c" }}>
+              <AlertTriangle size={20} color="#c2410c" className="shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-bold text-sm" style={{ ...H, color: "#7c2d12" }}>Allergies</p>
+                <p className="text-sm mt-0.5" style={{ color: "#7c2d12" }}>{allergyText}</p>
+              </div>
+            </section>
+          )}
+
+          {/* ---------- Stamps ---------- */}
+          <Section title="Stamps" icon={Star} delay={80}>
+            <p className="text-xs -mt-1 mb-3" style={{ color: MUTED }}>Earned with every completed visit.</p>
+            <div className="grid grid-cols-3 gap-2.5">
+              {(["WALKING", "GROOMING", "TRAINING"] as const).map((t, i) => {
+                const n = stampCount(t);
+                const meta = SERVICE[t];
+                const Icon = meta.icon;
+                const earned = n > 0;
+                const Inner = (
+                  <>
+                    <span
+                      className="w-16 h-16 rounded-full flex flex-col items-center justify-center"
+                      style={{
+                        transform: `rotate(${[-6, 4, -3][i]}deg)`,
+                        background: earned ? PLUM : "transparent",
+                        border: earned ? `2px dashed ${YELLOW}` : "2px dashed rgba(61,20,38,0.2)",
+                        boxShadow: earned ? "0 0 0 3px #6e1e3b" : "none",
+                      }}
                     >
-                      <Icon size={16} />
-                    </div>
-                    <div className="flex-1 p-3 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8]">
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="font-bold text-xs text-[#2a0c18]">{SERVICE_LABEL[b.type] ?? b.type}</h4>
-                        <span className="text-[10px] font-mono text-[#5e4752] shrink-0">{formatDate(b.startTime)}</span>
-                      </div>
-                      <p className="text-[11px] text-[#5e4752] mt-0.5">
-                        With <strong>{b.provider.user.name}</strong>
-                      </p>
-
-                      {b.report && (b.report.distanceKm || b.report.photos.length > 0) && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px] text-[#6e1e3b] font-medium">
-                          {b.report.distanceKm != null && (
-                            <span className="inline-flex items-center gap-1 bg-[#f6e6c8] px-2 py-0.5 rounded">
-                              <Route size={13} />
-                              {b.report.distanceKm} km Tracked
-                            </span>
-                          )}
-                          {b.report.photos.length > 0 && (
-                            <span className="inline-flex items-center gap-1 bg-[#f6e6c8] px-2 py-0.5 rounded">
-                              <CameraIcon size={13} />
-                              {b.report.photos.length} Photos
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {b.report?.notes && (
-                        <p className="text-[10px] text-[#5e4752] mt-1 italic">{b.report.notes}</p>
-                      )}
-
-                      {b.review && (
-                        <div className="mt-2 flex items-center gap-1 text-[#624000] text-[11px] font-bold">
-                          <Star size={14} color="#f9dd8a" fill="#f9dd8a" />
-                          <span>{b.review.rating.toFixed(1)} / 5.0{b.review.comment ? ` — ${b.review.comment}` : ""}</span>
-                        </div>
-                      )}
-
-                      {(b.status !== "COMPLETED" || rebookHref) && (
-                        <div className="mt-2 pt-2 border-t border-[#f6e6c8] flex items-center justify-between text-xs">
-                          {b.status !== "COMPLETED" ? (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#f3e2c4] text-[#5e4752]">{b.status}</span>
-                          ) : <span />}
-                          {rebookHref && (
-                            <Link href={rebookHref} className="px-2 py-0.5 rounded bg-[#dbe5f3] text-[#2a0c18] font-bold text-[10px]">
-                              Re-book
-                            </Link>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                      <Icon size={20} color={earned ? YELLOW : "rgba(61,20,38,0.3)"} />
+                      {earned && <span className="text-[11px] font-bold mt-0.5" style={{ ...H, color: YELLOW }}>×{n}</span>}
+                    </span>
+                    <span className="text-xs font-bold mt-2" style={{ ...H, color: earned ? INK : MUTED }}>{meta.label}</span>
+                    {!earned && <span className="text-[10px] font-bold mt-0.5 underline underline-offset-2" style={{ color: PLUM }}>Book the first</span>}
+                  </>
+                );
+                return earned ? (
+                  <div key={t} className="flex flex-col items-center py-2">{Inner}</div>
+                ) : (
+                  <Link key={t} href={meta.href} className="tap-scale flex flex-col items-center py-2 rounded-2xl">{Inner}</Link>
                 );
               })}
             </div>
-          )}
-        </div>
-      </div>
+          </Section>
 
-      <div className="px-6 mb-8">
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {FIELD_META.map(({ key, label, icon: Icon, placeholder, multiline }) => (
-            <div
-              key={key}
-              className="flex items-start gap-3 px-5 py-4"
-              style={{ borderBottom: "1px solid var(--border)" }}
-            >
-              <Icon size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>{label}</p>
-                {editing ? (
-                  multiline ? (
-                    <textarea
-                      className="w-full text-sm border rounded-lg px-2 py-1.5"
-                      style={{ borderColor: "var(--border)" }}
-                      rows={3}
-                      placeholder={placeholder}
-                      value={form[key as keyof typeof form] as string}
-                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    />
-                  ) : (
-                    <input
-                      className="w-full text-sm border rounded-lg px-2 py-1.5"
-                      style={{ borderColor: "var(--border)" }}
-                      placeholder={placeholder}
-                      value={form[key as keyof typeof form] as string}
-                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    />
-                  )
-                ) : (
-                  <p className="text-sm">{(pet[key] as string) || "—"}</p>
-                )}
+          {/* ---------- Vaccines ---------- */}
+          <Section
+            title="Vaccines"
+            icon={Syringe}
+            delay={100}
+            action={
+              <Link href="/owner/vaccines" className="tap-scale inline-flex items-center gap-1 px-3 h-8 rounded-full text-xs font-bold" style={{ background: PLUM, color: "white" }}>
+                <Plus size={12} /> Add
+              </Link>
+            }
+          >
+            {(overdue > 0 || dueSoon > 0) && (
+              <p className="text-xs font-semibold mb-2" style={{ color: overdue ? "#9a3412" : PLUM }}>
+                {overdue > 0 ? `${overdue} overdue` : ""}{overdue > 0 && dueSoon > 0 ? " · " : ""}{dueSoon > 0 ? `${dueSoon} due within 30 days` : ""}
+              </p>
+            )}
+            {vaxSorted.length === 0 ? (
+              <Empty>No vaccines added yet. Add the last ones from {pet.name}&rsquo;s vaccine card and we&rsquo;ll remind you before the next is due.</Empty>
+            ) : (
+              <ul className="space-y-2">
+                {vaxSorted.map((v) => {
+                  const { status, days } = vaxStatus(v);
+                  const chip =
+                    status === "OVERDUE" ? { text: "Overdue", bg: "#fde7dc", fg: "#9a3412" } :
+                    status === "DUE_SOON" ? { text: days === 0 ? "Due today" : `Due in ${days} d`, bg: YELLOW, fg: INK } :
+                    { text: v.nextDueDate ? "Up to date" : "Recorded", bg: "#e6edf8", fg: INK };
+                  return (
+                    <li key={v.id} className="flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3" style={{ background: "#fffaf0" }}>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm truncate" style={{ ...H, color: INK }}>{v.vaccineName}</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: MUTED }}>
+                          Given {fmtDate(v.dateGiven)}{v.nextDueDate ? ` · next ${fmtDate(v.nextDueDate)}` : ""}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: chip.bg, color: chip.fg }}>{chip.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Section>
+
+          {/* ---------- Health ---------- */}
+          <Section title="Health" icon={Stethoscope} delay={120} action={<EditButton onClick={() => setSheet("health")} label="Edit health" empty={!has(allergyText) && !has(pet.medicalHistory)} />}>
+            {!has(allergyText) && !has(pet.medicalHistory) && activeMeds.length === 0 ? (
+              <Empty>Note allergies and past conditions so every pro and vet knows.</Empty>
+            ) : (
+              <dl>
+                <Row label="Allergies" value={has(allergyText) ? allergyText : <span style={{ color: MUTED, fontWeight: 400 }}>Not noted</span>} />
+                {has(pet.medicalHistory) && <Row label="History" value={<span className="whitespace-pre-line">{pet.medicalHistory}</span>} />}
+              </dl>
+            )}
+            {activeMeds.length > 0 && (
+              <div className="mt-3">
+                <p className="flex items-center gap-1.5 text-xs font-bold mb-2" style={{ color: MUTED }}><Pill size={12} /> Medicines</p>
+                <ul className="space-y-1.5">
+                  {activeMeds.map((m) => (
+                    <li key={m.id} className="rounded-2xl px-3.5 py-2.5 text-sm" style={{ background: "#fffaf0", color: INK }}>
+                      <b>{m.name}</b>
+                      {[m.dosage, m.schedule].filter(Boolean).length > 0 && <span style={{ color: MUTED }}> · {[m.dosage, m.schedule].filter(Boolean).join(" · ")}</span>}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          ))}
+            )}
+            <Link href={`/owner/pets/${pet.id}/step-2`} className="mt-3 inline-flex items-center gap-1 text-xs font-bold" style={{ color: PLUM }}>
+              {activeMeds.length ? "Manage medicines" : "Add medicines"} <ChevronRight size={12} />
+            </Link>
+          </Section>
 
-          <div className="flex items-start gap-3 px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-            <ShieldCheck size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>Coverage amount</p>
-              {editing ? (
-                <input
-                  type="number"
-                  className="w-full text-sm border rounded-lg px-2 py-1.5"
-                  style={{ borderColor: "var(--border)" }}
-                  placeholder="Coverage in ₹"
-                  value={form.insuranceCoverageRupees}
-                  onChange={(e) => setForm({ ...form, insuranceCoverageRupees: e.target.value })}
-                />
+          {/* ---------- Care notes ---------- */}
+          <Section title="Care notes" icon={HeartHandshake} delay={140} action={<EditButton onClick={() => setSheet("care")} label="Edit care notes" empty={personality.length === 0 && !has(pet.notes) && !has(pet.favoriteTreats)} />}>
+            {personality.length === 0 && !has(pet.notes) && !has(pet.favoriteTreats) ? (
+              <Empty>Tell your pro what {pet.name} is like: personality, leash habits, fears, favourite treats.</Empty>
+            ) : (
+              <div className="space-y-3">
+                {personality.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {personality.map((t) => (
+                      <span key={t} className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#e6edf8", color: INK }}>{t}</span>
+                    ))}
+                  </div>
+                )}
+                {has(pet.notes) && <p className="text-sm whitespace-pre-line" style={{ color: INK }}>{pet.notes}</p>}
+                {has(pet.favoriteTreats) && <p className="text-xs" style={{ color: MUTED }}>Favourite treats: <b style={{ color: INK }}>{pet.favoriteTreats}</b></p>}
+              </div>
+            )}
+          </Section>
+
+          {/* ---------- Vet & emergency ---------- */}
+          <Section title="Vet and emergency" icon={Phone} delay={160} action={<EditButton onClick={() => setSheet("vet")} label="Edit vet" empty={!has(pet.vetHospitalName)} />}>
+            <div className="space-y-2">
+              {has(pet.vetHospitalName) ? (
+                <div className="flex items-center gap-3 rounded-2xl px-3.5 py-3" style={{ background: "#fffaf0" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm truncate" style={{ ...H, color: INK }}>{pet.vetHospitalName}</p>
+                    <p className="text-[11px] truncate" style={{ color: MUTED }}>{[pet.attendingVetName, pet.vetHospitalAddress].filter(Boolean).join(" · ") || "Your vet"}</p>
+                  </div>
+                  {has(pet.vetEmergencyPhone) && (
+                    <a href={`tel:${pet.vetEmergencyPhone}`} aria-label={`Call ${pet.vetHospitalName}`} className="tap-scale w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: PLUM }}>
+                      <Phone size={16} color="white" />
+                    </a>
+                  )}
+                </div>
               ) : (
-                <p className="text-sm">
-                  {pet.insuranceCoveragePaise ? `₹${(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}` : "—"}
-                </p>
+                <Empty>Add your vet so help is one tap away.</Empty>
               )}
+              {[{ id: "owner", name: pet.owner.name, phone: pet.owner.phone, relationship: "Guardian" }, ...pet.emergencyContacts]
+                .filter((c) => c.phone)
+                .map((c) => (
+                  <div key={c.id} className="flex items-center gap-3 rounded-2xl px-3.5 py-3" style={{ background: "#fffaf0" }}>
+                    <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fef3dc" }}><Users size={15} color={PLUM} /></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm truncate" style={{ ...H, color: INK }}>{c.name}</p>
+                      <p className="text-[11px]" style={{ color: MUTED }}>{c.relationship ?? "Emergency contact"} · {c.phone}</p>
+                    </div>
+                    <a href={`tel:${c.phone}`} aria-label={`Call ${c.name}`} className="tap-scale w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.12)" }}>
+                      <Phone size={15} color={PLUM} />
+                    </a>
+                  </div>
+                ))}
+              <Link href={`/owner/pets/${pet.id}/step-2`} className="inline-flex items-center gap-1 text-xs font-bold pt-1" style={{ color: PLUM }}>
+                {pet.emergencyContacts.length ? "Manage emergency contacts" : "Add an emergency contact"} <ChevronRight size={12} />
+              </Link>
             </div>
-          </div>
-          <div className="flex items-start gap-3 px-5 py-4">
-            <ShieldCheck size={16} color="var(--tan)" className="mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>Policy expiry</p>
-              {editing ? (
-                <input
-                  type="date"
-                  className="w-full text-sm border rounded-lg px-2 py-1.5"
-                  style={{ borderColor: "var(--border)" }}
-                  value={form.insuranceExpiryDate}
-                  onChange={(e) => setForm({ ...form, insuranceExpiryDate: e.target.value })}
-                />
-              ) : (
-                <p className="text-sm">
-                  {pet.insuranceExpiryDate ? new Date(pet.insuranceExpiryDate).toDateString() : "—"}
-                </p>
-              )}
-            </div>
+          </Section>
+
+          {/* ---------- IDs ---------- */}
+          <Section title="Microchip and insurance" icon={ShieldCheck} delay={180} action={<EditButton onClick={() => setSheet("ids")} label="Edit microchip and insurance" empty={!has(pet.microchipId) && !has(pet.insuranceProvider)} />}>
+            {!has(pet.microchipId) && !has(pet.insuranceProvider) ? (
+              <Empty>If {pet.name} is microchipped or insured, add the numbers here.</Empty>
+            ) : (
+              <dl>
+                {has(pet.microchipId) && <Row label="Microchip" value={<span className="inline-flex items-center gap-1.5"><Cpu size={13} color={PLUM} /> {pet.microchipId}</span>} />}
+                {has(pet.insuranceProvider) && <Row label="Insurance" value={pet.insuranceProvider} />}
+                {has(pet.insurancePolicy) && <Row label="Policy" value={pet.insurancePolicy} />}
+                {pet.insuranceCoveragePaise != null && <Row label="Cover" value={`₹${(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}`} />}
+                {pet.insuranceExpiryDate && (
+                  <Row
+                    label="Ends"
+                    value={<span style={{ color: new Date(pet.insuranceExpiryDate) < new Date() ? "#9a3412" : INK }}>{fmtDate(pet.insuranceExpiryDate)}{new Date(pet.insuranceExpiryDate) < new Date() ? " (ended)" : ""}</span>}
+                  />
+                )}
+              </dl>
+            )}
+          </Section>
+
+          {/* ---------- Visits ---------- */}
+          <Section title="Visits" icon={CalendarClock} delay={200}>
+            {upcoming.length === 0 && history.length === 0 ? (
+              <div>
+                <Empty>No visits yet. Book {pet.name}&rsquo;s first walk, groom or training session to start collecting stamps.</Empty>
+                <Link href="/walk-booking" className="tap-scale mt-3 inline-flex items-center gap-1 px-4 h-10 rounded-full text-sm font-bold" style={{ ...H, background: PLUM, color: "white" }}>
+                  Book a walk <ChevronRight size={15} />
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {[...upcoming.map((b) => ({ b, next: true })), ...history.map((b) => ({ b, next: false }))].map(({ b, next }) => {
+                  const meta = SERVICE[b.type] ?? SERVICE.WALKING;
+                  const Icon = meta.icon;
+                  return (
+                    <li key={b.id} className="flex items-center gap-3 rounded-2xl px-3.5 py-3" style={{ background: next ? "#fef3dc" : "#fffaf0" }}>
+                      <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: next ? PLUM : "#ffffff", border: next ? "none" : "1px solid rgba(61,20,38,0.1)" }}>
+                        <Icon size={15} color={next ? YELLOW : PLUM} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm" style={{ ...H, color: INK }}>
+                          {meta.label} <span className="font-semibold" style={{ color: MUTED }}>with {b.provider.user.name}</span>
+                        </p>
+                        <p className="text-[11px]" style={{ color: MUTED }}>
+                          {next ? "Coming up · " : ""}
+                          {fmtDate(b.startTime, { weekday: "short", day: "numeric", month: "short" })}
+                          {b.report?.distanceKm ? ` · ${b.report.distanceKm} km` : ""}
+                          {b.report?.photos.length ? ` · ${b.report.photos.length} photos` : ""}
+                        </p>
+                      </div>
+                      {b.review ? (
+                        <span className="text-xs font-bold inline-flex items-center gap-0.5 shrink-0" style={{ color: INK }}><Star size={12} fill={YELLOW} color={YELLOW} /> {b.review.rating}</span>
+                      ) : !next ? (
+                        <Link href={meta.href} className="text-xs font-bold shrink-0" style={{ color: PLUM }}>Book again</Link>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Section>
+
+          <p className="text-[11px] text-center pt-1" style={{ color: MUTED }}>
+            <Check size={11} className="inline -mt-0.5" /> Updated {fmtDate(pet.updatedAt)}
+          </p>
+
+          <div className="text-center pt-4">
+            <button type="button" onClick={removePet} disabled={deleting} className="text-xs font-bold underline underline-offset-2" style={{ color: MUTED }}>
+              {deleting ? "Removing…" : `Remove ${pet.name}`}
+            </button>
           </div>
         </div>
-      </div>
+      </main>
 
-      <div className="px-6 mt-10 mb-4">
-        <button
-          onClick={removePet}
-          disabled={deleting}
-          className="text-sm font-medium tap-scale"
-          style={{ color: "var(--terracotta)" }}
-        >
-          {deleting ? "Removing…" : `Remove ${pet.name} from Barkado & Co.`}
-        </button>
-      </div>
-
-      <BottomNav />
-    </main>
+      {sheet && <EditSheet sheet={sheet} pet={pet} onClose={() => setSheet(null)} onSaved={onSaved} />}
+      {shareOpen && (
+        <PassportShareSheet petId={pet.id} petName={pet.name} token={pet.shareToken} onTokenChange={(t) => setPet((p) => ({ ...p, shareToken: t }))} onClose={() => setShareOpen(false)} />
+      )}
     </div>
   );
 }

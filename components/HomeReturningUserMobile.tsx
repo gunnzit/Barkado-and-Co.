@@ -284,7 +284,7 @@ export default function HomeReturningUserMobile({
             <div>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--gold)" }}>Everything your dog needs, from birth to death.</p>
               <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.8)" }}>One ecosystem. Zero friction.</p>
-              <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.6)" }}>Paw Passport #{passportNumber}</p>
+              <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.6)" }}>PawPassport {passportNumber}</p>
             </div>
             <ChevronRight size={16} color="rgba(255,255,255,0.7)" />
           </Link>
