@@ -8,7 +8,9 @@ export type CartItem = {
   kind: "PRODUCT" | "SERVICE";
   quantity: number;
   productId: string | null;
-  product: { id: string; name: string; price: number; icon: string | null } | null;
+  product: { id: string; name: string; price: number; icon: string | null; imageUrls?: string[]; compareAtPrice?: number | null } | null;
+  selectedColor?: string | null;
+  selectedSize?: string | null;
   serviceType: "WALKING" | "SITTING" | "GROOMING" | "TRAINING" | null;
   providerId: string | null;
   provider: { id: string; user: { name: string } } | null;

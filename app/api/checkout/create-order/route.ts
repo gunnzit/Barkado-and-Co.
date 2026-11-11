@@ -6,6 +6,7 @@ import { razorpay } from "@/lib/razorpay";
 import { computeServiceCommission } from "@/lib/commission";
 import { computeCartTotals } from "@/lib/checkoutPricing";
 import { getPawPointsBalance } from "@/lib/pawPoints";
+import { isTooSoon } from "@/lib/istTime";
 
 const bodySchema = z.object({
   couponCode: z.string().optional(),
@@ -32,6 +33,18 @@ export async function POST(req: Request) {
     });
     if (cartItems.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    }
+
+    // A booking whose time has passed (or is too close for the pro to get
+    // there) can't be paid for: the customer picks a new time first.
+    if (cartItems.some((i) => i.kind === "SERVICE" && i.startTime && isTooSoon(i.startTime))) {
+      return NextResponse.json({ error: "One of your bookings is too soon or has already passed. Pick a new time first.", code: "STALE_BOOKING" }, { status: 400 });
+    }
+
+    // Shop orders ship to the customer's saved address and need a number
+    // for the rider. Bookings carry their own address and phone.
+    if (cartItems.some((i) => i.kind === "PRODUCT") && (!user.address?.trim() || !user.phone?.trim())) {
+      return NextResponse.json({ error: "Add your delivery address and mobile number before paying.", code: "MISSING_DETAILS" }, { status: 400 });
     }
 
     const productSubtotalPaise = cartItems.reduce((sum, item) => {
