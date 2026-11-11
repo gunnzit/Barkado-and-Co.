@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseBookingTime, istDayAndMinutes } from "@/lib/istTime";
 import { computeBudgetUsedPaise, isCapReached } from "@/lib/campaignBudget";
 
 // Composite ranking weights — how much each factor moves a provider up the
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const service = searchParams.get("service"); // WALKING | SITTING | GROOMING | TRAINING
   const pin = searchParams.get("pin");
-  const startTime = searchParams.get("startTime"); // ISO datetime-local value, optional
+  const startTime = searchParams.get("startTime"); // ISO or India-time wall clock, optional
 
   const providers = await prisma.provider.findMany({
     where: {
@@ -85,7 +86,7 @@ export async function GET(req: Request) {
   // cover the requested time. A provider with no hours rows at all is
   // treated as always available — most providers haven't set hours yet, and
   // defaulting them to "unavailable" everywhere would be wrong.
-  const requested = startTime ? new Date(startTime) : null;
+  const requested = startTime ? parseBookingTime(startTime) : null;
 
   const scored = providers.map((p) => {
     // This endpoint is PUBLIC, so private fields are stripped here before the
@@ -107,8 +108,8 @@ export async function GET(req: Request) {
 
     let availableAtRequestedTime: boolean | null = null;
     if (requested && availability.length > 0) {
-      const dayOfWeek = requested.getDay();
-      const minutes = requested.getHours() * 60 + requested.getMinutes();
+      // Provider hours are India time, so compare in India time (the server runs in UTC).
+      const { dayOfWeek, minutes } = istDayAndMinutes(requested);
       const dayRow = availability.find((a) => a.dayOfWeek === dayOfWeek);
       if (!dayRow) {
         availableAtRequestedTime = false;

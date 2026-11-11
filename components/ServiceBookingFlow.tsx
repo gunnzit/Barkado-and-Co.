@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Satellite, Camera, Plus, Sun, CloudSun, Moon, GraduationCap } from "lucide-react";
+import { PawPrint, Star, ShieldCheck, Check, MapPin, ShoppingBag, Clock, Sparkles, Camera, Plus, Sun, CloudSun, Moon, GraduationCap, Undo2, Lock } from "lucide-react";
 import { getMascotPath } from "@/lib/mascotImage";
-import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, SAMPLE_GROOMING_SPECIALTIES, SAMPLE_WALKING_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
+import { SAMPLE_EXPERIENCE, SAMPLE_SPECIALTIES, SAMPLE_GROOMING_SPECIALTIES, sampleIndexFor } from "@/lib/trainerSampleData";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -17,6 +18,8 @@ type Provider = {
   pricePerGroom?: number;
   pricePerTrain?: number;
   ratingAvg: number;
+  ratingCount?: number;
+  bio?: string | null;
   reliabilityScore: number;
   user: { name: string };
   _count: { bookings: number };
@@ -38,6 +41,7 @@ type PetOption = {
   id: string;
   name: string;
   photoUrl: string | null;
+  breed?: string | null;
 };
 
 const COPY: Record<
@@ -76,8 +80,10 @@ const TIME_SLOTS: { period: "Morning" | "Afternoon" | "Evening"; icon: typeof Su
   {
     period: "Morning",
     icon: Sun,
-    hours: "8AM - 12PM",
+    hours: "6AM - 12PM",
     slots: [
+      { label: "06:00 AM", hour: 6, minute: 0 },
+      { label: "07:00 AM", hour: 7, minute: 0 },
       { label: "08:00 AM", hour: 8, minute: 0 },
       { label: "09:30 AM", hour: 9, minute: 30 },
       { label: "11:00 AM", hour: 11, minute: 0 },
@@ -99,14 +105,73 @@ const TIME_SLOTS: { period: "Morning" | "Afternoon" | "Evening"; icon: typeof Su
     hours: "4PM - 8PM",
     slots: [
       { label: "05:00 PM", hour: 17, minute: 0 },
-      { label: "06:30 PM", hour: 18, minute: 30 },
+      { label: "06:00 PM", hour: 18, minute: 0 },
+      { label: "07:00 PM", hour: 19, minute: 0 },
+      { label: "07:30 PM", hour: 19, minute: 30 },
     ],
   },
 ];
 
+// Same lead time the server enforces (lib/istTime MIN_LEAD_MINUTES): a slot
+// is only offered if a pro can realistically still get there.
+const SLOT_LEAD_MINUTES = 45;
+function slotIsPast(dateIso: string | null, slot: { hour: number; minute: number }): boolean {
+  if (!dateIso) return false;
+  const [y, m, d] = dateIso.split("-").map(Number);
+  const at = new Date(y, m - 1, d, slot.hour, slot.minute);
+  return at.getTime() < Date.now() + SLOT_LEAD_MINUTES * 60_000;
+}
+
 // Experience/specialty sample data now lives in lib/trainerSampleData.ts —
 // shared with the provider profile page so the same trainer shows the
 // same placeholder values everywhere they appear.
+
+// First-walk price in whole rupees. Must match /api/cart/service, which rounds
+// the 10% discount to the nearest rupee, so the price never changes between
+// screens and checkout.
+function walkPriceRupees(min: 30 | 45 | 60, firstWalk: boolean): number {
+  const paise = WALK_PRICING_PAISE[min];
+  return firstWalk ? Math.round((paise * 0.9) / 100) : paise / 100;
+}
+
+/** Real photo, or the pro's initials. Never a stock face standing in for a real person. */
+function ProAvatar({ name, photoUrl, size }: { name: string; photoUrl: string | null; size: number }) {
+  const initials = name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+  return photoUrl ? (
+    <img src={photoUrl} alt={name} className="rounded-full object-cover shrink-0 mx-auto" style={{ width: size, height: size, boxShadow: "0 0 0 2px var(--gold)" }} />
+  ) : (
+    <span
+      className="rounded-full shrink-0 flex items-center justify-center font-bold mx-auto"
+      style={{ width: size, height: size, background: "#fef3dc", color: "var(--panel-dark)", boxShadow: "0 0 0 2px var(--gold)", fontFamily: "var(--font-heading)", fontSize: size * 0.36 }}
+      aria-hidden="true"
+    >
+      {initials || <PawPrint size={size * 0.4} />}
+    </span>
+  );
+}
+
+/** "★ 4.8 · 23 walks", or "New to Barkado" until there's real history. */
+function ProTrackRecord({ p, noun, centered = false }: { p: Provider; noun: string; centered?: boolean }) {
+  const done = p._count.bookings;
+  const rated = (p.ratingCount ?? 0) > 0;
+  if (!rated && done === 0) {
+    return (
+      <p className={`text-xs mt-1 font-semibold ${centered ? "text-center" : ""}`} style={{ color: "var(--terracotta)" }}>
+        New to Barkado
+      </p>
+    );
+  }
+  return (
+    <p className={`flex items-center gap-1 text-xs mt-1 ${centered ? "justify-center" : ""}`} style={{ color: "var(--muted)" }}>
+      {rated && (
+        <>
+          <Star size={11} fill="var(--gold)" color="#e9b949" /> <span className="font-semibold" style={{ color: "var(--forest)" }}>{p.ratingAvg.toFixed(1)}</span> ·
+        </>
+      )}
+      <span>{done} {noun}{done === 1 ? "" : "s"}</span>
+    </p>
+  );
+}
 
 function priceFor(serviceType: keyof typeof COPY, p: Provider, walkDurationMin: 30 | 45 | 60): number {
   if (serviceType === "WALKING") return WALK_PRICING_PAISE[walkDurationMin] / 100;
@@ -166,6 +231,7 @@ export default function ServiceBookingFlow({
   defaultPhone?: string | null;
 }) {
   const { addService } = useCart();
+  const router = useRouter();
   const [phase, setPhase] = useState<"intro" | "details" | "providers" | "done">(
     showStartButton ? "intro" : "details"
   );
@@ -194,6 +260,11 @@ export default function ServiceBookingFlow({
   }, []);
 
   useEffect(() => {
+    if (selectedSlot && serviceType !== "TRAINING" && slotIsPast(selectedDateIso, selectedSlot)) {
+      setSelectedSlot(null);
+      setStart("");
+      return;
+    }
     if (selectedDateIso && selectedSlot) {
       const hh = String(selectedSlot.hour).padStart(2, "0");
       const mm = String(selectedSlot.minute).padStart(2, "0");
@@ -239,7 +310,7 @@ export default function ServiceBookingFlow({
 
   const goToProviders = () => {
     // Single-visit services default a short window from the chosen start time.
-    if (!COPY[serviceType].needsEndDate && start && !end) {
+    if (!COPY[serviceType].needsEndDate && start) {
       const startDate = new Date(start);
       const minutes = serviceType === "WALKING" ? walkDurationMin : 30;
       setEnd(toLocalDatetimeString(new Date(startDate.getTime() + minutes * 60000)));
@@ -261,6 +332,11 @@ export default function ServiceBookingFlow({
       phone,
     });
     if (result === "ok") {
+      // Walks go straight to payment: one less step for the main action.
+      if (serviceType === "WALKING") {
+        router.push("/cart");
+        return;
+      }
       setPhase("done");
     } else if (result === "error") {
       setAddError(true);
@@ -316,15 +392,11 @@ export default function ServiceBookingFlow({
                   10% off your first walk
                 </span>
               )}
-              <div
-                className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 tracking-wide uppercase"
-                style={{ background: "rgba(255,255,255,0.15)", color: "white" }}
-              >
-                Adventure Walk
-              </div>
-              <h1 className="text-3xl font-bold text-white mb-1 leading-tight">Professional Dog Walking</h1>
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
-                Adventure, exercise, and peace of mind for {activePetName ?? "your pup"}.
+              <h1 className="text-3xl font-bold text-white mb-1 leading-tight">
+                Happy walks for {activePetName ?? "your dog"}
+              </h1>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.88)" }}>
+                An ID-verified walker, at a time that suits you.
               </p>
             </div>
           </div>
@@ -333,9 +405,9 @@ export default function ServiceBookingFlow({
             {/* ===== Select Package — sticky on desktop ===== */}
             <div className="lg:col-span-1 lg:order-last mb-6 lg:mb-0">
               <div className="card lg:sticky lg:top-6">
-                <h2 className="font-bold text-lg mb-1">Select Package</h2>
+                <h2 className="font-bold text-lg mb-1">How long?</h2>
                 <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-                  Choose the best fit for {activePetName ?? "your pet"}'s energy level.
+                  Pick what suits {activePetName ?? "your dog"}&rsquo;s energy. You&rsquo;ll choose the day and time next.
                 </p>
                 <div className="space-y-2.5">
                   {WALK_PACKAGES.map((pkg) => {
@@ -345,7 +417,7 @@ export default function ServiceBookingFlow({
                     // applied server-side (see /api/cart/service) — never
                     // the source of truth itself, just matches it so
                     // there's no surprise at checkout.
-                    const discountedPrice = Math.round(fullPrice * 0.9);
+                    const discountedPrice = walkPriceRupees(pkg.min, true);
                     return (
                       <button
                         key={pkg.min}
@@ -378,10 +450,10 @@ export default function ServiceBookingFlow({
                   onClick={() => setPhase("details")}
                   className="btn-primary w-full tap-scale mt-5"
                 >
-                  Book a Walk
+                  Choose a time
                 </button>
                 <p className="text-center text-[11px] mt-2" style={{ color: "var(--muted)" }}>
-                  Free cancellation up to 24h before.
+                  Cancel any time before the walk for a full refund.
                 </p>
               </div>
             </div>
@@ -389,13 +461,13 @@ export default function ServiceBookingFlow({
             <div className="lg:col-span-2">
               {/* ===== Why Choose Our Walks ===== */}
               <div className="mb-6">
-                <h2 className="font-bold text-lg mb-3">Why Choose Our Walks?</h2>
+                <h2 className="font-bold text-lg mb-3">Why walk with Barkado &amp; Co.?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    { icon: Satellite, title: "GPS Tracking", desc: "Real-time map of every walk — coming soon.", color: "var(--forest, #3d1426)" },
-                    { icon: Camera, title: "Photo Updates", desc: "Paw-some moments delivered to your phone — coming soon.", color: "var(--terracotta)" },
-                    { icon: ShieldCheck, title: "Verified Walkers", desc: "Every walker is document-verified before going live.", color: "var(--gold)" },
-                    { icon: Clock, title: "Flexible Durations", desc: "30, 45, or 60-minute walks to fit your schedule.", color: "var(--heritage-red, #c0392b)" },
+                    { icon: ShieldCheck, title: "ID-verified walkers", desc: "Every walker's ID is checked by our team before they can take bookings.", color: "var(--terracotta)" },
+                    { icon: Clock, title: "Early mornings to evenings", desc: "30, 45 or 60 minutes, from 6 AM to 7:30 PM.", color: "var(--terracotta)" },
+                    { icon: Undo2, title: "Cancel any time", desc: "Plans change. Cancel before the walk starts and get a full refund.", color: "var(--terracotta)" },
+                    { icon: Lock, title: "Secure payments", desc: "Pay safely in the app, processed by Razorpay.", color: "var(--terracotta)" },
                   ].map((f) => (
                     <div key={f.title} className="card flex items-start gap-3">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${f.color}1A` }}>
@@ -413,36 +485,14 @@ export default function ServiceBookingFlow({
               {/* ===== Meet Our Top Walkers ===== */}
               {topWalkers.length > 0 && (
                 <div className="mb-4">
-                  <h2 className="font-bold text-lg mb-3">Meet Our Top Walkers</h2>
+                  <h2 className="font-bold text-lg mb-3">Meet our walkers</h2>
                   <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                     {topWalkers.map((w) => (
-                      <div key={w.id} className="card shrink-0 text-center" style={{ width: 160 }}>
-                        <img
-                          src={w.photoUrl || `https://i.pravatar.cc/150?u=${w.id}`}
-                          alt={w.user.name}
-                          className="w-16 h-16 rounded-full object-cover mx-auto mb-2"
-                          style={{ border: "1px solid var(--border)" }}
-                        />
-                        <p className="font-semibold text-sm">{w.user.name}</p>
-                        <p className="flex items-center justify-center gap-1 text-xs mb-2" style={{ color: "var(--muted)" }}>
-                          <Star size={11} fill="var(--gold)" color="var(--gold)" /> {w.ratingAvg.toFixed(1)}
-                          <span style={{ color: "var(--muted)" }}>({w._count.bookings} walks)</span>
-                        </p>
-                        {/* Specialty tags are SAMPLE data — same disclosed,
-                            established pattern already used for
-                            Training/Grooming (no real per-provider
-                            specialty field exists yet). Distance is
-                            dropped entirely, not shown as a placeholder —
-                            no geocoding exists, and a specific fake number
-                            would be a false claim, not a "coming soon". */}
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {SAMPLE_WALKING_SPECIALTIES[sampleIndexFor(w.id, SAMPLE_WALKING_SPECIALTIES.length)].map((tag) => (
-                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      <Link key={w.id} href={`/provider/${w.id}`} className="card !p-4 shrink-0 text-center tap-scale" style={{ width: 150 }}>
+                        <ProAvatar name={w.user.name} photoUrl={w.photoUrl} size={64} />
+                        <p className="font-semibold text-sm mt-2 truncate">{w.user.name}</p>
+                        <ProTrackRecord p={w} noun="walk" centered />
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -649,7 +699,8 @@ export default function ServiceBookingFlow({
                       className="w-16 h-16 rounded-full object-cover mb-1.5"
                       style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`, boxShadow: selected ? "0 0 0 3px var(--gold)" : undefined }}
                     />
-                    <p className="text-xs font-semibold" style={{ color: selected ? undefined : "var(--muted)" }}>{p.name}</p>
+                    <p className="text-xs font-semibold max-w-[72px] truncate" style={{ color: selected ? undefined : "var(--muted)" }}>{p.name}</p>
+                    {p.breed && <p className="text-[10px] max-w-[72px] truncate" style={{ color: "var(--muted)" }}>{p.breed}</p>}
                   </button>
                 );
               })}
@@ -706,14 +757,19 @@ export default function ServiceBookingFlow({
                     <div className="flex flex-wrap gap-2">
                       {group.slots.map((slot) => {
                         const selected = selectedSlot?.label === slot.label;
+                        const past = slotIsPast(selectedDateIso, slot);
                         return (
                           <button
                             key={slot.label}
-                            onClick={() => setSelectedSlot(slot)}
-                            className="tap-scale px-4 py-2.5 rounded-full text-sm font-semibold"
+                            onClick={() => !past && setSelectedSlot(slot)}
+                            disabled={past}
+                            aria-disabled={past}
+                            title={past ? "Too soon to book" : undefined}
+                            className={`px-4 py-2.5 rounded-full text-sm font-semibold ${past ? "line-through cursor-not-allowed" : "tap-scale"}`}
                             style={{
                               background: selected ? "var(--gold)" : "var(--card)",
                               border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`,
+                              opacity: past ? 0.4 : 1,
                             }}
                           >
                             {slot.label}
@@ -822,14 +878,14 @@ export default function ServiceBookingFlow({
       {phase === "providers" && (
         <div className="animate-fade-up">
           <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-            <MapPin size={20} color="var(--terracotta)" />
-            {COPY[serviceType].providerNoun} nearby
+            <PawPrint size={20} color="var(--terracotta)" />
+            Choose your {COPY[serviceType].providerNoun.toLowerCase().replace(/s$/, "")}
           </h1>
-          <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>Verified, ready to help.</p>
+          <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>Every one is ID-verified by our team.</p>
 
           {addError && (
             <p className="text-xs mb-4" style={{ color: "var(--terracotta)" }}>
-              Couldn't add that to your cart — please try again.
+              Couldn&rsquo;t book that. The time may have passed or be too soon, so please go back and pick another slot.
             </p>
           )}
 
@@ -843,101 +899,90 @@ export default function ServiceBookingFlow({
           ) : (
             <div className="space-y-3">
               {providers.map((p) => (
-                <div key={p.id} className="card">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {/* Real photo if the provider has uploaded one; otherwise a
-                          consistent placeholder avatar seeded by provider ID, so
-                          the same provider always shows the same stand-in face
-                          instead of a different random one on every reload. */}
-                      <img
-                        src={p.photoUrl || `https://i.pravatar.cc/150?u=${p.id}`}
-                        alt={p.user.name}
-                        className="w-12 h-12 rounded-full object-cover shrink-0"
-                        style={{ border: "1px solid var(--border)" }}
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="font-semibold text-sm truncate">{p.user.name}</p>
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--cream)", color: "var(--terracotta)" }}>
-                            <ShieldCheck size={10} /> Verified
-                          </span>
-                          {p.isSponsored && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>
-                              <Sparkles size={10} /> Sponsored
-                            </span>
-                          )}
-                          {/* Real campaign boost — distinct from the paid
-                              "Sponsored" flag above (a different, older
-                              mechanism). Only shown when an active, PAID
-                              campaign actually matched this search. */}
-                          {p.isCampaignBoosted && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}>
-                              <Star size={10} fill="var(--forest, #3d1426)" /> Featured
-                            </span>
-                          )}
-                          {p.availableAtRequestedTime === false && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
-                              <Clock size={10} /> Outside their hours
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
-                          <span className="flex items-center gap-1"><Star size={11} fill="var(--gold)" color="var(--gold)" /> {p.ratingAvg.toFixed(1)}</span>
-                          <span>· {p._count.bookings} completed</span>
-                          <span className="font-semibold" style={{ color: "var(--terracotta)" }}>
-                            ₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}
-                          </span>
-                        </div>
+                <div key={p.id} className="card !p-4">
+                  <div className="flex items-start gap-3">
+                    <ProAvatar name={p.user.name} photoUrl={p.photoUrl} size={52} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-bold text-[15px] leading-snug truncate" style={{ fontFamily: "var(--font-heading)" }}>{p.user.name}</p>
+                        <FavoriteButton providerId={p.id} />
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <FavoriteButton providerId={p.id} />
-                      {(serviceType === "TRAINING" || serviceType === "GROOMING") ? (
-                        // Training has no direct "Choose" purchase (no real
-                        // recurring billing built yet). Grooming COULD have
-                        // a direct "Choose" in principle (packages are
-                        // real, one-time-priced), but per-size pricing
-                        // means there's no single price to choose without
-                        // first picking a size — so both route to the
-                        // profile page, where the real package/size picker
-                        // (and, for Grooming, a real Add to Cart) lives.
-                        <Link
-                          href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}&service=${serviceType}`}
-                          onClick={() => trackCampaignClick(p.activeCampaignId)}
-                          className="btn-primary text-sm tap-scale"
-                        >
-                          View Plans
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            trackCampaignClick(p.activeCampaignId);
-                            addToCart(p.id);
-                          }}
-                          disabled={submittingId === p.id}
-                          className="btn-primary text-sm tap-scale"
-                        >
-                          {submittingId === p.id ? "…" : "Choose"}
-                        </button>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#dbe5f3", color: "#3d1426" }}>
+                          <ShieldCheck size={10} /> ID verified
+                        </span>
+                        {(p.isSponsored || p.isCampaignBoosted) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--gold)", color: "#3d1426" }}>
+                            <Sparkles size={10} /> Featured
+                          </span>
+                        )}
+                        {p.availableAtRequestedTime === true && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#fef3dc", color: "#3d1426" }}>
+                            <Clock size={10} /> Free at this time
+                          </span>
+                        )}
+                        {p.availableAtRequestedTime === false && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
+                            <Clock size={10} /> Outside their usual hours
+                          </span>
+                        )}
+                      </div>
+                      <ProTrackRecord p={p} noun={serviceType === "WALKING" ? "walk" : "booking"} />
+                      {p.bio && (
+                        <p className="text-xs mt-1.5 line-clamp-2" style={{ color: "var(--muted)" }}>{p.bio}</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Reliability score bar — based on the same declined/expired/
-                      provider-cancelled calculation used in ranking, now shown directly. */}
-                  <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                    <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
-                      <span style={{ color: "var(--muted)" }}>Reliability Score</span>
-                      <span>{p.reliabilityScore}%</span>
+                  <div className="flex items-center justify-between gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                    <div className="min-w-0">
+                      {serviceType === "WALKING" ? (
+                        <p className="text-sm">
+                          <span className="font-bold text-base" style={{ fontFamily: "var(--font-heading)" }}>₹{walkPriceRupees(walkDurationMin, isFirstWalk)}</span>
+                          {isFirstWalk && <span className="ml-1 text-xs line-through" style={{ color: "var(--muted)" }}>₹{WALK_PRICING_PAISE[walkDurationMin] / 100}</span>}
+                          <span className="block text-[11px]" style={{ color: "var(--muted)" }}>{walkDurationMin}-minute walk{isFirstWalk ? " · first-walk price" : ""}</span>
+                        </p>
+                      ) : (
+                        <p className="text-sm font-bold">₹{priceFor(serviceType, p, walkDurationMin).toFixed(0)}</p>
+                      )}
                     </div>
-                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${p.reliabilityScore}%`, background: "var(--panel-dark)" }}
-                      />
-                    </div>
+                    {(serviceType === "TRAINING" || serviceType === "GROOMING") ? (
+                      // Training and Grooming route to the profile page, where the
+                      // real package/size picker (and, for Grooming, a real Add to Cart) lives.
+                      <Link
+                        href={`/provider/${p.id}?petId=${selectedPetId ?? ""}&start=${encodeURIComponent(start)}&service=${serviceType}`}
+                        onClick={() => trackCampaignClick(p.activeCampaignId)}
+                        className="btn-primary text-sm tap-scale shrink-0"
+                      >
+                        View Plans
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          trackCampaignClick(p.activeCampaignId);
+                          addToCart(p.id);
+                        }}
+                        disabled={submittingId !== null}
+                        className="btn-primary text-sm tap-scale shrink-0"
+                        style={{ opacity: submittingId !== null && submittingId !== p.id ? 0.5 : 1 }}
+                      >
+                        {submittingId === p.id ? "Adding…" : `Book ${p.user.name.split(" ")[0]}`}
+                      </button>
+                    )}
                   </div>
+
+                  {/* Reliability only means something once there's a real history. */}
+                  {p._count.bookings >= 3 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
+                        <span style={{ color: "var(--muted)" }}>Shows up as booked</span>
+                        <span>{p.reliabilityScore}%</span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                        <div className="h-full rounded-full" style={{ width: `${p.reliabilityScore}%`, background: "var(--panel-dark)" }} />
+                      </div>
+                    </div>
+                  )}
 
                   {/* ===== Training + Grooming: experience + specialty tags
                       are SAMPLE data (no real field exists yet — providers

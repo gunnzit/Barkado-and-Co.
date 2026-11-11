@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { parseBookingTime, isTooSoon, IST_TIMEZONE } from "@/lib/istTime";
 import { getOrCreateUser } from "@/lib/auth";
 import { sendBookingEmail } from "@/lib/sendBookingEmail";
 
@@ -37,10 +38,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "This booking can't be rescheduled anymore" }, { status: 400 });
   }
 
-  const newStart = new Date(parsed.data.startTime);
-  const newEnd = new Date(parsed.data.endTime);
-  if (Number.isNaN(newStart.getTime()) || Number.isNaN(newEnd.getTime())) {
+  const newStart = parseBookingTime(parsed.data.startTime);
+  const newEnd = parseBookingTime(parsed.data.endTime);
+  if (Number.isNaN(newStart.getTime()) || Number.isNaN(newEnd.getTime()) || newEnd <= newStart) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
+  if (isTooSoon(newStart)) {
+    return NextResponse.json({ error: "That time has passed or is too soon. Please pick a later slot." }, { status: 400 });
   }
 
   // Moving the time is a real change to what the provider agreed to, so it
@@ -63,7 +67,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     serviceLabel: SERVICE_LABEL[booking.type] ?? booking.type,
     otherPartyName: user.name,
     petName: booking.pet.name,
-    newTime: newStart.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }),
+    newTime: newStart.toLocaleString("en-IN", { timeZone: IST_TIMEZONE, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }),
   });
 
   return NextResponse.json(updated);

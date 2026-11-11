@@ -58,7 +58,7 @@ export default async function TrainingPage() {
           serviceType="TRAINING"
           activePetId={activePet?.id ?? null}
           activePetName={activePet?.name ?? null}
-          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl }))}
+          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl, breed: p.breed }))}
           hasPets={pets.length > 0}
           showStartButton={true}
           defaultAddress={user.address}

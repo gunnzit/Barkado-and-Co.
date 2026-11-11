@@ -48,25 +48,21 @@ export default async function WalkBookingPage() {
               <ArrowLeft size={16} />
             </Link>
             <div className="min-w-0">
-              <h2 className="text-lg font-bold tracking-tight leading-tight">Book a walker</h2>
+              <h2 className="text-lg font-bold tracking-tight leading-tight">Book a walk</h2>
               {user.address && (
                 <Link href="/owner/profile" className="flex items-center gap-1 mt-0.5 text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
-                  <MapPin size={11} /> {user.address.split(",")[0].toUpperCase()} <ChevronRight size={11} />
+                  <MapPin size={11} /> {(user.address.split(",").map((part) => part.trim()).find((part) => /[a-z]/i.test(part)) ?? user.address).toUpperCase()} <ChevronRight size={11} />
                 </Link>
               )}
             </div>
           </div>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0" style={{ background: "#e4ebf6", color: "#2f6fb0" }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: "#2f9e5f" }} />
-            Nearby
-          </span>
         </div>
 
         <ServiceBookingFlow
           serviceType="WALKING"
           activePetId={activePet?.id ?? null}
           activePetName={activePet?.name ?? null}
-          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl }))}
+          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl, breed: p.breed }))}
           hasPets={pets.length > 0}
           showStartButton={true}
           isFirstWalk={isFirstWalk}
