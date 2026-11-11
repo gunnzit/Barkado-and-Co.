@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 
-// /walk-booking has its own sticky price + Book bar in the same spot.
-const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up", "/walk-booking"];
+// Booking pages (walks, grooming, training) have their own sticky price + Book bar in the same spot.
+const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up", "/walk-booking", "/grooming", "/training"];
 
 export default function CartPill() {
   const { totalCount, items } = useCart();

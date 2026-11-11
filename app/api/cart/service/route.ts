@@ -92,8 +92,17 @@ export async function POST(req: Request) {
     });
     // Rounded to whole rupees so the charge matches the price shown on screen.
     priceAmount = priorPaidWalk ? walkPrice : Math.round((walkPrice * FIRST_WALK_DISCOUNT_RATE) / 100) * 100;
+  } else if (data.serviceType === "GROOMING" && !data.groomingPackageId) {
+    // Groomer without packages: book their standard groom at the base rate
+    // they set on their profile.
+    if (!provider.pricePerGroom || provider.pricePerGroom <= 0) {
+      return NextResponse.json({ error: "This groomer hasn't set a price yet." }, { status: 400 });
+    }
+    priceAmount = provider.pricePerGroom;
+    groomingPackageName = "Standard groom";
+    groomingSize = pet.size;
   } else if (data.serviceType === "GROOMING") {
-    if (!data.groomingPackageId || !data.groomingSize) {
+    if (!data.groomingSize) {
       return NextResponse.json({ error: "Choose a package and size." }, { status: 400 });
     }
     const pkg = await prisma.groomingPackage.findUnique({ where: { id: data.groomingPackageId } });
@@ -110,6 +119,9 @@ export async function POST(req: Request) {
     groomingSize = data.groomingSize;
   } else {
     priceAmount = priceForFlatService(data.serviceType, provider);
+    if (priceAmount <= 0) {
+      return NextResponse.json({ error: "This pro hasn't set a price yet." }, { status: 400 });
+    }
   }
 
   const item = await prisma.cartItem.create({

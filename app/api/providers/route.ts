@@ -35,6 +35,8 @@ export async function GET(req: Request) {
       // completed volume AND the reliability penalty (declined/expired/
       // provider-cancelled) from the same query.
       bookings: { select: { status: true, cancelledBy: true } },
+      // Real packages so the grooming booking screen can offer them inline.
+      ...(service === "GROOMING" ? { groomingPackages: { select: { id: true, name: true, pricesBySize: true }, orderBy: { createdAt: "asc" as const } } } : {}),
     },
   });
 
