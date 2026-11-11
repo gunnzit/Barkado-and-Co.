@@ -7,7 +7,7 @@ import { useCart } from "@/components/CartProvider";
 import { useCartBump } from "@/lib/cartMotion";
 
 // Booking pages (walks, grooming, training) have their own sticky price + Book bar in the same spot.
-const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up", "/walk-booking", "/grooming", "/training", "/owner/profile", "/owner/addresses", "/owner/pets/"];
+const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up", "/walk-booking", "/grooming", "/training", "/owner/profile", "/owner/addresses", "/owner/pets/", "/passport/"];
 
 export default function CartPill() {
   const { totalCount, items } = useCart();

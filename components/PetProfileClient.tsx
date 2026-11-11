@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import {
   PawPrint, Camera, Pencil, Plus, Syringe, AlertTriangle, HeartHandshake, Stethoscope, Phone,
   ShieldCheck, Cpu, Pill, Users, Footprints, Scissors, GraduationCap, Home as HomeIcon, Check,
-  ChevronRight, X, Loader2, Star, CalendarClock, Sparkles,
+  ChevronRight, X, Loader2, Star, CalendarClock, Sparkles, Share2,
 } from "lucide-react";
 import TaskHeader from "@/components/TaskHeader";
 import { derivePassportNumber } from "@/lib/passportId";
+import PassportShareSheet from "@/components/PassportShareSheet";
 
 /* ---------- Types ---------- */
 
@@ -53,6 +54,7 @@ type Pet = {
   attendingVetName: string | null;
   vetEmergencyPhone: string | null;
   photoUrl: string | null;
+  shareToken: string | null;
   createdAt: string;
   updatedAt: string;
   owner: { name: string; phone: string | null };
@@ -354,6 +356,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const passportNo = derivePassportNumber(pet.id);
   const age = ageLabel(pet.birthday);
@@ -470,12 +473,15 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
               ))}
             </dl>
 
-            <div className="relative flex items-end justify-between mt-4">
-              <button type="button" onClick={() => setSheet("basics")} className="tap-scale inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-xs font-bold" style={{ background: YELLOW, color: INK }}>
-                <Pencil size={12} /> Edit basics
+            <div className="relative grid grid-cols-2 gap-2 mt-4">
+              <button type="button" onClick={() => setShareOpen(true)} className="tap-scale inline-flex items-center justify-center gap-1.5 h-11 rounded-full text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
+                <Share2 size={14} /> {pet.shareToken ? "Shared" : "Share"}
               </button>
-              <p className="text-[15px]" style={{ color: YELLOW, fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
+              <button type="button" onClick={() => setSheet("basics")} className="tap-scale inline-flex items-center justify-center gap-1.5 h-11 rounded-full text-sm font-bold" style={{ ...H, background: "rgba(255,255,255,0.1)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.25)" }}>
+                <Pencil size={13} /> Edit basics
+              </button>
             </div>
+            <p className="relative text-right mt-3 text-[15px]" style={{ color: YELLOW, fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
           </section>
 
           {/* ---------- Completeness ---------- */}
@@ -751,6 +757,9 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       </main>
 
       {sheet && <EditSheet sheet={sheet} pet={pet} onClose={() => setSheet(null)} onSaved={onSaved} />}
+      {shareOpen && (
+        <PassportShareSheet petId={pet.id} petName={pet.name} token={pet.shareToken} onTokenChange={(t) => setPet((p) => ({ ...p, shareToken: t }))} onClose={() => setShareOpen(false)} />
+      )}
     </div>
   );
 }
