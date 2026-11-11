@@ -1,18 +1,23 @@
 "use client";
 
-import BrandLogo from "@/components/BrandLogo";
 import { useEffect, useState } from "react";
+import BrandLoader from "@/components/BrandLoader";
 
+// Shown once per browser session when the app first opens.
 export default function SplashScreen() {
   const [phase, setPhase] = useState<"hidden" | "showing" | "leaving">("hidden");
 
   useEffect(() => {
-    if (sessionStorage.getItem("barkado_splash_shown")) return;
-    sessionStorage.setItem("barkado_splash_shown", "1");
+    try {
+      if (sessionStorage.getItem("barkado_splash_shown")) return;
+      sessionStorage.setItem("barkado_splash_shown", "1");
+    } catch {
+      return; // storage blocked: skip the splash rather than risk showing it on every page
+    }
     setPhase("showing");
 
-    const leaveTimer = setTimeout(() => setPhase("leaving"), 1500);
-    const hideTimer = setTimeout(() => setPhase("hidden"), 1900);
+    const leaveTimer = setTimeout(() => setPhase("leaving"), 1900);
+    const hideTimer = setTimeout(() => setPhase("hidden"), 2280);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(hideTimer);
@@ -20,61 +25,5 @@ export default function SplashScreen() {
   }, []);
 
   if (phase === "hidden") return null;
-
-  return (
-    <div
-      className={`fixed inset-0 flex flex-col items-center justify-center splash-overlay ${phase === "leaving" ? "splash-leaving" : ""}`}
-      style={{ background: "var(--panel-dark)", zIndex: 300 }}
-    >
-      <div className="splash-icon mb-4">
-        <BrandLogo variant="monogram" tone="ivory" className="w-24 h-auto" alt="" />
-      </div>
-      <p className="splash-text"><BrandLogo variant="wordmark" tone="ivory" className="h-14 w-auto" /></p>
-      <p className="splash-tagline font-script text-lg mt-3" style={{ color: "var(--brand-yellow)" }}>
-        A Hug in every Paw
-      </p>
-
-      <style jsx>{`
-        .splash-overlay {
-          animation: splashFadeIn 200ms ease-out;
-        }
-        .splash-overlay.splash-leaving {
-          animation: splashFadeOut 400ms ease-in forwards;
-        }
-        @keyframes splashFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes splashFadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-        .splash-icon {
-          opacity: 0;
-          transform: scale(0.5);
-          animation: splashIconIn 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms forwards;
-          box-shadow: 0 0 0 0 rgba(249, 221, 138, 0.4);
-        }
-        @keyframes splashIconIn {
-          0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0 0 rgba(249, 221, 138, 0.4); }
-          60% { opacity: 1; transform: scale(1.08); }
-          80% { box-shadow: 0 0 0 18px rgba(249, 221, 138, 0); }
-          100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 18px rgba(249, 221, 138, 0); }
-        }
-        .splash-text {
-          opacity: 0;
-          transform: translateY(10px);
-          animation: splashTextIn 500ms ease-out 550ms forwards;
-        }
-        .splash-tagline {
-          opacity: 0;
-          transform: translateY(10px);
-          animation: splashTextIn 500ms ease-out 700ms forwards;
-        }
-        @keyframes splashTextIn {
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </div>
-  );
+  return <BrandLoader variant="splash" leaving={phase === "leaving"} />;
 }
