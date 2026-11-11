@@ -11,6 +11,7 @@ import {
 import TaskHeader from "@/components/TaskHeader";
 import { derivePassportNumber } from "@/lib/passportId";
 import PassportShareSheet from "@/components/PassportShareSheet";
+import { passportChecklist, type PassportStepKey } from "@/lib/passportProgress";
 
 /* ---------- Types ---------- */
 
@@ -358,6 +359,14 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const [deleting, setDeleting] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
+  // Homepage "Share" opens the share sheet straight away (?share=1).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("share") === "1") {
+      setShareOpen(true);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+
   const passportNo = derivePassportNumber(pet.id);
   const age = ageLabel(pet.birthday);
   const allergyText = [...pet.allergyTags, ...(has(pet.allergies) ? [pet.allergies!.trim()] : [])].join(", ");
@@ -370,16 +379,21 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
   const dueSoon = vaxSorted.filter((v) => vaxStatus(v).status === "DUE_SOON").length;
 
   // Completeness: what makes the passport useful to a vet, a pro or a boarder.
-  const checklist: { label: string; done: boolean; act: () => void }[] = [
-    { label: "Add a photo", done: has(pet.photoUrl), act: () => document.getElementById("pp-photo")?.click() },
-    { label: "Add a birthday", done: has(pet.birthday), act: () => setSheet("basics") },
-    { label: "Add weight", done: pet.weightKg != null, act: () => setSheet("basics") },
-    { label: "Add a vaccine", done: pet.vaccinations.length > 0, act: () => router.push("/owner/vaccines") },
-    { label: "Note any allergies", done: has(allergyText), act: () => setSheet("health") },
-    { label: "Add care notes", done: personality.length > 0 || has(pet.notes), act: () => setSheet("care") },
-    { label: "Add your vet", done: has(pet.vetHospitalName), act: () => setSheet("vet") },
-    { label: "Add an emergency contact", done: pet.emergencyContacts.length > 0 || has(pet.vetEmergencyPhone), act: () => router.push(`/owner/pets/${pet.id}/step-2`) },
-  ];
+  const ACTIONS: Record<PassportStepKey, () => void> = {
+    photo: () => document.getElementById("pp-photo")?.click(),
+    birthday: () => setSheet("basics"),
+    weight: () => setSheet("basics"),
+    vaccine: () => router.push("/owner/vaccines"),
+    allergies: () => setSheet("health"),
+    care: () => setSheet("care"),
+    vet: () => setSheet("vet"),
+    emergency: () => router.push(`/owner/pets/${pet.id}/step-2`),
+  };
+  const checklist = passportChecklist({
+    ...pet,
+    vaccinationCount: pet.vaccinations.length,
+    emergencyContactCount: pet.emergencyContacts.length,
+  }).map((c) => ({ ...c, act: ACTIONS[c.key] }));
   const doneCount = checklist.filter((c) => c.done).length;
   const pct = Math.round((doneCount / checklist.length) * 100);
   const nextStep = checklist.find((c) => !c.done);

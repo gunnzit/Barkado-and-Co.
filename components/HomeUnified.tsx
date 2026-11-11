@@ -5,8 +5,9 @@ import { useClerk } from "@clerk/nextjs";
 import {
   ArrowRight, ChevronRight, ShieldCheck, BadgeCheck, RotateCcw, CalendarClock,
   Syringe, Sparkles, Plus, Star, PawPrint, Lock, Undo2, Footprints, Scissors,
-  GraduationCap, ShoppingBag,
+  GraduationCap, ShoppingBag, Share2, QrCode,
 } from "lucide-react";
+import MonogramMark from "@/components/MonogramMark";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
 import { WagglesStrip, EarnBanner, ReviewsSection, SiteFooter, type HomeReview } from "@/components/HomeExtras";
 
@@ -32,7 +33,8 @@ const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", GROOMIN
 type Prices = { walkFromPaise: number; walkFirstPaise: number | null; groomFromPaise: number | null; trainFromPaise: number | null };
 type Counts = { walkers: number; groomers: number; trainers: number; products: number };
 type Pro = { id: string; name: string; photoUrl: string; ratingAvg: number; completed: number; services: string[] };
-type Product = { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[] };
+type Product = { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[]; fits: boolean };
+type Passport = { number: string; pct: number; next: string | null; shared: boolean };
 type Upcoming = { id: string; type: string; startTime: Date; status: string; providerName: string; petName: string };
 type LastCompleted = { type: string; providerName: string; petName: string; priceAmount: number };
 
@@ -75,6 +77,7 @@ export default function HomeUnified({
   featuredPros,
   products,
   reviews = [],
+  passport = null,
 }: {
   isSignedIn: boolean;
   userName: string | null;
@@ -92,6 +95,7 @@ export default function HomeUnified({
   featuredPros: Pro[];
   products: Product[];
   reviews?: HomeReview[];
+  passport?: Passport | null;
 }) {
   const { openSignIn } = useClerk();
   const gate = (e: React.MouseEvent) => {
@@ -158,7 +162,7 @@ export default function HomeUnified({
         <div className="max-w-2xl mx-auto w-full">
 
           {/* ===== Returning customer: what's next for their dog ===== */}
-          {isSignedIn && (upcoming || lastCompleted || nextVaccine) && (
+          {isSignedIn && (upcoming || lastCompleted) && (
             <section className="enter-up px-4 pt-2 pb-1 space-y-2.5">
               {upcoming && (
                 <Link href="/owner/bookings" className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: `1.5px solid ${PLUM}`, boxShadow: CARD_SHADOW }}>
@@ -195,30 +199,6 @@ export default function HomeUnified({
                 </div>
               )}
 
-              {activePet && (nextVaccine || pawPointsBalance > 0) && (
-                <Link href={`/owner/pets/${activePet.id}`} className="flex items-center gap-3 p-3.5 rounded-[1.75rem] tap-scale" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
-                  <span className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center" style={{ background: IVORY, boxShadow: `0 0 0 2px ${YELLOW}` }}>
-                    {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={18} color={PLUM} />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>{activePet.name}&rsquo;s Paw Passport</p>
-                    <p className="text-xs flex flex-wrap gap-x-2" style={{ color: MUTED }}>
-                      {nextVaccine && (
-                        <span className="inline-flex items-center gap-1">
-                          <Syringe size={11} />
-                          {nextVaccine.name} {new Date(nextVaccine.dueDate) < new Date() ? "overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
-                        </span>
-                      )}
-                      {pawPointsBalance > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <Sparkles size={11} /> {pawPointsBalance} pts = {rupees(pawPointsValuePaise)} off
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <ChevronRight size={18} color={PLUM} className="shrink-0" />
-                </Link>
-              )}
             </section>
           )}
 
@@ -243,9 +223,14 @@ export default function HomeUnified({
                     {prices.walkFirstPaise && (
                       <p className="text-xs" style={{ color: "rgba(251,240,217,0.75)" }}>10% off your first walk</p>
                     )}
-                    <Link href="/walk-booking" onClick={gate} className="mt-4 inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
-                      Book a walk <ArrowRight size={15} />
-                    </Link>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Link href="/walk-booking" onClick={gate} className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
+                        Book a walk <ArrowRight size={15} />
+                      </Link>
+                      <Link href="/accessories" className="inline-flex items-center gap-1.5 px-4 py-3 rounded-full text-sm font-bold tap-scale" style={{ background: "rgba(255,255,255,0.12)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.3)", ...H }}>
+                        <ShoppingBag size={14} /> Shop
+                      </Link>
+                    </div>
                   </div>
                   <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="enter-pop w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)", ["--d" as string]: "80ms" }} />
                 </div>
@@ -254,9 +239,124 @@ export default function HomeUnified({
             </section>
           )}
 
+          {/* ===== PawPassport: what only Barkado has ===== */}
+          <section className="px-4 pt-1 pb-3">
+            {activePet && passport ? (
+              <div className="enter-up relative overflow-hidden rounded-[2rem] p-4 pb-6" style={{ ["--d" as string]: "60ms", background: PLUM, boxShadow: "0 14px 30px -12px rgba(110,30,59,0.5)" }}>
+                <div className="relative flex items-center gap-3.5">
+                  <Link href={`/owner/pets/${activePet.id}`} className="shrink-0 tap-scale" aria-label={`Open ${activePet.name}'s PawPassport`}>
+                    <span className="block w-16 h-16 rounded-full p-[3px]" style={{ background: YELLOW }}>
+                      {activePet.photoUrl ? (
+                        <img src={activePet.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        <span className="w-full h-full rounded-full flex items-center justify-center" style={{ background: "#5a1830" }}><PawPrint size={22} color={YELLOW} /></span>
+                      )}
+                    </span>
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: YELLOW }}>PawPassport · {passport.number}</p>
+                    <p className="font-bold text-[18px] leading-tight truncate mt-0.5" style={{ ...H, color: "#fffaf0" }}>{activePet.name}&rsquo;s passport</p>
+                    {passport.pct < 100 ? (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }} aria-hidden="true">
+                          <span className="block h-full rounded-full origin-left bar-in" style={{ background: YELLOW, transform: `scaleX(${passport.pct / 100})` }} />
+                        </span>
+                        <span className="text-[11px] font-bold shrink-0" style={{ color: YELLOW }}>{passport.pct}%</span>
+                      </div>
+                    ) : (
+                      <p className="text-xs mt-1 font-semibold" style={{ color: YELLOW }}>Complete. Good human!</p>
+                    )}
+                  </div>
+                </div>
+                {(nextVaccine || (passport.pct < 100 && passport.next)) && (
+                  <p className="relative mt-3 text-xs flex items-center gap-1.5" style={{ color: "rgba(251,240,217,0.9)" }}>
+                    {nextVaccine ? (
+                      <>
+                        <Syringe size={12} color={YELLOW} />
+                        {nextVaccine.name} {new Date(nextVaccine.dueDate) < new Date() ? "is overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={12} color={YELLOW} /> Next: {passport.next!.toLowerCase()}
+                      </>
+                    )}
+                  </p>
+                )}
+                <div className="relative grid grid-cols-2 gap-2 mt-3.5">
+                  <Link href={`/owner/pets/${activePet.id}`} className="tap-scale h-11 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
+                    Open passport
+                  </Link>
+                  <Link href={`/owner/pets/${activePet.id}?share=1`} className="tap-scale h-11 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-bold" style={{ ...H, background: "rgba(255,255,255,0.1)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.25)" }}>
+                    <Share2 size={14} /> {passport.shared ? "Shared" : "Share"}
+                  </Link>
+                </div>
+                <WaveEdge />
+              </div>
+            ) : (
+              <Link href={isSignedIn ? "/owner/pets/new" : "/owner/pets"} onClick={gate} className="enter-up hover-lift tap-scale block relative overflow-hidden rounded-[2rem] p-5 pb-7" style={{ ["--d" as string]: "60ms", background: PLUM, boxShadow: "0 14px 30px -12px rgba(110,30,59,0.5)" }}>
+                <span className="absolute -right-5 -bottom-6 w-32 h-32 opacity-[0.08] pointer-events-none" aria-hidden="true"><MonogramMark className="w-full h-full" color="#fbf0d9" title="" /></span>
+                <p className="relative text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: YELLOW }}>Only at Barkado &amp; Co.</p>
+                <p className="relative font-bold text-[22px] leading-tight mt-1" style={{ ...H, color: "#fffaf0" }}>Every good dog deserves a PawPassport</p>
+                <ul className="relative mt-3 space-y-1.5 text-[13px]" style={{ color: "rgba(251,240,217,0.92)" }}>
+                  <li className="flex items-center gap-2"><Syringe size={14} color={YELLOW} /> Vaccines, with reminders before they&rsquo;re due</li>
+                  <li className="flex items-center gap-2"><QrCode size={14} color={YELLOW} /> Share with your vet or boarder by QR code</li>
+                  <li className="flex items-center gap-2"><Star size={14} color={YELLOW} /> Stamps for every walk, groom and lesson</li>
+                </ul>
+                <span className="relative mt-4 inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
+                  Create a free passport <ArrowRight size={15} />
+                </span>
+                <WaveEdge />
+              </Link>
+            )}
+          </section>
+
+          {/* ===== Shop: the shelf, sized for the dog where we know it ===== */}
+          {products.length > 0 && (
+            <section className="px-4 py-3">
+              <SectionTitle
+                title={petName && products.some((p) => p.fits) ? `Shop for ${petName}` : "From the Shop"}
+                sub="Collars, beds, treats and toys, delivered"
+                href="/accessories"
+                cta={counts.products > products.length ? `Shop all ${counts.products}` : "Shop all"}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                {products.map((p, i) => (
+                  <Link key={p.id} href={`/accessories/${p.id}`} className="enter-up hover-lift rounded-[1.5rem] p-2 tap-scale" style={{ ["--d" as string]: `${100 + i * 50}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                    <div className="relative img-frame aspect-square !rounded-[1.1rem] flex items-center justify-center" style={{ background: "#fef3dc" }}>
+                      {p.imageUrls[0] ? (
+                        <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <MonogramMark className="w-12 h-12 opacity-30" color={PLUM} title="" />
+                      )}
+                      {p.fits && petName && (
+                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: YELLOW, color: INK }}>
+                          <PawPrint size={10} /> Fits {petName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="px-1 pt-2 pb-1">
+                      <p className="font-bold text-sm line-clamp-1" style={{ ...H, color: PLUM }}>{p.name}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-sm" style={{ color: INK }}>
+                          <span className="font-bold" style={H}>{rupees(p.price)}</span>
+                          {p.compareAtPrice && p.compareAtPrice > p.price && <span className="ml-1 text-[11px] line-through" style={{ color: MUTED }}>{rupees(p.compareAtPrice)}</span>}
+                        </span>
+                        <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={14} /></span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <Link href="/accessories" className="hover-lift tap-scale mt-3 flex items-center justify-between gap-3 rounded-[1.5rem] px-4 py-3" style={{ background: YELLOW }}>
+                <span className="text-sm font-bold" style={{ ...H, color: INK }}>Free delivery on orders over ₹500</span>
+                <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: PLUM }}>Shop <ArrowRight size={13} /></span>
+              </Link>
+            </section>
+          )}
+
           {/* ===== The three services ===== */}
           <section className="px-4 py-3">
-            <SectionTitle title={isReturning ? "Book again" : "What we do"} sub="Walking, grooming and training, booked in a few taps" />
+            <SectionTitle title={isReturning ? "Book again" : "Care at your door"} sub="Walking, grooming and training, booked in a few taps" />
 
             {/* Walking leads — the most frequent, most repeatable service */}
             <Link href={walk.href} onClick={gate} className="enter-up hover-lift block relative overflow-hidden rounded-[1.75rem] mb-3 tap-scale" style={{ ["--d" as string]: "120ms", background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
@@ -389,59 +489,7 @@ export default function HomeUnified({
 
           <ReviewsSection reviews={reviews} />
 
-          {/* ===== Shop ===== */}
-          <section className="px-4 py-3">
-            {products.length >= 2 ? (
-              <>
-                <SectionTitle title="From the Shop" sub="Collars, beds, treats and toys" href="/accessories" cta="Shop all" />
-                <div className="grid grid-cols-2 gap-3">
-                  {products.slice(0, 4).map((p) => (
-                    <Link key={p.id} href={`/accessories/${p.id}`} className="hover-lift rounded-[1.5rem] p-2 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
-                      <div className="img-frame aspect-square !rounded-[1.1rem]" style={{ background: IVORY }}>
-                        <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="px-1 pt-2 pb-1">
-                        <p className="font-bold text-sm line-clamp-1" style={{ ...H, color: PLUM }}>{p.name}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="font-bold text-sm" style={{ ...H, color: INK }}>{rupees(p.price)}</span>
-                          <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={14} /></span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            ) : counts.products > 0 ? (
-              <Link href="/accessories" className="hover-lift relative flex items-center gap-3 overflow-hidden rounded-[1.75rem] p-4 pb-6 tap-scale" style={{ background: PLUM }}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: YELLOW }}>The Artisan Shelf</p>
-                  <p className="font-script text-[26px] leading-tight text-white">Spoil them a little EXTRA</p>
-                  <p className="text-xs mt-1" style={{ color: "rgba(251,240,217,0.85)" }}>{counts.products} collars, beds, treats and toys</p>
-                  <span className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-bold" style={{ background: YELLOW, color: INK, ...H }}>
-                    <ShoppingBag size={13} /> Shop now
-                  </span>
-                </div>
-                <img src="/images/brand/collar-plum.jpg" alt="" className="w-28 h-28 object-cover rounded-2xl shrink-0" />
-                <WaveEdge />
-              </Link>
-            ) : null}
-          </section>
 
-          {/* ===== Paw Passport — free with every account ===== */}
-          {!activePet && (
-            <section className="px-4 py-3">
-              <Link href="/owner/pets" onClick={gate} className="hover-lift flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
-                <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
-                  <BadgeCheck size={22} color={PLUM} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-[16px] leading-tight" style={{ ...H, color: PLUM }}>Free Paw Passport</p>
-                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>Vaccines, care notes and every booking for your dog, in one place.</p>
-                </div>
-                <ChevronRight size={18} color={PLUM} className="shrink-0" />
-              </Link>
-            </section>
-          )}
 
           <EarnBanner />
         </div>

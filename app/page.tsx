@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import HomeUnified from "@/components/HomeUnified";
+import { derivePassportNumber } from "@/lib/passportId";
+import { passportProgress } from "@/lib/passportProgress";
 import { getPawPointsBalance, redemptionValuePaise } from "@/lib/pawPoints";
 
 // Same base price and first-walk discount the cart API charges
@@ -38,10 +40,10 @@ export default async function Home() {
     prisma.groomingPackage.findMany({ where: { provider: { verified: true } }, select: { pricesBySize: true } }),
     prisma.trainingPackage.findMany({ where: { provider: { verified: true } }, select: { pricePaise: true } }),
     prisma.product.findMany({
-      where: { active: true, imageUrls: { isEmpty: false } },
-      take: 4,
+      where: { active: true },
+      take: 12,
       orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, price: true, compareAtPrice: true, imageUrls: true },
+      select: { id: true, name: true, price: true, compareAtPrice: true, imageUrls: true, suitableSizes: true },
     }),
     prisma.product.count({ where: { active: true } }),
     // Real, written reviews only (4★ and up, with a comment of some substance).
@@ -96,7 +98,7 @@ export default async function Home() {
 
   // ===== Signed-in data =====
   const pets = user
-    ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { vaccineName: true, nextDueDate: true } } } })
+    ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { vaccineName: true, nextDueDate: true } }, _count: { select: { emergencyContacts: true } } } })
     : [];
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
@@ -155,6 +157,21 @@ export default async function Home() {
         .sort((a, b) => a.nextDueDate!.getTime() - b.nextDueDate!.getTime())[0] ?? null
     : null;
 
+  // Shop: products that fit the active dog's size first, then photos first.
+  const petSize = activePet?.size ?? null;
+  const shopPicks = [...productsWithPhotos]
+    .map((p) => ({ ...p, fits: !!petSize && p.suitableSizes.includes(petSize) }))
+    .sort((a, b) => Number(b.fits) - Number(a.fits) || Number(b.imageUrls.length > 0) - Number(a.imageUrls.length > 0))
+    .slice(0, 4)
+    .map(({ suitableSizes: _s, ...p }) => p);
+
+  const passport = activePet
+    ? (() => {
+        const prog = passportProgress({ ...activePet, vaccinationCount: activePet.vaccinations.length, emergencyContactCount: activePet._count.emergencyContacts });
+        return { number: derivePassportNumber(activePet.id), pct: prog.pct, next: prog.next?.label ?? null, shared: !!activePet.shareToken };
+      })()
+    : null;
+
   return (
     <div className={`w-full ${themeClass}`}>
       <HomeUnified
@@ -177,7 +194,8 @@ export default async function Home() {
         }}
         counts={{ walkers: walkers.length, groomers: groomers.length, trainers: trainers.length, products: activeProductCount }}
         featuredPros={featuredPros}
-        products={productsWithPhotos}
+        products={shopPicks}
+        passport={passport}
         reviews={reviews}
       />
     </div>
