@@ -7,6 +7,8 @@ import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
 import { Sparkles, ShoppingBag, User, Search, Navigation, ChevronDown } from "lucide-react";
 import LocationPickerModal from "@/components/LocationPickerModal";
+import { useCart } from "@/components/CartProvider";
+import { useCartBump } from "@/lib/cartMotion";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
@@ -17,13 +19,20 @@ export default function HomeMobileHeader({
   userPhone,
   cartCount,
   pawPointsBalance,
+  showSearch = true,
 }: {
   userAddress: string | null;
   userPhone: string | null;
   cartCount: number;
   pawPointsBalance: number;
+  /** Off on pages with their own search box (the Shop). */
+  showSearch?: boolean;
 }) {
   const { user } = useUser();
+  // Live count from the cart (the server-rendered number goes stale after an add).
+  const { totalCount, ready } = useCart();
+  const liveCount = ready ? totalCount : cartCount;
+  const cartRef = useCartBump<HTMLAnchorElement>();
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [addresses, setAddresses] = useState<Address[] | null>(null);
@@ -60,20 +69,22 @@ export default function HomeMobileHeader({
             <BrandLogo variant="wordmark" className="h-8 w-auto" />
           </h1>
           <div className="flex items-center gap-2">
-            <button onClick={openSearch} className="w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label="Search">
-              <Search size={16} />
-            </button>
+            {showSearch && (
+              <button onClick={openSearch} className="w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label="Search">
+                <Search size={16} />
+              </button>
+            )}
             {user && (
               <Link href="/owner/wallet" className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tap-scale" style={{ background: "#f9dd8a", ...H, color: "#3d1426" }}>
                 <Sparkles size={12} color="#6e1e3b" />
                 {pawPointsBalance.toLocaleString("en-IN")} pts
               </Link>
             )}
-            <Link href="/cart" className="relative w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label="Cart">
+            <Link ref={cartRef} href="/cart" data-cart-target className="relative w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label={liveCount > 0 ? `Cart, ${liveCount} item${liveCount === 1 ? "" : "s"}` : "Cart"}>
               <ShoppingBag size={17} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: "#6e1e3b", color: "white", ...H }}>
-                  {cartCount}
+              {liveCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center overflow-hidden" style={{ background: "#6e1e3b", color: "white", ...H }}>
+                  <span key={liveCount} className="num-roll">{liveCount}</span>
                 </span>
               )}
             </Link>

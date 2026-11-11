@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import ShopPageClient from "@/components/ShopPageClient";
 import { resolveThemeClass } from "@/lib/breedTheme";
+import { getPawPointsBalance } from "@/lib/pawPoints";
 
 export default async function AccessoriesPage() {
   const user = await getOrCreateUser();
@@ -25,6 +26,10 @@ export default async function AccessoriesPage() {
       include: { items: { include: { product: true } } },
     }),
   ]);
+
+  const [pawPointsBalance, cartCount] = user
+    ? await Promise.all([getPawPointsBalance(user.id), prisma.cartItem.count({ where: { userId: user.id } })])
+    : [0, 0];
 
   const bestsellerIds = new Set(topSellingIds.filter((t) => t._count.productId > 0).map((t) => t.productId));
 
@@ -108,6 +113,9 @@ export default async function AccessoriesPage() {
         ) : (
           <ShopPageClient
             userAddress={user?.address ?? null}
+            userPhone={user?.phone ?? null}
+            cartCount={cartCount as number}
+            pawPointsBalance={pawPointsBalance as number}
             products={serialized}
             featuredProduct={featuredProduct}
             tailoredProducts={tailoredProducts}
