@@ -107,7 +107,7 @@ h1, h2 {
   background: rgba(110, 30, 59, 0.06);
 }
 
-/* Cards follow the Stitch design system (design/stitch/*/DESIGN.md):
+/* Cards follow the Stitch design system (DESIGN.md in each design/stitch folder):
    extra-large radius, warm hairline border, soft plum-tinted shadow. */
 .card {
   background: var(--card);
