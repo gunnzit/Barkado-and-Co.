@@ -135,7 +135,7 @@ export default function AccessoriesListClient({
           <div key={active ?? "all"} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {visible.map((item, i) => (
               <div key={item.id} className="enter-up flex" style={{ ["--d" as string]: `${Math.min(i % PAGE_SIZE, 7) * 40}ms` }}>
-                <div className="flex-1 min-w-0 flex flex-col [&>*]:flex-1">
+                <div className="reveal flex-1 min-w-0 flex flex-col [&>*]:flex-1">
                   <AccessoryCard item={item} fitsPetName={petSize && petName && active !== FITS && item.suitableSizes && item.suitableSizes.includes(petSize) ? petName : null} />
                 </div>
               </div>

@@ -28,7 +28,7 @@ const WAGGLES = [
 /** A strip of happy dogs, polaroid style, to bring the brand's warmth to the middle of the page. */
 export function WagglesStrip() {
   return (
-    <section className="py-4" aria-labelledby="waggles-title">
+    <section className="reveal py-4" aria-labelledby="waggles-title">
       <div className="px-4 mb-3">
         <h2 id="waggles-title" className="font-script text-[34px] leading-none" style={{ color: PLUM }}>WAGGLES!</h2>
         <p className="text-xs mt-1" style={{ color: MUTED }}>Happy dogs, happy humans. That&rsquo;s the whole idea.</p>
@@ -80,7 +80,7 @@ const SERVICE_NAME: Record<string, string> = { WALKING: "Walk", GROOMING: "Groom
 export function ReviewsSection({ reviews }: { reviews: HomeReview[] }) {
   if (reviews.length === 0) return null;
   return (
-    <section className="py-3" aria-labelledby="reviews-title">
+    <section className="reveal py-3" aria-labelledby="reviews-title">
       <div className="px-4 mb-3">
         <h2 id="reviews-title" className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>What pet parents say</h2>
         <p className="text-xs" style={{ color: MUTED }}>From real Barkado bookings</p>
