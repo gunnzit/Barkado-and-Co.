@@ -1,25 +1,16 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
-import { Sparkles, ShoppingBag, User, Search, Mic, Navigation, ChevronDown } from "lucide-react";
+import { Sparkles, ShoppingBag, User, Search, Navigation, ChevronDown } from "lucide-react";
 import LocationPickerModal from "@/components/LocationPickerModal";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
 type Address = { id: string; label: string; fullAddress: string; receiverName: string; receiverPhone: string; isDefault: boolean };
-
-const SEARCH_PHRASES = [
-  "dog walking in 15m",
-  "puppy food",
-  "spa van nearby",
-  "dog groomer today",
-  "training classes",
-  "leashes & collars",
-];
 
 export default function HomeMobileHeader({
   userAddress,
@@ -59,37 +50,6 @@ export default function HomeMobileHeader({
   // happen on that page, not in this header.
   const openSearch = () => router.push("/search");
 
-  const [placeholderText, setPlaceholderText] = useState("");
-  useEffect(() => {
-    let phraseIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      const current = SEARCH_PHRASES[phraseIndex];
-      if (!deleting) {
-        charIndex += 1;
-        setPlaceholderText(current.slice(0, charIndex));
-        if (charIndex === current.length) {
-          deleting = true;
-          timeoutId = setTimeout(tick, 1400);
-          return;
-        }
-      } else {
-        charIndex -= 1;
-        setPlaceholderText(current.slice(0, charIndex));
-        if (charIndex === 0) {
-          deleting = false;
-          phraseIndex = (phraseIndex + 1) % SEARCH_PHRASES.length;
-        }
-      }
-      timeoutId = setTimeout(tick, deleting ? 35 : 65);
-    };
-
-    timeoutId = setTimeout(tick, 600);
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   return (
     <header className="max-w-6xl mx-auto pt-safe" style={{ background: "rgba(255,250,240,0.95)", borderBottom: "1px solid rgba(227,207,196,0.2)" }}>
@@ -100,10 +60,15 @@ export default function HomeMobileHeader({
             <BrandLogo variant="wordmark" className="h-8 w-auto" />
           </h1>
           <div className="flex items-center gap-2">
-            <Link href="/owner/wallet" className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tap-scale" style={{ background: "#f3e2c4", border: "1px solid rgba(227,207,196,0.4)", ...H, color: "#2a0c18" }}>
-              <Sparkles size={13} color="#f9dd8a" />
-              {pawPointsBalance.toLocaleString("en-IN")} PTS
-            </Link>
+            <button onClick={openSearch} className="w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label="Search">
+              <Search size={16} />
+            </button>
+            {user && (
+              <Link href="/owner/wallet" className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tap-scale" style={{ background: "#f9dd8a", ...H, color: "#3d1426" }}>
+                <Sparkles size={12} color="#6e1e3b" />
+                {pawPointsBalance.toLocaleString("en-IN")} pts
+              </Link>
+            )}
             <Link href="/cart" className="relative w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)", color: "#2a0c18" }} aria-label="Cart">
               <ShoppingBag size={17} />
               {cartCount > 0 && (
@@ -131,19 +96,6 @@ export default function HomeMobileHeader({
           </button>
         </div>
 
-        <button
-          onClick={openSearch}
-          className="relative flex items-center w-full h-10 rounded-xl px-3 text-left"
-          style={{ background: "#ffffff", boxShadow: "0 2px 12px rgba(61,20,38,0.03)", border: "1px solid rgba(227,207,196,0.3)" }}
-        >
-          <Search size={18} color="#5e4752" className="mr-2 shrink-0" />
-          <span className="flex-1 text-xs truncate" style={{ color: "#735c68" }}>
-            Search '{placeholderText}'...
-          </span>
-          <div className="flex items-center gap-1.5 pl-2 shrink-0" style={{ borderLeft: "1px solid rgba(227,207,196,0.3)" }}>
-            <Mic size={17} color="#6e1e3b" />
-          </div>
-        </button>
       </div>
 
       {pickerOpen && !loadingAddresses && (

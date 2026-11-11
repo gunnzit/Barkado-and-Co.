@@ -3,129 +3,134 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { resolveThemeClass } from "@/lib/breedTheme";
 import HomeUnified from "@/components/HomeUnified";
-import { getPawPointsBalance } from "@/lib/pawPoints";
+import { getPawPointsBalance, redemptionValuePaise } from "@/lib/pawPoints";
+
+// Same base price and first-walk discount the cart API charges
+// (app/api/cart/service/route.ts). Shown on the home page so price is visible
+// before the first tap; the server stays the source of truth.
+const WALK_FROM_PAISE = 30000;
+const FIRST_WALK_DISCOUNT = 0.1;
+
+const minOf = (values: (number | null | undefined)[]) => {
+  const real = values.filter((v): v is number => typeof v === "number" && v > 0);
+  return real.length > 0 ? Math.min(...real) : null;
+};
 
 export default async function Home() {
-  const [
-    verifiedCount,
-    ratedProviders,
-    products,
-    activeProviderCount,
-    groomingPackagesRaw,
-    trainingPackagesRaw,
-  ] = await Promise.all([
-    prisma.provider.count({ where: { verified: true } }),
+  const user = await getOrCreateUser().catch(() => null);
+  const now = new Date();
+
+  const [verifiedProviders, groomingPackages, trainingPackages, productsWithPhotos, activeProductCount] = await Promise.all([
     prisma.provider.findMany({
       where: { verified: true },
-      include: {
+      select: {
+        id: true,
+        photoUrl: true,
+        ratingAvg: true,
+        ratingCount: true,
+        servicesOffered: true,
+        pricePerGroom: true,
+        pricePerTrain: true,
         user: { select: { name: true } },
         _count: { select: { bookings: { where: { status: "COMPLETED" } } } },
       },
-      orderBy: { ratingAvg: "desc" },
-      take: 20,
     }),
-    prisma.product.findMany({ where: { active: true }, take: 8, orderBy: { createdAt: "desc" } }),
-    prisma.provider.count({ where: { verified: true, isAvailableNow: true } }),
-    prisma.groomingPackage.findMany({
-      take: 2,
+    prisma.groomingPackage.findMany({ where: { provider: { verified: true } }, select: { pricesBySize: true } }),
+    prisma.trainingPackage.findMany({ where: { provider: { verified: true } }, select: { pricePaise: true } }),
+    prisma.product.findMany({
+      where: { active: true, imageUrls: { isEmpty: false } },
+      take: 4,
       orderBy: { createdAt: "desc" },
-      include: { provider: { include: { user: { select: { name: true } } } } },
+      select: { id: true, name: true, price: true, compareAtPrice: true, imageUrls: true },
     }),
-    prisma.trainingPackage.findMany({
-      take: 2,
-      orderBy: { createdAt: "desc" },
-      include: { provider: { include: { user: { select: { name: true } } } } },
-    }),
+    prisma.product.count({ where: { active: true } }),
   ]);
 
-  const groomingBundles = groomingPackagesRaw.map((p) => {
-    const prices = Object.values(p.pricesBySize as Record<string, number>).filter((v) => typeof v === "number");
-    return {
+  const offers = (type: string) => verifiedProviders.filter((p) => p.servicesOffered.includes(type as never));
+  const walkers = offers("WALKING");
+  const groomers = offers("GROOMING");
+  const trainers = offers("TRAINING");
+
+  const groomPackagePrices = groomingPackages.flatMap((g) =>
+    Object.values(g.pricesBySize as Record<string, number>).filter((v) => typeof v === "number"),
+  );
+  const groomFromPaise = minOf([...groomers.map((p) => p.pricePerGroom), ...groomPackagePrices]);
+  const trainFromPaise = minOf([...trainers.map((p) => p.pricePerTrain), ...trainingPackages.map((t) => t.pricePaise)]);
+
+  // Only pros with a real photo and at least one real rating are featured.
+  const featuredPros = verifiedProviders
+    .filter((p) => p.photoUrl && p.ratingCount > 0)
+    .sort((a, b) => b.ratingAvg - a.ratingAvg)
+    .slice(0, 3)
+    .map((p) => ({
       id: p.id,
-      name: p.name,
-      startingPricePaise: prices.length > 0 ? Math.min(...prices) : 0,
-      providerName: p.provider.user.name,
-    };
-  });
-  const trainingBundles = trainingPackagesRaw.map((p) => ({
-    id: p.id,
-    name: p.name,
-    cadence: p.cadence,
-    pricePaise: p.pricePaise,
-    providerName: p.provider.user.name,
-  }));
+      name: p.user.name,
+      photoUrl: p.photoUrl!,
+      ratingAvg: p.ratingAvg,
+      completed: p._count.bookings,
+      services: p.servicesOffered.filter((s) => s === "WALKING" || s === "GROOMING" || s === "TRAINING"),
+    }));
 
-  const now = new Date();
-  const candidateIds = ratedProviders.map((p) => p.id);
-  const activeCampaigns = candidateIds.length > 0
-    ? await prisma.campaign.findMany({
-        where: {
-          providerId: { in: candidateIds },
-          status: "ACTIVE",
-          paidAt: { not: null },
-          startDate: { lte: now },
-          OR: [{ endDate: null }, { endDate: { gte: now } }],
-        },
-        select: { providerId: true },
-      })
+  // ===== Signed-in data =====
+  const pets = user
+    ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { vaccineName: true, nextDueDate: true } } } })
     : [];
-  const boostedProviderIds = new Set(activeCampaigns.map((c) => c.providerId));
-
-  const providers = [...ratedProviders]
-    .sort((a, b) => {
-      const aBoost = boostedProviderIds.has(a.id);
-      const bBoost = boostedProviderIds.has(b.id);
-      if (aBoost !== bBoost) return aBoost ? -1 : 1;
-      return b.ratingAvg - a.ratingAvg;
-    })
-    .slice(0, 3);
-
-  const user = await getOrCreateUser().catch(() => null);
-  const pets = user ? await prisma.pet.findMany({ where: { ownerId: user.id }, include: { vaccinations: { select: { nextDueDate: true } } } }) : [];
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = resolveThemeClass(activePet);
 
-  const [pawPointsBalance, cartCount] = user
-    ? await Promise.all([
-        getPawPointsBalance(user.id),
-        prisma.cartItem.count({ where: { userId: user.id } }),
-      ])
-    : [0, 0];
-
-  let hasHistory = false;
-  let rebookCandidate: {
-    type: string;
-    provider: { id: string; user: { name: string } } | null;
-    pet: { name: string } | null;
-    startTime: Date | null;
-    priceAmount: number | null;
+  let pawPointsBalance = 0;
+  let cartCount = 0;
+  let isFirstWalk = true;
+  let upcoming: {
+    id: string; type: string; startTime: Date; status: string; providerName: string; petName: string;
   } | null = null;
+  let lastCompleted: { type: string; providerName: string; petName: string; priceAmount: number } | null = null;
 
   if (user) {
-    const [paidOrderCount, bookingCount] = await Promise.all([
-      prisma.order.count({ where: { userId: user.id, status: "PAID" } }),
-      prisma.booking.count({ where: { ownerId: user.id } }),
-    ]);
-    hasHistory = paidOrderCount > 0 || bookingCount > 0;
-
-    if (hasHistory) {
-      const lastAnyBooking = await prisma.booking.findFirst({
+    const [balance, cart, paidWalk, nextBooking, lastBooking] = await Promise.all([
+      getPawPointsBalance(user.id),
+      prisma.cartItem.count({ where: { userId: user.id } }),
+      prisma.booking.findFirst({ where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } }, select: { id: true } }),
+      prisma.booking.findFirst({
+        where: { ownerId: user.id, status: { in: ["REQUESTED", "ACCEPTED", "IN_PROGRESS"] }, endTime: { gte: now } },
+        orderBy: { startTime: "asc" },
+        include: { provider: { include: { user: { select: { name: true } } } }, pet: { select: { name: true } } },
+      }),
+      prisma.booking.findFirst({
         where: { ownerId: user.id, status: "COMPLETED" },
         orderBy: { startTime: "desc" },
         include: { provider: { include: { user: { select: { name: true } } } }, pet: { select: { name: true } } },
-      });
-      if (lastAnyBooking) {
-        rebookCandidate = {
-          type: lastAnyBooking.type,
-          provider: { id: lastAnyBooking.providerId, user: lastAnyBooking.provider.user },
-          pet: lastAnyBooking.pet,
-          startTime: lastAnyBooking.startTime,
-          priceAmount: lastAnyBooking.priceAmount,
-        };
-      }
+      }),
+    ]);
+    pawPointsBalance = balance as number;
+    cartCount = cart;
+    isFirstWalk = !paidWalk;
+    if (nextBooking) {
+      upcoming = {
+        id: nextBooking.id,
+        type: nextBooking.type,
+        startTime: nextBooking.startTime,
+        status: nextBooking.status,
+        providerName: nextBooking.provider.user.name,
+        petName: nextBooking.pet.name,
+      };
+    }
+    if (lastBooking) {
+      lastCompleted = {
+        type: lastBooking.type,
+        providerName: lastBooking.provider.user.name,
+        petName: lastBooking.pet.name,
+        priceAmount: lastBooking.priceAmount,
+      };
     }
   }
+
+  const nextVaccine = activePet
+    ? activePet.vaccinations
+        .filter((v) => v.nextDueDate)
+        .sort((a, b) => a.nextDueDate!.getTime() - b.nextDueDate!.getTime())[0] ?? null
+    : null;
 
   return (
     <div className={`w-full ${themeClass}`}>
@@ -134,17 +139,22 @@ export default async function Home() {
         userName={user?.name ?? null}
         userAddress={user?.address ?? null}
         userPhone={user?.phone ?? null}
-        activePet={activePet}
-        pawPointsBalance={pawPointsBalance as number}
-        cartCount={cartCount as number}
-        hasHistory={hasHistory}
-        rebookCandidate={rebookCandidate}
-        verifiedCount={verifiedCount}
-        activeProviderCount={activeProviderCount}
-        providers={providers}
-        products={products}
-        groomingBundles={groomingBundles}
-        trainingBundles={trainingBundles}
+        cartCount={cartCount}
+        pawPointsBalance={pawPointsBalance}
+        pawPointsValuePaise={redemptionValuePaise(pawPointsBalance)}
+        activePet={activePet ? { id: activePet.id, name: activePet.name, breed: activePet.breed, photoUrl: activePet.photoUrl } : null}
+        nextVaccine={nextVaccine ? { name: nextVaccine.vaccineName, dueDate: nextVaccine.nextDueDate! } : null}
+        upcoming={upcoming}
+        lastCompleted={lastCompleted}
+        prices={{
+          walkFromPaise: WALK_FROM_PAISE,
+          walkFirstPaise: isFirstWalk ? Math.round(WALK_FROM_PAISE * (1 - FIRST_WALK_DISCOUNT)) : null,
+          groomFromPaise,
+          trainFromPaise,
+        }}
+        counts={{ walkers: walkers.length, groomers: groomers.length, trainers: trainers.length, products: activeProductCount }}
+        featuredPros={featuredPros}
+        products={productsWithPhotos}
       />
     </div>
   );

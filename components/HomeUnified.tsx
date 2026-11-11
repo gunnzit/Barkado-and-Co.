@@ -3,95 +3,95 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import {
-  RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
-  GraduationCap, Home as HomeIcon, BadgeCheck, ArrowRight,
-  ChevronRight, ShieldCheck, MapPin, PhoneCall, Plus, Star, Check, PawPrint, MoreVertical,
+  ArrowRight, ChevronRight, ShieldCheck, BadgeCheck, RotateCcw, CalendarClock,
+  Syringe, Sparkles, Plus, Star, PawPrint, Lock, Undo2, Footprints, Scissors,
+  GraduationCap, ShoppingBag, Phone, Mail,
 } from "lucide-react";
-import EmergencyButton from "@/components/EmergencyButton";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
-import UpcomingEvents from "@/components/UpcomingEvents";
-import PetSwitcher from "@/components/PetSwitcher";
-import { derivePassportNumber } from "@/lib/passportId";
-import { formatPetAge } from "@/lib/petAge";
-import { vaccineStatusChip } from "@/lib/petVaccineStatus";
+
+/*
+ * Home page — rebuilt around the four things Barkado & Co. actually sells:
+ * Walking, Grooming, Training and the Shop. Every price, count and guarantee
+ * on this page comes from real data or a real policy (see app/page.tsx and
+ * /legal/refund). Sections with no real data hide themselves instead of
+ * showing samples or placeholders.
+ */
 
 const H = { fontFamily: "var(--font-heading)" } as const;
-const SUPPORT_PHONE = "+91 00000 00000";
-
-const SERVICE_LABEL: Record<string, string> = {
-  WALKING: "Adventure Walk", SITTING: "Home Staycation", GROOMING: "Luxury Spa Session", TRAINING: "Good Manners Programme",
-};
-const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", SITTING: "/sitting", GROOMING: "/grooming", TRAINING: "/training" };
-
-// Service grid from the Stitch "Home" design (design/stitch/01-home). No speed or
-// discount badges: none of those promises are backed by real dispatch data yet.
-const SERVICES = [
-  { label: "Dog Walks", icon: Footprints, href: "/walk-booking" },
-  { label: "Home Spa", icon: Bath, href: "/grooming" },
-  { label: "Vet at Home", icon: Stethoscope, href: "/owner/pets" },
-  { label: "Training", icon: GraduationCap, href: "/training" },
-  { label: "Staycation", icon: HomeIcon, href: "/sitting" },
-  { label: "Shop", icon: Utensils, href: "/accessories" },
-];
-
 const PLUM = "#6e1e3b";
 const INK = "#3d1426";
 const YELLOW = "#f9dd8a";
 const IVORY = "#fbf0d9";
+const MUTED = "#5e4752";
 const CARD_SHADOW = "0 8px 24px -4px rgba(61,20,38,0.06)";
+const SUPPORT_PHONE_DISPLAY = "+91 99888 75745";
+const SUPPORT_PHONE_TEL = "+919988875745";
+const SUPPORT_EMAIL = "hello@barkadoandco.com";
 
-/** Golden-yellow wavy band — the brand's signature edge for plum panels. */
-function WaveBand({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0 10 C 50 0, 100 20, 150 10 S 250 0, 300 10 S 380 20, 400 8 L400 24 L0 24 Z" fill={YELLOW} />
-    </svg>
-  );
+const SERVICE_NAME: Record<string, string> = { WALKING: "Walk", GROOMING: "Grooming", TRAINING: "Training", SITTING: "Sitting" };
+const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", GROOMING: "/grooming", TRAINING: "/training", SITTING: "/sitting" };
+
+type Prices = { walkFromPaise: number; walkFirstPaise: number | null; groomFromPaise: number | null; trainFromPaise: number | null };
+type Counts = { walkers: number; groomers: number; trainers: number; products: number };
+type Pro = { id: string; name: string; photoUrl: string; ratingAvg: number; completed: number; services: string[] };
+type Product = { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[] };
+type Upcoming = { id: string; type: string; startTime: Date; status: string; providerName: string; petName: string };
+type LastCompleted = { type: string; providerName: string; petName: string; priceAmount: number };
+
+const rupees = (paise: number) => `₹${Math.round(paise / 100).toLocaleString("en-IN")}`;
+
+function WaveEdge() {
+  return <span className="brand-wave" aria-hidden="true" />;
 }
 
-type Pet = {
-  id: string; name: string; breed: string | null; photoUrl: string | null;
-  birthday: Date | null; microchipId: string | null; size: string;
-  gender?: string | null; weightKg?: number | null;
-  vaccinations: { nextDueDate: Date | null }[];
-};
-type Provider = { id: string; user: { name: string }; photoUrl: string | null; ratingAvg: number; _count: { bookings: number } };
-type Product = { id: string; name: string; price: number; compareAtPrice?: number | null; imageUrls: string[] };
-type GroomingBundle = { id: string; name: string; startingPricePaise: number; providerName: string };
-type TrainingBundle = { id: string; name: string; cadence: string; pricePaise: number; providerName: string };
+function SectionTitle({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
+  return (
+    <div className="flex items-end justify-between gap-3 mb-3">
+      <div>
+        <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>{title}</h2>
+        {sub && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>}
+      </div>
+      {href && cta && (
+        <Link href={href} className="text-xs font-bold underline underline-offset-2 shrink-0 pb-0.5" style={{ color: PLUM }}>
+          {cta}
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function HomeUnified({
   isSignedIn,
   userName,
   userAddress,
   userPhone,
-  activePet,
-  pawPointsBalance,
   cartCount,
-  hasHistory,
-  rebookCandidate,
-  verifiedCount,
-  activeProviderCount,
-  providers,
+  pawPointsBalance,
+  pawPointsValuePaise,
+  activePet,
+  nextVaccine,
+  upcoming,
+  lastCompleted,
+  prices,
+  counts,
+  featuredPros,
   products,
-  groomingBundles,
-  trainingBundles,
 }: {
   isSignedIn: boolean;
   userName: string | null;
   userAddress: string | null;
   userPhone: string | null;
-  activePet: Pet | null;
-  pawPointsBalance: number;
   cartCount: number;
-  hasHistory: boolean;
-  rebookCandidate: { type: string; provider: { id: string; user: { name: string } } | null; pet: { name: string } | null; startTime: Date | null; priceAmount: number | null } | null;
-  verifiedCount: number;
-  activeProviderCount: number;
-  providers: Provider[];
+  pawPointsBalance: number;
+  pawPointsValuePaise: number;
+  activePet: { id: string; name: string; breed: string | null; photoUrl: string | null } | null;
+  nextVaccine: { name: string; dueDate: Date } | null;
+  upcoming: Upcoming | null;
+  lastCompleted: LastCompleted | null;
+  prices: Prices;
+  counts: Counts;
+  featuredPros: Pro[];
   products: Product[];
-  groomingBundles: GroomingBundle[];
-  trainingBundles: TrainingBundle[];
 }) {
   const { openSignIn } = useClerk();
   const gate = (e: React.MouseEvent) => {
@@ -101,382 +101,355 @@ export default function HomeUnified({
     }
   };
 
-  const age = activePet ? formatPetAge(activePet.birthday) : null;
-  const vChip = activePet ? vaccineStatusChip(activePet.vaccinations) : null;
+  const isReturning = isSignedIn && (!!upcoming || !!lastCompleted);
+  const petName = activePet?.name ?? null;
+  const firstName = userName?.split(" ")[0] ?? null;
+
+  const services = [
+    {
+      key: "WALKING",
+      title: "Dog Walking",
+      line: "30, 45 or 60 minutes with an ID-verified walker.",
+      icon: Footprints,
+      img: "/images/tab-walking.jpg",
+      imgAlt: "A dog out on a leash walk",
+      price: prices.walkFirstPaise
+        ? { now: rupees(prices.walkFirstPaise), was: rupees(prices.walkFromPaise), note: "first walk" }
+        : { now: rupees(prices.walkFromPaise), was: null, note: null },
+      href: "/walk-booking",
+      cta: "Book a walk",
+      count: counts.walkers,
+      noun: "walker",
+    },
+    {
+      key: "GROOMING",
+      title: "Home Grooming",
+      line: "Bath, trim and tidy-up at your door, priced by your dog's size.",
+      icon: Scissors,
+      img: "/images/brand/golden-bandana.jpg",
+      imgAlt: "A freshly groomed golden retriever",
+      price: prices.groomFromPaise ? { now: rupees(prices.groomFromPaise), was: null, note: null } : null,
+      href: "/grooming",
+      cta: "Book grooming",
+      count: counts.groomers,
+      noun: "groomer",
+    },
+    {
+      key: "TRAINING",
+      title: "Training",
+      line: "Puppy basics, manners and behaviour, with a trainer you choose.",
+      icon: GraduationCap,
+      img: "/images/hero-dog-german-shepherd.jpg",
+      imgAlt: "An alert German shepherd mid-stride",
+      price: prices.trainFromPaise ? { now: rupees(prices.trainFromPaise), was: null, note: null } : null,
+      href: "/training",
+      cta: "Find a trainer",
+      count: counts.trainers,
+      noun: "trainer",
+    },
+  ];
+  const [walk, ...otherServices] = services;
 
   return (
     <div style={{ background: IVORY }}>
-      <EmergencyButton />
       <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-      <main className="flex flex-col relative w-full pt-2 pb-24" style={{ background: IVORY }}>
-        <div className="max-w-6xl mx-auto w-full">
+      <main className="w-full pt-2 pb-28" style={{ background: IVORY }}>
+        <div className="max-w-2xl mx-auto w-full">
 
-          {/* Hero — plum card, cut-out dog, golden wave (Stitch Home) */}
-          <section className="px-4 pt-2 pb-3">
-            <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
-              <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
-              <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-8">
-                <div className="flex-1 min-w-0 pb-1">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
-                    <PawPrint size={11} /> Chandigarh
+          {/* ===== Returning customer: what's next for their dog ===== */}
+          {isSignedIn && (upcoming || lastCompleted || nextVaccine) && (
+            <section className="px-4 pt-2 pb-1 space-y-2.5">
+              {upcoming && (
+                <Link href="/owner/bookings" className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: `1.5px solid ${PLUM}`, boxShadow: CARD_SHADOW }}>
+                  <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}>
+                    <CalendarClock size={20} color={PLUM} />
                   </span>
-                  <h1 className="font-script mt-2 text-[30px] leading-[1.05] text-white">
-                    A Hug in every Paw
-                  </h1>
-                  <p className="mt-1.5 text-xs leading-snug" style={{ color: "rgba(251,240,217,0.85)" }}>
-                    Verified walkers, groomers and sitters at your doorstep.
-                  </p>
-                  <Link href="/walk-booking" onClick={gate} className="mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
-                    Book a walk <ArrowRight size={15} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>
+                      {upcoming.status === "IN_PROGRESS" ? "Happening now" : upcoming.status === "REQUESTED" ? "Waiting for confirmation" : "Coming up"}
+                    </p>
+                    <p className="font-bold text-[15px] leading-snug truncate" style={{ ...H, color: INK }}>
+                      {SERVICE_NAME[upcoming.type]} for {upcoming.petName} with {upcoming.providerName.split(" ")[0]}
+                    </p>
+                    <p className="text-xs" style={{ color: MUTED }}>
+                      {new Date(upcoming.startTime).toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  <ChevronRight size={18} color={PLUM} className="shrink-0" />
+                </Link>
+              )}
+
+              {!upcoming && lastCompleted && (
+                <div className="flex items-center gap-3 p-4 rounded-[1.75rem]" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>Last time</p>
+                    <p className="font-bold text-[15px] leading-snug truncate" style={{ ...H, color: INK }}>
+                      {SERVICE_NAME[lastCompleted.type]} for {lastCompleted.petName} with {lastCompleted.providerName.split(" ")[0]}
+                    </p>
+                    <p className="text-xs" style={{ color: MUTED }}>{rupees(lastCompleted.priceAmount)}</p>
+                  </div>
+                  <Link href={SERVICE_HREF[lastCompleted.type]} className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tap-scale" style={{ background: PLUM, color: "white", ...H }}>
+                    <RotateCcw size={14} /> Book again
                   </Link>
                 </div>
-                <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="w-32 h-40 sm:w-44 sm:h-52 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)" }} />
-              </div>
-              <WaveBand className="absolute bottom-0 left-0 w-full h-5" />
-            </div>
-          </section>
+              )}
 
-          {activeProviderCount > 0 && (
-            <div className="px-4 py-2">
-              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl" style={{ background: "#6e1e3b", color: "white" }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#34d399" }} />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: "#10b981" }} />
+              {activePet && (nextVaccine || pawPointsBalance > 0) && (
+                <Link href={`/owner/pets/${activePet.id}`} className="flex items-center gap-3 p-3.5 rounded-[1.75rem] tap-scale" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+                  <span className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center" style={{ background: IVORY, boxShadow: `0 0 0 2px ${YELLOW}` }}>
+                    {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={18} color={PLUM} />}
                   </span>
-                  <div className="truncate text-xs">
-                    <span className="font-bold text-white">{activeProviderCount} Pro{activeProviderCount === 1 ? "" : "s"} active</span>
-                    <span style={{ color: "rgba(240,224,200,0.8)" }}> around your area</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>{activePet.name}&rsquo;s Paw Passport</p>
+                    <p className="text-xs flex flex-wrap gap-x-2" style={{ color: MUTED }}>
+                      {nextVaccine && (
+                        <span className="inline-flex items-center gap-1">
+                          <Syringe size={11} />
+                          {nextVaccine.name} {new Date(nextVaccine.dueDate) < new Date() ? "overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
+                        </span>
+                      )}
+                      {pawPointsBalance > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <Sparkles size={11} /> {pawPointsBalance} pts = {rupees(pawPointsValuePaise)} off
+                        </span>
+                      )}
+                    </p>
                   </div>
-                </div>
-                <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#6e1e3b", color: "white", ...H }} title="Not a real ETA yet">
-                  ⚡ ETA
-                </span>
-              </div>
-            </div>
+                  <ChevronRight size={18} color={PLUM} className="shrink-0" />
+                </Link>
+              )}
+            </section>
           )}
 
-          <section className="px-4 pt-2 pb-2.5">
-            {activePet ? (
-              <div className="relative overflow-hidden rounded-[1.75rem] p-4" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
-                <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: PLUM }} />
-                <div className="pl-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <PetSwitcher display="viewing" hideThemeSwitch />
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: "#6e1e3b", color: "#fff8ec" }}>Active</span>
-                      <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="w-7 h-7 rounded-lg flex items-center justify-center" aria-label="Pet options">
-                        <MoreVertical size={16} color="#a29887" />
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#ebe5d8", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                        {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={22} color="#a29887" />}
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full" style={{ border: "2px solid #1e8e47", background: "white" }} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium" style={{ color: "#6f6759" }}>
-                        {[activePet.breed ?? "Mixed", activePet.gender ? (activePet.gender === "MALE" ? "Male" : "Female") : null].filter(Boolean).join(" • ")}
-                      </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: "#8f8574" }}>
-                        {[age, activePet.weightKg ? `${activePet.weightKg} kg` : null].filter(Boolean).join(" • ")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid #f2ece1" }}>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbe5f3", color: INK }}>
-                      <Check size={11} /> PawPassport™ #{derivePassportNumber(activePet.id)}
+          {/* ===== Hero: one job — book a walk ===== */}
+          {!isReturning && (
+            <section className="px-4 pt-2 pb-4">
+              <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+                <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
+                <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-9">
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
+                      <PawPrint size={11} /> Chandigarh
                     </span>
-                    {vChip && (
-                      <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#faf2e6", color: "#a6611b", border: "1px solid #f2e0c7" }}>
-                        {vChip.text}
-                      </span>
+                    <h1 className="font-script mt-2 text-[30px] leading-[1.05] text-white">
+                      {firstName && petName ? `A walk for ${petName}?` : "A Hug in every Paw"}
+                    </h1>
+                    <p className="mt-2 text-sm leading-snug" style={{ color: "rgba(251,240,217,0.9)" }}>
+                      Dog walks from{" "}
+                      <span className="font-bold" style={{ color: YELLOW }}>{rupees(prices.walkFirstPaise ?? prices.walkFromPaise)}</span>
+                      {prices.walkFirstPaise && <span className="line-through ml-1 opacity-70">{rupees(prices.walkFromPaise)}</span>}
+                    </p>
+                    {prices.walkFirstPaise && (
+                      <p className="text-xs" style={{ color: "rgba(251,240,217,0.75)" }}>10% off your first walk</p>
                     )}
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3.5 pt-2" style={{ borderTop: "1px solid #f5f0e6" }}>
-                    {rebookCandidate ? (
-                      <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: "#877d6d" }}>
-                        <MapPin size={11} /> Next: {SERVICE_LABEL[rebookCandidate.type]}
-                        {rebookCandidate.startTime ? ` ${rebookCandidate.startTime.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}
-                      </span>
-                    ) : (
-                      <span />
-                    )}
-                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale ml-auto" style={{ color: "#2a0c18" }}>
-                      Passport &amp; Care <ChevronRight size={14} className="ml-1" />
+                    <Link href="/walk-booking" onClick={gate} className="mt-4 inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
+                      Book a walk <ArrowRight size={15} />
                     </Link>
                   </div>
+                  <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)" }} />
                 </div>
+                <WaveEdge />
               </div>
-            ) : (
-              <Link href="/owner/pets" onClick={gate} className="relative overflow-hidden rounded-[1.75rem] p-4 flex items-center gap-3 tap-scale" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
-                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
-                  <BadgeCheck size={22} color={PLUM} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-[17px] leading-tight" style={{ ...H, color: PLUM }}>Paw Passport</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#5e4752" }}>
-                    {isSignedIn ? "Add your dog to keep vaccines, care notes and walks in one place." : "Sign in to create your dog's Paw Passport: vaccines, care notes and walks in one place."}
-                  </p>
-                </div>
-                <ChevronRight size={18} color={PLUM} className="shrink-0" />
-              </Link>
-            )}
+            </section>
+          )}
 
-            {rebookCandidate && (
-              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl mt-2.5" style={{ background: "#fbf0d9", border: "1px solid rgba(227,207,196,0.3)" }}>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#2a0c18" }}>
-                    <History size={14} color="#6e1e3b" />
-                    <span>{SERVICE_LABEL[rebookCandidate.type]}</span>
-                  </div>
-                  <div className="text-[10px] truncate" style={{ color: "#5e4752" }}>
-                    {rebookCandidate.startTime ? rebookCandidate.startTime.toLocaleString("en-IN", { weekday: "long", hour: "numeric", minute: "2-digit" }) : ""}
-                    {rebookCandidate.provider ? ` with ${rebookCandidate.provider.user.name}` : ""}
-                    {rebookCandidate.priceAmount ? ` • ₹${(rebookCandidate.priceAmount / 100).toFixed(0)}` : ""}
-                  </div>
-                </div>
-                <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
-                  <RotateCcw size={14} /> 1-Tap Rebook
-                </Link>
-              </div>
-            )}
-          </section>
-
+          {/* ===== The three services ===== */}
           <section className="px-4 py-3">
-            <div className="mb-2.5">
-              <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Our Services</h2>
-              <p className="text-xs" style={{ color: "#5e4752" }}>Crafted for wagging tails</p>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-              {SERVICES.map((o) => {
-                const Icon = o.icon;
-                return (
-                  <Link key={o.label} href={o.href} onClick={gate} className="flex flex-col items-center text-center p-3 rounded-2xl tap-scale transition-shadow hover:shadow-md" style={{ background: "#ffffff", boxShadow: CARD_SHADOW }}>
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-2" style={{ background: "#f8edd6" }}>
-                      <Icon size={21} color={PLUM} />
-                    </div>
-                    <span className="font-bold text-xs leading-tight" style={{ ...H, color: PLUM }}>{o.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
+            <SectionTitle title={isReturning ? "Book again" : "What we do"} sub="Walking, grooming and training, booked in a few taps" />
 
-          <section className="px-4 py-2.5">
-            <div className="p-4 rounded-[1.75rem] flex flex-col gap-3.5" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Care Bundles</h2>
-                  <p className="text-[11px] mt-0.5" style={{ color: "#5e4752" }}>
-                    {(groomingBundles.length > 0 || trainingBundles.length > 0) ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
-                  </p>
+            {/* Walking leads — the most frequent, most repeatable service */}
+            <Link href={walk.href} onClick={gate} className="block relative overflow-hidden rounded-[1.75rem] mb-3 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+              <div className="img-frame !rounded-none relative h-40">
+                <img src={walk.img} alt={walk.imgAlt} className="w-full h-full object-cover object-[center_78%]" />
+                <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: YELLOW, color: INK }}>
+                  <walk.icon size={13} /> Most booked
+                </span>
+              </div>
+              <div className="p-4 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-lg leading-tight" style={{ ...H, color: PLUM }}>{walk.title}</h3>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>{walk.line}</p>
+                  {walk.price && (
+                    <p className="mt-2 text-sm" style={{ color: INK }}>
+                      from <span className="font-bold text-base" style={H}>{walk.price.now}</span>
+                      {walk.price.was && <span className="ml-1 text-xs line-through" style={{ color: MUTED }}>{walk.price.was}</span>}
+                      {walk.price.note && <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#dbe5f3" }}>{walk.price.note}</span>}
+                    </p>
+                  )}
                 </div>
-                <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#6e1e3b" }}>
-                  All Bundles <ChevronRight size={14} />
-                </Link>
+                <span className="shrink-0 inline-flex items-center gap-1 px-4 py-2.5 rounded-full text-xs font-bold" style={{ background: PLUM, color: "white", ...H }}>
+                  {walk.cta} <ArrowRight size={13} />
+                </span>
               </div>
-              <div className="grid grid-cols-1 gap-2.5">
-                {(groomingBundles.length > 0 || trainingBundles.length > 0) ? (
-                  <>
-                    {groomingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(227,207,196,0.25)" }}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#f9dd8a", color: "#6e1e3b", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>{b.providerName}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(227,207,196,0.15)" }}>
-                          <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
-                            Choose Bundle <ArrowRight size={12} />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                    {trainingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(227,207,196,0.25)" }}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#dbe5f3", color: "#24101a", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(227,207,196,0.15)" }}>
-                          <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#6e1e3b", color: "white", ...H }}>
-                            Choose Bundle <ArrowRight size={12} />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(227,207,196,0.5)" }} title="Sample — create real packages via a provider dashboard">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#f9dd8a", color: "#6e1e3b", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>Groom &amp; Glow Ritual (4 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>Example only — no provider has created this yet</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>from ₹1,599</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(227,207,196,0.5)" }} title="Sample — create real packages via a provider dashboard">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#dbe5f3", color: "#24101a", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#2a0c18" }}>Master Manners &amp; Social (6 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#5e4752" }}>Example only — no provider has created this yet</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#2a0c18" }}>₹3,899</div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
+            </Link>
 
-          {products.length > 0 && (
-            <section className="px-4 py-3">
-              <div className="flex items-center justify-between mb-2.5">
-                <div>
-                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Artisanal Accessories</h2>
-                  <p className="text-xs" style={{ color: "#5e4752" }}>Handcrafted goods for your dog</p>
-                </div>
-                <Link href="/accessories" className="text-xs font-bold underline underline-offset-2 shrink-0" style={{ color: PLUM }}>
-                  Catalog
-                </Link>
-              </div>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                {products.slice(0, 6).map((p) => (
-                  <Link key={p.id} href={`/accessories/${p.id}`} className="shrink-0 rounded-[1.5rem] p-2.5 flex flex-col justify-between tap-scale" style={{ width: 160, background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
-                    <div className="img-frame relative w-full h-32 !rounded-2xl mb-2" style={{ background: IVORY }}>
-                      {p.imageUrls[0] ? <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><PawPrint size={26} color="rgba(110,30,59,0.25)" /></div>}
-                    </div>
-                    <h4 className="font-bold text-sm line-clamp-1 px-0.5" style={{ ...H, color: PLUM }}>{p.name}</h4>
-                    <div className="flex items-center justify-between mt-1.5 px-0.5">
-                      <div className="flex items-baseline gap-1">
-                        <span className="font-bold text-sm" style={{ ...H, color: INK }}>₹{(p.price / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                        {p.compareAtPrice && p.compareAtPrice > p.price && (
-                          <span className="text-[10px] line-through" style={{ color: "#735c68" }}>₹{(p.compareAtPrice / 100).toFixed(0)}</span>
-                        )}
-                      </div>
+            <div className="grid grid-cols-2 gap-3">
+              {otherServices.map((s) => (
+                <Link key={s.key} href={s.href} onClick={gate} className="flex flex-col overflow-hidden rounded-[1.5rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                  <div className="img-frame !rounded-none h-28">
+                    <img src={s.img} alt={s.imgAlt} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="font-bold text-[15px] leading-tight flex items-center gap-1.5" style={{ ...H, color: PLUM }}>
+                      <s.icon size={15} /> {s.title}
+                    </h3>
+                    <p className="text-[11px] mt-1 leading-snug" style={{ color: MUTED }}>{s.line}</p>
+                    <div className="mt-auto pt-2.5 flex items-center justify-between gap-1">
+                      <span className="text-xs" style={{ color: INK }}>
+                        {s.price ? <>from <span className="font-bold text-sm" style={H}>{s.price.now}</span></> : <span style={{ color: MUTED }}>See prices</span>}
+                      </span>
                       <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true">
-                        <Plus size={16} />
+                        <ArrowRight size={14} />
                       </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {providers.length > 0 && (
-            <section className="px-4 py-3">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Pros ready near you</h2>
-                  <p className="text-xs" style={{ color: "#5e4752" }}>{verifiedCount} verified caregiver{verifiedCount === 1 ? "" : "s"} in your network</p>
-                </div>
-                <Link href="/walk-booking" onClick={gate} className="text-xs font-bold underline underline-offset-2 shrink-0" style={{ color: PLUM }}>
-                  View all
-                </Link>
-              </div>
-              <div className="flex flex-col gap-3">
-                {providers.map((p) => (
-                  <div key={p.id} className="p-4 rounded-[1.75rem] flex flex-col gap-3" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.06)", boxShadow: CARD_SHADOW }}>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0" style={{ boxShadow: `0 0 0 2px ${YELLOW}` }}>
-                        {p.photoUrl ? <img src={p.photoUrl} alt={p.user.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ background: "#f8edd6" }}><PawPrint size={20} color={PLUM} /></div>}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-base truncate" style={{ ...H, color: PLUM }}>{p.user.name}</h4>
-                          <BadgeCheck size={16} color="#a5bde1" className="shrink-0" aria-label="Verified" />
-                        </div>
-                        <p className="text-xs flex items-center gap-1" style={{ color: "#5e4752" }}>
-                          <Star size={12} fill="#e9b949" color="#e9b949" />
-                          <span className="font-semibold" style={{ color: INK }}>{p.ratingAvg > 0 ? p.ratingAvg.toFixed(2) : "New"}</span>
-                          <span>· {p._count.bookings} completed</span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: YELLOW, color: INK }}>
-                        <ShieldCheck size={13} /> ID verified
-                      </span>
-                      <Link href="/walk-booking" onClick={gate} className="px-5 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: PLUM, color: "white", ...H }}>
-                        Book
-                      </Link>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="px-4 py-2">
-            {/* Trust strip (Stitch Home). Only claims the product backs today. */}
-            <div className="grid grid-cols-3 rounded-[1.75rem] py-3" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
-              {[
-                { icon: ShieldCheck, label: "ID-verified pros" },
-                { icon: BadgeCheck, label: "Paw Passport records" },
-                { icon: Check, label: "Secure payments" },
-              ].map((b, i) => (
-                <div key={b.label} className="flex flex-col items-center text-center gap-1 px-1" style={i > 0 ? { borderLeft: "1px solid rgba(61,20,38,0.1)" } : undefined}>
-                  <b.icon size={18} color={PLUM} />
-                  <span className="font-semibold text-[11px] leading-tight" style={{ color: INK }}>{b.label}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
 
-          <section className="px-4 py-2.5">
-            <div className="flex items-center justify-between mb-2.5">
-              <div>
-                <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>Community Pack Meetups</h2>
-                <p className="text-[11px]" style={{ color: "#5e4752" }}>Socialize your pet with neighborhood dogs</p>
+          {/* ===== How it works + real guarantees (new visitors) ===== */}
+          {!isReturning && (
+            <section className="px-4 py-3">
+              <div className="rounded-[1.75rem] p-5" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+                <h2 className="font-bold text-[20px] leading-7 tracking-tight mb-3" style={{ ...H, color: PLUM }}>How it works</h2>
+                <ol className="space-y-3">
+                  {[
+                    { t: "Pick a service and a time", d: "Walking, grooming or training, at a slot that suits you." },
+                    { t: "Choose a verified pro", d: "See their rating and completed bookings before you pick." },
+                    { t: "Pay securely and relax", d: "Track the booking in the app and rebook in one tap." },
+                  ].map((step, i) => (
+                    <li key={step.t} className="flex items-start gap-3">
+                      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold" style={{ background: YELLOW, color: INK, border: `2px solid ${PLUM}`, ...H }}>{i + 1}</span>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: INK }}>{step.t}</p>
+                        <p className="text-xs" style={{ color: MUTED }}>{step.d}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className="grid grid-cols-3 gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(61,20,38,0.1)" }}>
+                  {[
+                    { icon: ShieldCheck, t: "ID-verified pros", d: "Checked before going live" },
+                    { icon: Undo2, t: "Cancel any time", d: "Full refund before it starts" },
+                    { icon: Lock, t: "Secure payments", d: "Processed by Razorpay" },
+                  ].map((g) => (
+                    <div key={g.t} className="flex flex-col items-center text-center gap-1">
+                      <g.icon size={18} color={PLUM} />
+                      <span className="font-bold text-[11px] leading-tight" style={{ color: INK }}>{g.t}</span>
+                      <span className="text-[10px] leading-tight" style={{ color: MUTED }}>{g.d}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
-          <UpcomingEvents />
+            </section>
+          )}
 
-          <section className="px-4 py-2">
-            <div className="flex items-center justify-between p-3 rounded-2xl" style={{ background: "rgba(255,218,214,0.4)", border: "1px solid rgba(186,26,26,0.25)" }}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#ba1a1a", color: "white" }}>
-                  <PhoneCall size={18} />
-                </div>
-                <div>
-                  <div className="font-extrabold text-xs" style={{ ...H, color: "#93000a" }}>24/7 Urgent Pet Helpline</div>
-                  <div className="text-[10px]" style={{ color: "rgba(147,0,10,0.8)" }}>Placeholder number for now</div>
-                </div>
+          {/* ===== Pros — only with real photos and real ratings ===== */}
+          {featuredPros.length > 0 ? (
+            <section className="px-4 py-3">
+              <SectionTitle title="Top-rated pros" sub="Real ratings from Barkado bookings" />
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                {featuredPros.map((p) => (
+                  <Link key={p.id} href={`/provider/${p.id}`} className="shrink-0 w-40 p-3 rounded-[1.5rem] text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                    <img src={p.photoUrl} alt={p.name} className="w-16 h-16 rounded-full object-cover mx-auto" style={{ boxShadow: `0 0 0 2px ${YELLOW}` }} />
+                    <p className="font-bold text-sm mt-2 flex items-center justify-center gap-1 truncate" style={{ ...H, color: PLUM }}>
+                      {p.name.split(" ")[0]} <BadgeCheck size={14} color="#a5bde1" />
+                    </p>
+                    <p className="text-xs flex items-center justify-center gap-1" style={{ color: MUTED }}>
+                      <Star size={11} fill="#e9b949" color="#e9b949" /> {p.ratingAvg.toFixed(1)} · {p.completed} done
+                    </p>
+                    <p className="text-[10px] mt-1" style={{ color: MUTED }}>{p.services.map((s) => SERVICE_NAME[s]).join(" · ")}</p>
+                  </Link>
+                ))}
               </div>
-              <a href={`tel:${SUPPORT_PHONE.replace(/\s/g, "")}`} className="px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 shrink-0 tap-scale" style={{ background: "#ba1a1a", color: "white", ...H }}>
-                Call SOS
-              </a>
+            </section>
+          ) : counts.walkers + counts.groomers + counts.trainers > 0 ? (
+            <section className="px-4 py-2">
+              <p className="flex items-center justify-center gap-1.5 text-xs text-center" style={{ color: MUTED }}>
+                <ShieldCheck size={14} color={PLUM} />
+                {[
+                  counts.walkers > 0 && `${counts.walkers} walker${counts.walkers === 1 ? "" : "s"}`,
+                  counts.groomers > 0 && `${counts.groomers} groomer${counts.groomers === 1 ? "" : "s"}`,
+                  counts.trainers > 0 && `${counts.trainers} trainer${counts.trainers === 1 ? "" : "s"}`,
+                ].filter(Boolean).join(", ")}{" "}
+                ID-verified and ready to book
+              </p>
+            </section>
+          ) : null}
+
+          {/* ===== Shop ===== */}
+          <section className="px-4 py-3">
+            {products.length >= 2 ? (
+              <>
+                <SectionTitle title="From the Shop" sub="Collars, beds, treats and toys" href="/accessories" cta="Shop all" />
+                <div className="grid grid-cols-2 gap-3">
+                  {products.slice(0, 4).map((p) => (
+                    <Link key={p.id} href={`/accessories/${p.id}`} className="rounded-[1.5rem] p-2 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                      <div className="img-frame aspect-square !rounded-[1.1rem]" style={{ background: IVORY }}>
+                        <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="px-1 pt-2 pb-1">
+                        <p className="font-bold text-sm line-clamp-1" style={{ ...H, color: PLUM }}>{p.name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="font-bold text-sm" style={{ ...H, color: INK }}>{rupees(p.price)}</span>
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={14} /></span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : counts.products > 0 ? (
+              <Link href="/accessories" className="relative flex items-center gap-3 overflow-hidden rounded-[1.75rem] p-4 pb-6 tap-scale" style={{ background: PLUM }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: YELLOW }}>The Artisan Shelf</p>
+                  <p className="font-script text-[26px] leading-tight text-white">Spoil them a little EXTRA</p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(251,240,217,0.85)" }}>{counts.products} collars, beds, treats and toys</p>
+                  <span className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-bold" style={{ background: YELLOW, color: INK, ...H }}>
+                    <ShoppingBag size={13} /> Shop now
+                  </span>
+                </div>
+                <img src="/images/brand/collar-plum.jpg" alt="" className="w-28 h-28 object-cover rounded-2xl shrink-0" />
+                <WaveEdge />
+              </Link>
+            ) : null}
+          </section>
+
+          {/* ===== Paw Passport — free with every account ===== */}
+          {!activePet && (
+            <section className="px-4 py-3">
+              <Link href="/owner/pets" onClick={gate} className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
+                  <BadgeCheck size={22} color={PLUM} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[16px] leading-tight" style={{ ...H, color: PLUM }}>Free Paw Passport</p>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>Vaccines, care notes and every booking for your dog, in one place.</p>
+                </div>
+                <ChevronRight size={18} color={PLUM} className="shrink-0" />
+              </Link>
+            </section>
+          )}
+
+          {/* ===== Help ===== */}
+          <section className="px-4 pt-4 pb-2">
+            <div className="rounded-[1.75rem] p-4 flex items-center justify-between gap-3" style={{ background: "#fef3dc" }}>
+              <div className="min-w-0">
+                <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>Questions? We&rsquo;re here.</p>
+                <p className="text-xs" style={{ color: MUTED }}>Talk to a real person at Barkado &amp; Co.</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <a href={`tel:${SUPPORT_PHONE_TEL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: PLUM, color: "white" }} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
+                  <Phone size={16} />
+                </a>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: "#ffffff", color: PLUM, border: "1px solid rgba(61,20,38,0.1)" }} aria-label={`Email ${SUPPORT_EMAIL}`}>
+                  <Mail size={16} />
+                </a>
+              </div>
             </div>
+            <p className="font-script text-center text-lg mt-5" style={{ color: PLUM }}>A Hug in every Paw</p>
           </section>
         </div>
       </main>
