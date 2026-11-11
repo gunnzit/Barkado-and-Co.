@@ -13,6 +13,8 @@ export default async function PetProfilePage({ params }: { params: Promise<{ id:
     include: {
       owner: { select: { name: true, phone: true } },
       vaccinations: { orderBy: { nextDueDate: "asc" } },
+      medications: { orderBy: { createdAt: "asc" } },
+      emergencyContacts: { orderBy: { createdAt: "asc" } },
       bookings: {
         include: {
           provider: { include: { user: true } },

@@ -250,7 +250,7 @@ export default function PetsClient({
                         Next: {SERVICE_LABEL[p.nextBooking.type] ?? p.nextBooking.type} {formatWhen(p.nextBooking.startTime)}
                       </span>
                     ) : (
-                      <span className="text-[11px]" style={{ color: "#8f8574" }}>PawPassport™ #{derivePassportNumber(p.id)}</span>
+                      <span className="text-[11px]" style={{ color: "#8f8574" }}>PawPassport {derivePassportNumber(p.id)}</span>
                     )}
                     <Link href={`/owner/pets/${p.id}`} className="inline-flex items-center text-xs font-bold tap-scale" style={{ color: "#2a0c18" }}>
                       {isActive ? "Passport & Care" : "View Profile"}
