@@ -29,7 +29,7 @@ export default async function TrainingPage() {
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
       <main className="max-w-lg mx-auto">
-        <TaskHeader title="Book training" />
+        <TaskHeader title="Book training" showBack={false} />
         <ProBookingFlow
           service="TRAINING"
           pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl, breed: p.breed, size: p.size }))}

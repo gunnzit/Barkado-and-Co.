@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
+import { hasInAppHistory } from "@/lib/navHistory";
 
 /**
  * Slim, sticky header for task screens (booking a walk, grooming, training):
@@ -11,14 +12,14 @@ import { useCart } from "@/components/CartProvider";
  * No logo, points or profile here — those belong on browse screens, not in
  * the middle of a booking.
  */
-export default function TaskHeader({ title, fallbackHref = "/", showCart = true }: { title: string; fallbackHref?: string; showCart?: boolean }) {
+export default function TaskHeader({ title, fallbackHref = "/", showCart = true, showBack = true }: { title: string; fallbackHref?: string; showCart?: boolean; showBack?: boolean }) {
   const router = useRouter();
   const { totalCount } = useCart();
 
   const goBack = () => {
     // Use real history when the user navigated here inside the app; otherwise
     // (opened from a link or a refresh) fall back to a sensible page.
-    if (typeof window !== "undefined" && window.history.length > 1 && document.referrer.startsWith(window.location.origin)) {
+    if (hasInAppHistory()) {
       router.back();
     } else {
       router.push(fallbackHref);
@@ -31,6 +32,7 @@ export default function TaskHeader({ title, fallbackHref = "/", showCart = true 
       style={{ background: "rgba(251,240,217,0.88)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)" }}
     >
       <div className="relative flex items-center justify-between h-14 px-3">
+        {showBack ? (
         <button
           type="button"
           onClick={goBack}
@@ -40,6 +42,9 @@ export default function TaskHeader({ title, fallbackHref = "/", showCart = true 
         >
           <ArrowLeft size={18} />
         </button>
+        ) : (
+          <span className="w-10 h-10" aria-hidden="true" />
+        )}
 
         <h1 className="absolute left-1/2 -translate-x-1/2 text-[17px] font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)", color: "#6e1e3b" }}>
           {title}
