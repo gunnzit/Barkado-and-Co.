@@ -1,19 +1,16 @@
-import Link from "next/link";
-import { ArrowLeft, MapPin, ChevronRight } from "lucide-react";
 import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { resolveThemeClass } from "@/lib/breedTheme";
-import ServicePageTopBar from "@/components/ServicePageTopBar";
-import ServiceBookingFlow from "@/components/ServiceBookingFlow";
-import { getPawPointsBalance } from "@/lib/pawPoints";
+import TaskHeader from "@/components/TaskHeader";
+import WalkBookingFlow from "@/components/WalkBookingFlow";
 
 export default async function WalkBookingPage() {
   const user = await getOrCreateUser();
   if (!user) redirect("/sign-in");
 
-  const pets = await prisma.pet.findMany({ where: { ownerId: user.id } });
+  const pets = await prisma.pet.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: "asc" } });
   const activePetCookie = (await cookies()).get("active_pet_id")?.value;
   const activePet = pets.find((p) => p.id === activePetCookie) ?? pets[0] ?? null;
   const themeClass = resolveThemeClass(activePet);
@@ -21,59 +18,20 @@ export default async function WalkBookingPage() {
   // Real "first walk" definition, matching the same check enforced
   // server-side in /api/cart/service/route.ts exactly: has this owner
   // ever actually PAID for a walk before.
-  const [priorPaidWalk, cartCount, pawPointsBalance] = await Promise.all([
-    prisma.booking.findFirst({ where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } } }),
-    prisma.cartItem.count({ where: { userId: user.id } }),
-    getPawPointsBalance(user.id),
-  ]);
-  const isFirstWalk = !priorPaidWalk;
+  const priorPaidWalk = await prisma.booking.findFirst({ where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } }, select: { id: true } });
 
   return (
     <div className={`w-full ${themeClass}`} style={{ backgroundColor: "var(--cream)", backgroundImage: "var(--page-bg-image)", backgroundRepeat: "repeat", backgroundSize: "cover, 260px", minHeight: "100vh" }}>
-      {/* max-w-3xl here (wider than the max-w-lg every other page uses) so
-          ServiceBookingFlow's responsive two-column layout for the Walking
-          intro screen actually has room to appear on desktop — every other
-          page keeps the standard mobile-width container untouched. */}
-      <main className="pb-28 max-w-3xl mx-auto">
-        <ServicePageTopBar cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
+      <main className="max-w-lg mx-auto">
+        <TaskHeader title="Book a walk" />
 
-        {/* Real sub-row — back arrow, title, real address, real verified-
-            provider "Nearby" indicator. No dog selector, no theme toggle,
-            per explicit product decision — this page previously had both,
-            carried over from the shared LocationHeader/PetSwitcher/
-            ThemeToggle row used elsewhere. */}
-        <div className="px-5 pb-3 pt-1 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/" className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 tap-scale" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <ArrowLeft size={16} />
-            </Link>
-            <div className="min-w-0">
-              <h2 className="text-lg font-bold tracking-tight leading-tight">Book a walker</h2>
-              {user.address && (
-                <Link href="/owner/profile" className="flex items-center gap-1 mt-0.5 text-xs font-semibold tap-scale" style={{ color: "var(--terracotta)" }}>
-                  <MapPin size={11} /> {user.address.split(",")[0].toUpperCase()} <ChevronRight size={11} />
-                </Link>
-              )}
-            </div>
-          </div>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0" style={{ background: "#e8f4ec", color: "#2f6fb0" }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: "#2f9e5f" }} />
-            Nearby
-          </span>
-        </div>
-
-        <ServiceBookingFlow
-          serviceType="WALKING"
+        <WalkBookingFlow
+          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl, breed: p.breed }))}
           activePetId={activePet?.id ?? null}
-          activePetName={activePet?.name ?? null}
-          pets={pets.map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrl }))}
-          hasPets={pets.length > 0}
-          showStartButton={true}
-          isFirstWalk={isFirstWalk}
-          defaultAddress={user.address}
-          defaultPhone={user.phone}
+          isFirstWalk={!priorPaidWalk}
+          address={user.address}
+          phone={user.phone}
         />
-
       </main>
     </div>
   );

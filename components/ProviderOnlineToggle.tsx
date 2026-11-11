@@ -35,7 +35,7 @@ export default function ProviderOnlineToggle() {
       disabled={toggling}
       className="tap-scale flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
       style={{
-        background: isAvailableNow ? "#e3f0e6" : "var(--card)",
+        background: isAvailableNow ? "#e4ebf6" : "var(--card)",
         color: isAvailableNow ? "#2f7a44" : "var(--muted)",
         border: `1px solid ${isAvailableNow ? "#2f7a44" : "var(--border)"}`,
       }}

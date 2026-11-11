@@ -14,12 +14,12 @@ import { SAMPLE_ROLE_TITLES, sampleIndexFor } from "@/lib/trainerSampleData";
 // Walk = Deep Forest Green, Home Staycation = Terracotta, Luxury Spa =
 // Honey Gold, Good Manners = Heritage Red.
 const OFFERINGS = [
-  { label: "Walks", icon: PawPrint, href: "/walk-booking", bg: "rgba(22,40,31,0.12)", fg: "var(--forest, #16281f)" },
-  { label: "Grooming", icon: Scissors, href: "/grooming", bg: "rgba(232,169,74,0.18)", fg: "var(--gold)" },
+  { label: "Walks", icon: PawPrint, href: "/walk-booking", bg: "rgba(61,20,38,0.12)", fg: "var(--forest, #3d1426)" },
+  { label: "Grooming", icon: Scissors, href: "/grooming", bg: "rgba(249,221,138,0.18)", fg: "var(--gold)" },
   { label: "Training", icon: GraduationCap, href: "/training", bg: "rgba(192,57,43,0.12)", fg: "var(--heritage-red, #c0392b)" },
-  { label: "Vet Care", icon: Stethoscope, href: "/owner/pets", bg: "var(--cream)", fg: "var(--forest, #16281f)" },
-  { label: "Staycation", icon: HomeIcon, href: "/sitting", bg: "rgba(201,122,86,0.18)", fg: "var(--terracotta)" },
-  { label: "Passport", icon: BookOpen, href: "/owner/pets", bg: "var(--cream)", fg: "var(--forest, #16281f)" },
+  { label: "Vet Care", icon: Stethoscope, href: "/owner/pets", bg: "var(--cream)", fg: "var(--forest, #3d1426)" },
+  { label: "Staycation", icon: HomeIcon, href: "/sitting", bg: "rgba(110,30,59,0.18)", fg: "var(--terracotta)" },
+  { label: "Passport", icon: BookOpen, href: "/owner/pets", bg: "var(--cream)", fg: "var(--forest, #3d1426)" },
 ];
 
 export default function HomeNewUserMobile({
@@ -56,7 +56,7 @@ export default function HomeNewUserMobile({
       <section className="mt-3 px-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Signature Offerings</span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: "var(--terracotta)", background: "rgba(201,122,86,0.12)" }}>
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: "var(--terracotta)", background: "rgba(110,30,59,0.12)" }}>
             <Gift size={12} /> New Member Perks
           </span>
         </div>
@@ -68,7 +68,7 @@ export default function HomeNewUserMobile({
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: o.bg }}>
                   <Icon size={26} color={o.fg} />
                 </div>
-                <span className="font-heading font-semibold text-xs" style={{ color: "var(--forest, #16281f)" }}>{o.label}</span>
+                <span className="font-heading font-semibold text-xs" style={{ color: "var(--forest, #3d1426)" }}>{o.label}</span>
               </Link>
             );
           })}
@@ -79,11 +79,11 @@ export default function HomeNewUserMobile({
       <section className="mt-4 px-4">
         <div className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)" }}>
           <div className="flex flex-col gap-3">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-full w-max" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-full w-max" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
               {avgRating !== null && avgRating > 0 && <span style={{ color: "var(--gold)" }}>★ {avgRating.toFixed(2)}</span>}
               <span>• {verifiedCount} Local Providers • Zero Cancellation Fees</span>
             </div>
-            <h2 className="font-heading font-bold text-2xl leading-tight tracking-tight" style={{ color: "var(--forest, #16281f)" }}>
+            <h2 className="font-heading font-bold text-2xl leading-tight tracking-tight" style={{ color: "var(--forest, #3d1426)" }}>
               Everything your dog needs, from birth to death. One ecosystem.
             </h2>
             <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
@@ -95,7 +95,7 @@ export default function HomeNewUserMobile({
             <div className="flex items-center justify-between p-2.5 rounded-lg" style={{ background: "var(--cream)" }}>
               <div className="flex items-center gap-2">
                 <Gift size={18} color="var(--terracotta)" />
-                <span className="font-heading font-bold text-[11px]" style={{ color: "var(--forest, #16281f)" }}>Welcome Gift: 100 Bonus PawPoints</span>
+                <span className="font-heading font-bold text-[11px]" style={{ color: "var(--forest, #3d1426)" }}>Welcome Gift: 100 Bonus PawPoints</span>
               </div>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "var(--panel-dark)", color: "var(--gold)" }}>Real &amp; Credited</span>
             </div>
@@ -104,7 +104,7 @@ export default function HomeNewUserMobile({
               <Link href="/walk-booking" className="w-full h-11 rounded-full flex items-center justify-center gap-2 font-heading font-bold text-xs" style={{ background: "var(--panel-dark)", color: "white" }}>
                 Book First Service <ArrowRight size={14} />
               </Link>
-              <Link href="/owner/pets" className="w-full h-11 rounded-full flex items-center justify-center gap-1.5 font-heading font-semibold text-xs shadow-sm" style={{ background: "var(--card)", color: "var(--forest, #16281f)", border: "1px solid var(--border)" }}>
+              <Link href="/owner/pets" className="w-full h-11 rounded-full flex items-center justify-center gap-1.5 font-heading font-semibold text-xs shadow-sm" style={{ background: "var(--card)", color: "var(--forest, #3d1426)", border: "1px solid var(--border)" }}>
                 <BookOpen size={14} /> Create Free Paw Passport
               </Link>
             </div>
@@ -125,7 +125,7 @@ export default function HomeNewUserMobile({
       <section className="mt-6 px-4">
         <div className="mb-3">
           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--terracotta)" }}>Purposeful Living</span>
-          <h3 className="font-heading font-bold text-lg leading-tight mt-0.5" style={{ color: "var(--forest, #16281f)" }}>
+          <h3 className="font-heading font-bold text-lg leading-tight mt-0.5" style={{ color: "var(--forest, #3d1426)" }}>
             Not a marketplace, an experience for every part of their week
           </h3>
         </div>
@@ -133,19 +133,19 @@ export default function HomeNewUserMobile({
           {/* Grooming — featured showcase */}
           <div className="p-4 rounded-2xl shadow-sm relative" style={{ background: "var(--card)" }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(232,169,74,0.25)", color: "var(--gold)" }}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(249,221,138,0.25)", color: "var(--gold)" }}>
                 <Star size={12} fill="var(--gold)" /> Most Popular First Visit
               </span>
-              <span className="font-heading font-bold text-sm" style={{ color: "var(--forest, #16281f)" }}>from ₹499</span>
+              <span className="font-heading font-bold text-sm" style={{ color: "var(--forest, #3d1426)" }}>from ₹499</span>
             </div>
             <div className="flex gap-3">
               <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--cream)" }}>
                 {products[0]?.imageUrls[0] && <img src={products[0].imageUrls[0]} alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="flex flex-col min-w-0 justify-center">
-                <h4 className="font-heading font-bold text-sm truncate" style={{ color: "var(--forest, #16281f)" }}>Artisanal Spa &amp; Gentle Grooming</h4>
+                <h4 className="font-heading font-bold text-sm truncate" style={{ color: "var(--forest, #3d1426)" }}>Artisanal Spa &amp; Gentle Grooming</h4>
                 <p className="text-xs line-clamp-2 mt-0.5" style={{ color: "var(--muted)" }}>Organic botanical wash, hydro-massage therapy &amp; stress-free scissor styling.</p>
-                <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 w-max" style={{ background: "rgba(232,169,74,0.2)", color: "var(--gold)" }}>
+                <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 w-max" style={{ background: "rgba(249,221,138,0.2)", color: "var(--gold)" }}>
                   First-timer stress-free trial
                 </span>
               </div>
@@ -167,11 +167,11 @@ export default function HomeNewUserMobile({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>Adventure Walks</h4>
-                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #16281f)" }}>from ₹299</span>
+                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>Adventure Walks</h4>
+                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #3d1426)" }}>from ₹299</span>
               </div>
               <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--muted)" }}>GPS tracked route • Certified handlers • Live photo logs</p>
-              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1.5" style={{ background: "rgba(22,40,31,0.1)", color: "var(--forest, #16281f)" }}>Solo &amp; Pack Options</span>
+              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1.5" style={{ background: "rgba(61,20,38,0.1)", color: "var(--forest, #3d1426)" }}>Solo &amp; Pack Options</span>
             </div>
           </Link>
 
@@ -182,8 +182,8 @@ export default function HomeNewUserMobile({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>Behavior &amp; Training</h4>
-                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #16281f)" }}>from ₹799</span>
+                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>Behavior &amp; Training</h4>
+                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #3d1426)" }}>from ₹799</span>
               </div>
               <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--muted)" }}>In-home positive reinforcement &amp; puppy foundations</p>
               <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1.5" style={{ background: "rgba(192,57,43,0.12)", color: "var(--heritage-red, #c0392b)" }}>Vetted Ethologists</span>
@@ -197,11 +197,11 @@ export default function HomeNewUserMobile({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>Home Staycation</h4>
-                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #16281f)" }}>₹899/night</span>
+                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>Home Staycation</h4>
+                <span className="text-xs font-bold shrink-0" style={{ color: "var(--forest, #3d1426)" }}>₹899/night</span>
               </div>
               <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--muted)" }}>100% cage-free vetted host family environments</p>
-              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1.5" style={{ background: "rgba(201,122,86,0.18)", color: "var(--terracotta)" }}>24/7 Concierge Cam</span>
+              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1.5" style={{ background: "rgba(110,30,59,0.18)", color: "var(--terracotta)" }}>24/7 Concierge Cam</span>
             </div>
           </Link>
         </div>
@@ -213,7 +213,7 @@ export default function HomeNewUserMobile({
           <div className="flex items-center justify-between mb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Small-Batch Supplies</span>
-              <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #16281f)" }}>The Artisan Shelf — Handcrafted Goods</h3>
+              <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #3d1426)" }}>The Artisan Shelf — Handcrafted Goods</h3>
             </div>
             <Link href="/accessories" className="text-xs font-semibold flex items-center gap-0.5 shrink-0" style={{ color: "var(--terracotta)" }}>
               Explore <ArrowRight size={12} />
@@ -233,10 +233,10 @@ export default function HomeNewUserMobile({
                     )}
                   </div>
                   <div>
-                    <h4 className="font-heading font-semibold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>{p.name}</h4>
+                    <h4 className="font-heading font-semibold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>{p.name}</h4>
                   </div>
                   <div className="flex items-center justify-between mt-2 pt-1">
-                    <span className="font-heading font-bold text-xs" style={{ color: "var(--forest, #16281f)" }}>₹{(p.price / 100).toFixed(0)}</span>
+                    <span className="font-heading font-bold text-xs" style={{ color: "var(--forest, #3d1426)" }}>₹{(p.price / 100).toFixed(0)}</span>
                     <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "var(--cream)" }}>+</span>
                   </div>
                 </Link>
@@ -255,8 +255,8 @@ export default function HomeNewUserMobile({
         <section className="mt-6 px-4">
           <div className="p-4 rounded-2xl shadow-sm" style={{ background: "var(--card)" }}>
             <div className="flex items-center gap-1.5 mb-1">
-              <ShieldCheck size={16} color="var(--forest, #16281f)" />
-              <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #16281f)" }}>Trust Beats Discounts</h3>
+              <ShieldCheck size={16} color="var(--forest, #3d1426)" />
+              <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #3d1426)" }}>Trust Beats Discounts</h3>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>Every single partner is vetted in-person through a rigorous 28-point certification protocol.</p>
             <div className="flex flex-col gap-2.5">
@@ -270,13 +270,13 @@ export default function HomeNewUserMobile({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1">
-                          <span className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>{p.user.name}</span>
-                          <CheckCircle2 size={13} color="var(--forest, #16281f)" />
+                          <span className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>{p.user.name}</span>
+                          <CheckCircle2 size={13} color="var(--forest, #3d1426)" />
                         </div>
                         <span className="text-[11px]" style={{ color: "var(--muted)" }}>{role} • {p._count.bookings} completed</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: "rgba(232,169,74,0.2)", color: "var(--gold)" }}>
+                    <div className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: "rgba(249,221,138,0.2)", color: "var(--gold)" }}>
                       ★ {p.ratingAvg.toFixed(2)}
                     </div>
                   </div>
@@ -290,8 +290,8 @@ export default function HomeNewUserMobile({
                 { icon: FileCheck, label: "Insured & Bonded" },
               ].map((b) => (
                 <div key={b.label} className="flex flex-col items-center text-center p-2 rounded-lg" style={{ background: "var(--cream)" }}>
-                  <b.icon size={18} color="var(--forest, #16281f)" />
-                  <span className="text-[10px] font-semibold mt-1" style={{ color: "var(--forest, #16281f)" }}>{b.label}</span>
+                  <b.icon size={18} color="var(--forest, #3d1426)" />
+                  <span className="text-[10px] font-semibold mt-1" style={{ color: "var(--forest, #3d1426)" }}>{b.label}</span>
                 </div>
               ))}
             </div>
@@ -316,7 +316,7 @@ export default function HomeNewUserMobile({
               Your pet's physical safety and emotional wellbeing is unconditionally insured on every single appointment. Free lifetime Paw Passport, vetted handlers, transparent pricing, and artisan nutrition in a single connected experience.
             </p>
             <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
-              <Link href="/walk-booking" className="h-11 px-5 rounded-full font-heading font-bold text-xs flex items-center justify-center gap-2 shadow-md" style={{ background: "var(--gold)", color: "var(--forest, #16281f)" }}>
+              <Link href="/walk-booking" className="h-11 px-5 rounded-full font-heading font-bold text-xs flex items-center justify-center gap-2 shadow-md" style={{ background: "var(--gold)", color: "var(--forest, #3d1426)" }}>
                 Book First Service <ArrowRight size={14} />
               </Link>
               <Link href="/owner/pets" className="h-11 px-5 rounded-full font-heading font-semibold text-xs flex items-center justify-center gap-1.5" style={{ background: "rgba(255,255,255,0.12)" }}>
@@ -333,7 +333,7 @@ export default function HomeNewUserMobile({
         <div className="flex items-center justify-between mb-3">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--terracotta)" }}>Canine Community</span>
-            <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #16281f)" }}>Community Pack Meetups</h3>
+            <h3 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #3d1426)" }}>Community Pack Meetups</h3>
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide" style={{ background: "var(--cream)", color: "var(--muted)" }}>Coming Soon</span>
         </div>
@@ -344,7 +344,7 @@ export default function HomeNewUserMobile({
                 <span className="font-heading font-bold text-xs">TBD</span>
               </div>
               <div className="min-w-0">
-                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #16281f)" }}>Local dog meetups</h4>
+                <h4 className="font-heading font-bold text-xs truncate" style={{ color: "var(--forest, #3d1426)" }}>Local dog meetups</h4>
                 <span className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "var(--muted)" }}>
                   <MapPin size={12} color="var(--terracotta)" /> Details coming soon
                 </span>
@@ -365,7 +365,7 @@ export default function HomeNewUserMobile({
           <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: "var(--panel-dark)" }}>
             <PawPrint size={20} color="var(--gold)" />
           </div>
-          <h4 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #16281f)" }}>Barkado &amp; Co. Guarantee</h4>
+          <h4 className="font-heading font-bold text-sm" style={{ color: "var(--forest, #3d1426)" }}>Barkado &amp; Co. Guarantee</h4>
           <p className="text-xs max-w-xs mt-1" style={{ color: "var(--muted)" }}>
             Your pet's physical safety and emotional wellbeing is unconditionally insured on every single appointment.
           </p>
@@ -382,7 +382,7 @@ export default function HomeNewUserMobile({
           <span className="text-[10px] mt-4" style={{ color: "var(--muted)" }}>© 2026 Barkado &amp; Co. All rights reserved. Crafted with devotion.</span>
         </div>
 
-        <div className="mt-4 flex items-center justify-between p-2.5 rounded-xl" style={{ background: "#fdece5", color: "#a5652a" }}>
+        <div className="mt-4 flex items-center justify-between p-2.5 rounded-xl" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
           <div className="flex items-center gap-2">
             <Phone size={18} />
             <span className="font-heading font-bold text-xs">Need Urgent Pet Help?</span>

@@ -21,10 +21,10 @@ export async function sendProviderApprovalEmail(to: string, name: string) {
       subject: "You're approved! Welcome to Barkado & Co.",
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #16281f;">You're approved, ${name}! 🎉</h2>
+          <h2 style="color: #6e1e3b;">You're approved, ${name}! 🎉</h2>
           <p>Your provider profile has been reviewed and approved. You can now start receiving booking requests on Barkado &amp; Co.</p>
           <p>
-            <a href="${appUrl}/provider" style="display:inline-block;background:#c97a56;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:bold;">
+            <a href="${appUrl}/provider" style="display:inline-block;background:#6e1e3b;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:bold;">
               Open your dashboard
             </a>
           </p>

@@ -36,7 +36,7 @@ export default function AccessoriesListClient({
 
   return (
     <div>
-      <div className="px-6 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
+      <div id="shop-products" className="px-4 mb-4 flex gap-2 overflow-x-auto no-scrollbar scroll-mt-24">
         <button
           onClick={() => { setActiveCategory(null); setVisibleCount(PAGE_SIZE); }}
           className="tap-scale shrink-0 px-4 py-2 rounded-full text-sm font-semibold"
@@ -64,13 +64,13 @@ export default function AccessoriesListClient({
         ))}
       </div>
 
-      <div className="px-6 mb-6">
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+      <div className="px-4 mb-6">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold" style={{ background: "var(--gold)", color: "#3d1426", border: "1.5px dashed rgba(61,20,38,0.18)" }}>
           <Truck size={14} /> Free shipping on orders over ₹500
         </div>
       </div>
 
-      <div className="px-6">
+      <div className="px-4">
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
           Showing {visible.length} of {filtered.length} {activeCategory ? activeCategory.toLowerCase() : "curated"} essentials
         </p>
@@ -78,7 +78,7 @@ export default function AccessoriesListClient({
         {filtered.length === 0 ? (
           <p className="text-sm py-10 text-center" style={{ color: "var(--muted)" }}>No products match your search.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {visible.map((item) => (
               <AccessoryCard key={item.id} item={item} />
             ))}

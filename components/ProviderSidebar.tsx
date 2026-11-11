@@ -38,7 +38,7 @@ export default function ProviderSidebar({
       style={{ width: 260, background: "var(--card)", border: "1px solid var(--border)", top: 24, alignSelf: "flex-start" }}
     >
       <div className="p-5 flex items-center gap-3" style={{ borderBottom: "1px solid var(--border)" }}>
-        <PawPrint size={22} color="var(--forest, #16281f)" />
+        <PawPrint size={22} color="var(--forest, #3d1426)" />
         <div>
           <p className="font-bold text-sm">Barkado Pro</p>
           <p className="text-[11px]" style={{ color: "var(--muted)" }}>Professional Dashboard</p>

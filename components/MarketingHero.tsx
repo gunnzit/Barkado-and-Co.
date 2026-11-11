@@ -119,7 +119,7 @@ export default function MarketingHero({
               bonus amount. Kept per explicit instruction, "for now". */}
           <div
             className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white tap-scale"
-            style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}
+            style={{ background: "linear-gradient(135deg, #f9dd8a 0%, #6e1e3b 100%)" }}
           >
             <Gift size={13} /> Welcome Gift: 100 Bonus PawPoints
           </div>

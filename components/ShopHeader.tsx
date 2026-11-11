@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { useEffect } from "react";
 import { Search, SlidersHorizontal, ShoppingBag, User, MapPin, ChevronDown } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
@@ -47,44 +48,44 @@ export default function ShopHeader({
   const addressLabel = userAddress ? userAddress.split(",")[0] : "Set location";
 
   return (
-    <div className="px-4 pt-3 pb-3" style={{ background: "#fbfaee" }}>
+    <div className="px-4 pt-3 pb-3" style={{ background: "#fffaf0" }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <h1 className="font-extrabold text-lg" style={{ ...H, color: "#02120a" }}>Barkado &amp; Co.</h1>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#ffdbcd", color: "#904c2c" }}>SHOP</span>
+          <h1><BrandLogo variant="wordmark" className="h-8 w-auto" /></h1>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "#f9dd8a", color: "#6e1e3b" }}>SHOP</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: "#e9e9dd", color: "#02120a", ...H }}>
-            <span style={{ color: "#904c2c" }}>●</span> {pawPointsBalance.toLocaleString("en-IN")} PTS
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: "#f3e2c4", color: "#2a0c18", ...H }}>
+            <span style={{ color: "#6e1e3b" }}>●</span> {pawPointsBalance.toLocaleString("en-IN")} PTS
           </div>
-          <Link href="/owner/profile" className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#02120a" }}>
+          <Link href="/owner/profile" className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#6e1e3b" }}>
             <User size={15} color="white" />
           </Link>
         </div>
       </div>
 
       <button onClick={openPicker} className="flex items-center gap-1 text-xs mb-3 tap-scale">
-        <MapPin size={12} color="#904c2c" />
-        <span className="font-semibold" style={{ ...H, color: "#02120a" }}>{addressLabel}</span>
-        <ChevronDown size={12} color="#424844" />
+        <MapPin size={12} color="#6e1e3b" />
+        <span className="font-semibold" style={{ ...H, color: "#2a0c18" }}>{addressLabel}</span>
+        <ChevronDown size={12} color="#5e4752" />
       </button>
 
       <div className="flex items-center gap-2">
-        <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-xl" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.3)" }}>
-          <Search size={16} color="#737874" className="shrink-0" />
+        <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-xl" style={{ background: "#ffffff", border: "1px solid rgba(227,207,196,0.3)" }}>
+          <Search size={16} color="#735c68" className="shrink-0" />
           <input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search leashes, chews, bowls..."
             className="flex-1 bg-transparent text-sm outline-none min-w-0"
           />
-          <SlidersHorizontal size={15} color="#904c2c" className="shrink-0" />
+          <SlidersHorizontal size={15} color="#6e1e3b" className="shrink-0" />
         </div>
-        <Link href="/cart" className="flex items-center gap-1.5 h-10 px-3 rounded-xl shrink-0" style={{ background: "#02120a", color: "white" }}>
+        <Link href="/cart" className="flex items-center gap-1.5 h-10 px-3 rounded-xl shrink-0" style={{ background: "#6e1e3b", color: "white" }}>
           <span className="relative">
             <ShoppingBag size={16} />
             {items.length > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ background: "#904c2c" }}>
+              <span className="absolute -top-2 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ background: "#6e1e3b" }}>
                 {items.length}
               </span>
             )}

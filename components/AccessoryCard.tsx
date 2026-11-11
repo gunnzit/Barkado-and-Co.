@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Sparkles, Check } from "lucide-react";
+import { Dog, CircleDot, UtensilsCrossed, Bone, BedDouble, Briefcase, Sparkles, Check, Plus } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import FavoriteButton from "@/components/FavoriteButton";
 import PartnerBrandTag from "@/components/PartnerBrandTag";
@@ -43,9 +43,15 @@ const COLOR_DOT: Record<string, string> = {
 function stockLabel(stock: number): { text: string; color: string } {
   if (stock <= 0) return { text: "Out of stock", color: "var(--muted)" };
   if (stock <= 5) return { text: `Only ${stock} left`, color: "var(--heritage-red, #c0392b)" };
-  return { text: `${stock} in stock & ready to ship`, color: "var(--forest, #16281f)" };
+  return { text: `${stock} in stock & ready to ship`, color: "var(--forest, #3d1426)" };
 }
 
+/**
+ * Compact 2-column product card from the Stitch Shop design
+ * (design/stitch/03-shop): square photo on ivory, favourite heart, name,
+ * one-line description, price and a round plum add button.
+ * Cart, stock and colour/size logic is unchanged.
+ */
 export function AccessoryCard({ item }: { item: Accessory }) {
   const { quantities, setQuantity } = useCart();
   const qty = quantities[item.id] ?? 0;
@@ -62,6 +68,9 @@ export function AccessoryCard({ item }: { item: Accessory }) {
   const [adding, setAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [error, setError] = useState("");
+
+  const needsOptions = colorOptions.length > 0 || sizeOptions.length > 0;
+  const soldOut = item.stock <= 0;
 
   const addToCart = async () => {
     setAdding(true);
@@ -86,124 +95,123 @@ export function AccessoryCard({ item }: { item: Accessory }) {
   };
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-      <Link href={`/accessories/${item.id}`} className="block relative">
-        <div className="w-full flex items-center justify-center relative" style={{ height: 200, background: "var(--cream)" }}>
+    <div
+      className="flex flex-col rounded-[1.5rem] overflow-hidden"
+      style={{ background: "var(--card)", border: "1px solid rgba(61,20,38,0.07)", boxShadow: "0 8px 24px -4px rgba(61,20,38,0.06)" }}
+    >
+      <Link href={`/accessories/${item.id}`} className="block relative p-2 pb-0">
+        <div className="img-frame w-full aspect-square flex items-center justify-center relative !rounded-[1.1rem]" style={{ background: "var(--cream)" }}>
           {photo ? (
             <img src={photo} alt={item.name} className="w-full h-full object-cover" />
           ) : (
-            <Icon size={40} color="var(--tan)" strokeWidth={1.5} />
+            <Icon size={36} color="var(--tan)" strokeWidth={1.5} />
           )}
           {item.isBestseller && (
             <span
-              className="absolute top-3 left-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
-              style={{ background: "var(--panel-dark)", color: "var(--gold)" }}
+              className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "var(--gold)", color: "#3d1426" }}
             >
               <Sparkles size={10} /> Bestseller
             </span>
           )}
+          {hasDiscount && (
+            <span className="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbe5f3", color: "#3d1426" }}>
+              {percentOff}% off
+            </span>
+          )}
         </div>
-        <div className="absolute top-3 right-3" onClick={(e) => e.preventDefault()}>
-          <FavoriteButton productId={item.id} size={15} />
+        <div className="absolute top-4 right-4" onClick={(e) => e.preventDefault()}>
+          <FavoriteButton productId={item.id} size={14} />
         </div>
       </Link>
 
-      <div className="p-4">
-        <Link href={`/accessories/${item.id}`}>
-          <p className="font-heading font-bold text-base leading-snug">{item.name}</p>
-          <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>{item.description}</p>
+      <div className="flex flex-col flex-1 p-3 pt-2.5">
+        <Link href={`/accessories/${item.id}`} className="min-w-0">
+          <p className="font-heading font-bold text-sm leading-snug line-clamp-1" style={{ color: "var(--terracotta)" }}>{item.name}</p>
+          <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: "var(--muted)" }}>{item.description}</p>
         </Link>
 
         {item.partnerBrand && (
-          <div className="mt-2">
+          <div className="mt-1.5">
             <PartnerBrandTag partnerBrandId={item.partnerBrand.id} partnerBrandName={item.partnerBrand.name} />
           </div>
         )}
 
-        {(colorOptions.length > 0 || sizeOptions.length > 0) && (
-          <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
-            {colorOptions.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                {colorOptions.map((c) => {
-                  const dot = COLOR_DOT[c.toLowerCase()] ?? "#c9a876";
-                  const active = selectedColor === c;
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedColor(c)}
-                      className="tap-scale w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: dot, border: active ? "2px solid var(--panel-dark)" : "2px solid transparent", boxShadow: "0 0 0 1px var(--border)" }}
-                      title={c}
-                      aria-label={c}
-                    >
-                      {active && <Check size={11} color="white" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {sizeOptions.length > 0 && (
-              <div className="flex items-center gap-1">
-                {sizeOptions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className="tap-scale px-2.5 py-1 rounded-md text-xs font-semibold"
-                    style={{
-                      background: selectedSize === s ? "var(--panel-dark)" : "var(--cream)",
-                      color: selectedSize === s ? "white" : "inherit",
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+        {needsOptions && (
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {colorOptions.map((c) => {
+              const dot = COLOR_DOT[c.toLowerCase()] ?? "#c9a876";
+              const active = selectedColor === c;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setSelectedColor(c)}
+                  className="tap-scale w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: dot, border: active ? "2px solid var(--panel-dark)" : "2px solid transparent", boxShadow: "0 0 0 1px var(--border)" }}
+                  title={c}
+                  aria-label={c}
+                >
+                  {active && <Check size={10} color="white" />}
+                </button>
+              );
+            })}
+            {sizeOptions.map((sz) => (
+              <button
+                key={sz}
+                onClick={() => setSelectedSize(sz)}
+                className="tap-scale px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{
+                  background: selectedSize === sz ? "var(--panel-dark)" : "var(--cream)",
+                  color: selectedSize === sz ? "white" : "inherit",
+                }}
+              >
+                {sz}
+              </button>
+            ))}
           </div>
         )}
 
-        <p className="text-xs font-medium mt-3" style={{ color: stock.color }}>{stock.text}</p>
+        {item.stock <= 5 && (
+          <p className="text-[11px] font-semibold mt-1.5" style={{ color: stock.color }}>{stock.text}</p>
+        )}
 
-        <div className="flex items-center justify-between mt-3 gap-3">
-          <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-bold text-xl">₹{item.price}</span>
-              {hasDiscount && (
-                <span className="text-sm line-through" style={{ color: "var(--muted)" }}>₹{item.compareAtPrice}</span>
-              )}
-            </div>
+        <div className="flex items-end justify-between mt-auto pt-2.5 gap-2">
+          <div className="min-w-0">
+            <span className="font-heading font-bold text-base">₹{item.price.toLocaleString("en-IN")}</span>
             {hasDiscount && (
-              <p className="text-[11px] font-bold" style={{ color: "#2f6fb0" }}>{percentOff}% OFF</p>
+              <span className="block text-[11px] line-through leading-none" style={{ color: "var(--muted)" }}>₹{item.compareAtPrice}</span>
             )}
           </div>
 
-          {colorOptions.length > 0 || sizeOptions.length > 0 ? (
+          {needsOptions ? (
             <button
               onClick={addToCart}
-              disabled={item.stock <= 0 || adding}
-              className="btn-primary tap-scale shrink-0 flex items-center gap-1.5"
-              style={{ opacity: item.stock <= 0 ? 0.4 : 1 }}
+              disabled={soldOut || adding}
+              className="tap-scale shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white"
+              style={{ background: "var(--panel-dark)", opacity: soldOut ? 0.4 : 1 }}
+              aria-label={justAdded ? `${item.name} added to cart` : `Add ${item.name} to cart`}
             >
-              {adding ? "Adding…" : justAdded ? (<><Check size={14} /> Added</>) : "Add to Cart"}
+              {adding ? "…" : justAdded ? <Check size={16} /> : <Plus size={17} />}
             </button>
           ) : qty === 0 ? (
             <button
               onClick={() => setQuantity(item.id, 1)}
-              disabled={item.stock <= 0}
-              className="btn-primary tap-scale shrink-0"
-              style={{ opacity: item.stock <= 0 ? 0.4 : 1 }}
+              disabled={soldOut}
+              className="tap-scale shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white"
+              style={{ background: "var(--panel-dark)", opacity: soldOut ? 0.4 : 1 }}
+              aria-label={`Add ${item.name} to cart`}
             >
-              Add to Cart
+              <Plus size={17} />
             </button>
           ) : (
-            <div className="flex items-center gap-2 rounded-lg px-1 py-1 shrink-0" style={{ background: "var(--panel-dark)" }}>
-              <button onClick={() => setQuantity(item.id, qty - 1)} className="tap-scale w-7 h-7 rounded flex items-center justify-center text-white font-bold" aria-label="Decrease quantity">−</button>
-              <span className="text-sm font-bold text-white w-5 text-center">{qty}</span>
-              <button onClick={() => setQuantity(item.id, qty + 1)} className="tap-scale w-7 h-7 rounded flex items-center justify-center text-white font-bold" aria-label="Increase quantity">+</button>
+            <div className="flex items-center gap-0.5 rounded-full p-0.5 shrink-0" style={{ background: "var(--panel-dark)" }}>
+              <button onClick={() => setQuantity(item.id, qty - 1)} className="tap-scale w-7 h-7 rounded-full flex items-center justify-center text-white font-bold" aria-label="Decrease quantity">−</button>
+              <span className="text-xs font-bold text-white w-4 text-center">{qty}</span>
+              <button onClick={() => setQuantity(item.id, qty + 1)} className="tap-scale w-7 h-7 rounded-full flex items-center justify-center text-white font-bold" aria-label="Increase quantity">+</button>
             </div>
           )}
         </div>
-        {error && <p className="text-xs mt-2" style={{ color: "var(--terracotta)" }}>{error}</p>}
+        {error && <p className="text-[11px] mt-1.5" style={{ color: "var(--heritage-red, #c0392b)" }}>{error}</p>}
       </div>
     </div>
   );

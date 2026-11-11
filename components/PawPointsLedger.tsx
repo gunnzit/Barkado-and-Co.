@@ -6,10 +6,10 @@ import { Plus, Minus, RotateCcw } from "lucide-react";
 type Transaction = { id: string; type: string; points: number; createdAt: string };
 
 const TYPE_META: Record<string, { label: string; icon: any; sign: "+" | "-"; color: string }> = {
-  EARNED: { label: "Earned", icon: Plus, sign: "+", color: "var(--forest, #16281f)" },
+  EARNED: { label: "Earned", icon: Plus, sign: "+", color: "var(--forest, #3d1426)" },
   REDEEMED: { label: "Redeemed", icon: Minus, sign: "-", color: "var(--terracotta)" },
   EARNED_REVERSED: { label: "Refund adjustment", icon: RotateCcw, sign: "-", color: "var(--heritage-red, #c0392b)" },
-  REDEEMED_REVERSED: { label: "Refund adjustment", icon: RotateCcw, sign: "+", color: "var(--forest, #16281f)" },
+  REDEEMED_REVERSED: { label: "Refund adjustment", icon: RotateCcw, sign: "+", color: "var(--forest, #3d1426)" },
 };
 
 export default function PawPointsLedger({ transactions }: { transactions: Transaction[] }) {
@@ -31,7 +31,7 @@ export default function PawPointsLedger({ transactions }: { transactions: Transa
               key={f}
               onClick={() => setFilter(f)}
               className="tap-scale px-2.5 py-1 rounded-md text-[11px] font-semibold capitalize"
-              style={{ background: filter === f ? "var(--card)" : "transparent", color: filter === f ? "var(--forest, #16281f)" : "var(--muted)" }}
+              style={{ background: filter === f ? "var(--card)" : "transparent", color: filter === f ? "var(--forest, #3d1426)" : "var(--muted)" }}
             >
               {f}
             </button>

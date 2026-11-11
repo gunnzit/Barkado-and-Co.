@@ -132,7 +132,7 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
   const mins = durationMinutes(booking.startTime, booking.endTime);
   const hasDietaryAlert = dietaryItems(booking.pet).length > 0;
   const CATEGORY_COLOR: Record<string, string> = {
-    WALKING: "var(--forest, #16281f)",
+    WALKING: "var(--forest, #3d1426)",
     SITTING: "var(--terracotta)",
     GROOMING: "var(--gold)",
     TRAINING: "var(--heritage-red, #c0392b)",
@@ -146,7 +146,7 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
       </div>
       <div className="w-1 rounded-full shrink-0 self-stretch" style={{ background: CATEGORY_COLOR[booking.type], opacity: 0.5 }} />
       <img
-        src={booking.pet.photoUrl || `https://i.pravatar.cc/150?u=pet-${booking.id}`}
+        src={booking.pet.photoUrl || "/images/brand/pet-placeholder.svg"}
         alt={booking.pet.name}
         className="w-11 h-11 rounded-full object-cover shrink-0"
         style={{ border: "1px solid var(--border)" }}
@@ -168,7 +168,7 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
         <p className="font-bold text-sm">₹{(booking.priceAmount / 100).toFixed(0)}</p>
         <span
           className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
-          style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}
+          style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}
         >
           {booking.status === "ACCEPTED" ? "Confirmed" : booking.status}
         </span>
@@ -411,8 +411,8 @@ export default function ProviderDashboard({
             {requests.length > 0 && (
               <button onClick={() => setTab("requests")} className="card w-full tap-scale flex items-center justify-between text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdece0" }}>
-                    <Clock size={16} color="#a5652a" />
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#fdf1d6" }}>
+                    <Clock size={16} color="#8a2a4d" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{requests.length} new request{requests.length === 1 ? "" : "s"}</p>

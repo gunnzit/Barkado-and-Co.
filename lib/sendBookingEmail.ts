@@ -74,11 +74,11 @@ export async function sendBookingEmail(params: {
       subject: SUBJECTS[params.type],
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #16281f;">Hi ${params.recipientName},</h2>
-          <h3 style="color: #16281f;">${heading}</h3>
+          <h2 style="color: #6e1e3b;">Hi ${params.recipientName},</h2>
+          <h3 style="color: #6e1e3b;">${heading}</h3>
           <p>${body}</p>
           <p>
-            <a href="${ctaHref}" style="display:inline-block;background:#c97a56;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:bold;">
+            <a href="${ctaHref}" style="display:inline-block;background:#6e1e3b;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:bold;">
               ${ctaLabel}
             </a>
           </p>

@@ -90,7 +90,7 @@ export default function ProviderListPreviewModal({
                       </span>
                     )}
                     {p.availableAtRequestedTime === false && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdece0", color: "#a5652a" }}>
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
                         <Clock size={10} /> Outside their hours
                       </span>
                     )}

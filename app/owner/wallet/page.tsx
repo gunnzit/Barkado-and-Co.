@@ -78,7 +78,7 @@ export default async function WalletPage() {
               </div>
 
               {expiringSoon > 0 && (
-                <div className="rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5" style={{ background: "#fdece5", color: "#a5652a" }}>
+                <div className="rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>
                   <AlertCircle size={16} />
                   <p className="text-xs font-semibold">{expiringSoon} pts expire within 7 days — redeem them before they're gone.</p>
                 </div>

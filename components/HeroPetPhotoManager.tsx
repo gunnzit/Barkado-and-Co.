@@ -215,8 +215,8 @@ export default function HeroPetPhotoManager({
 
       <style jsx>{`
         @keyframes heroPhotoCtaPulse {
-          0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.25), 0 0 0 0 rgba(232,169,74,0.6); }
-          50% { box-shadow: 0 4px 14px rgba(0,0,0,0.25), 0 0 0 8px rgba(232,169,74,0); }
+          0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.25), 0 0 0 0 rgba(249,221,138,0.6); }
+          50% { box-shadow: 0 4px 14px rgba(0,0,0,0.25), 0 0 0 8px rgba(249,221,138,0); }
         }
         .hero-photo-cta {
           animation: heroPhotoCtaPulse 2.2s ease-in-out infinite;

@@ -70,15 +70,15 @@ export default async function AdminOverviewPage() {
             <Link
               href="/admin/providers"
               className="card tap-scale animate-fade-up flex items-center justify-between"
-              style={{ background: "#fdece0", border: "1px solid #e8a94a" }}
+              style={{ background: "#fdf1d6", border: "1px solid #f9dd8a" }}
             >
               <div className="flex items-center gap-3">
-                <Clock size={18} color="#a5652a" />
+                <Clock size={18} color="#8a2a4d" />
                 <div>
-                  <p className="font-semibold text-sm" style={{ color: "#a5652a" }}>
+                  <p className="font-semibold text-sm" style={{ color: "#8a2a4d" }}>
                     {pendingProviders} provider{pendingProviders === 1 ? "" : "s"} awaiting approval
                   </p>
-                  <p className="text-xs" style={{ color: "#a5652a" }}>Review and verify →</p>
+                  <p className="text-xs" style={{ color: "#8a2a4d" }}>Review and verify →</p>
                 </div>
               </div>
             </Link>

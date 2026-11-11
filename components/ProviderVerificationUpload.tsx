@@ -59,7 +59,7 @@ export default function ProviderVerificationUpload() {
   return (
     <div className="space-y-3">
       {profile.verified ? (
-        <div className="card flex items-center gap-3" style={{ background: "#e3f0e6", border: "1px solid #2f7a44" }}>
+        <div className="card flex items-center gap-3" style={{ background: "#e4ebf6", border: "1px solid #2f7a44" }}>
           <ShieldCheck size={20} color="#2f7a44" />
           <div>
             <p className="font-semibold text-sm" style={{ color: "#2f7a44" }}>Verified</p>
@@ -67,13 +67,13 @@ export default function ProviderVerificationUpload() {
           </div>
         </div>
       ) : (
-        <div className="card flex items-center gap-3" style={{ background: "#fdece0", border: "1px solid #e8a94a" }}>
-          <Clock size={20} color="#a5652a" />
+        <div className="card flex items-center gap-3" style={{ background: "#fdf1d6", border: "1px solid #f9dd8a" }}>
+          <Clock size={20} color="#8a2a4d" />
           <div>
-            <p className="font-semibold text-sm" style={{ color: "#a5652a" }}>
+            <p className="font-semibold text-sm" style={{ color: "#8a2a4d" }}>
               {profile.verificationDocs.length > 0 ? "Pending review" : "Not yet submitted"}
             </p>
-            <p className="text-xs" style={{ color: "#a5652a" }}>
+            <p className="text-xs" style={{ color: "#8a2a4d" }}>
               {profile.verificationDocs.length > 0
                 ? "An admin will review your documents shortly."
                 : "Upload an ID or certification to get verified and start receiving requests."}

@@ -27,7 +27,7 @@ const SERVICE_ICON: Record<string, any> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  ACTIVE: { bg: "rgba(22,40,31,0.1)", color: "var(--forest, #16281f)" },
+  ACTIVE: { bg: "rgba(61,20,38,0.1)", color: "var(--forest, #3d1426)" },
   PAUSED: { bg: "rgba(196,110,45,0.12)", color: "var(--terracotta)" },
   COMPLETED: { bg: "var(--cream)", color: "var(--muted)" },
 };
@@ -55,7 +55,7 @@ export default function ProviderCampaignHistory({ onBack }: { onBack: () => void
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="tap-scale p-1.5 rounded-full" style={{ color: "var(--forest, #16281f)" }}>
+        <button onClick={onBack} className="tap-scale p-1.5 rounded-full" style={{ color: "var(--forest, #3d1426)" }}>
           <ArrowLeft size={20} />
         </button>
         <h1 className="text-lg font-bold">Campaign History</h1>

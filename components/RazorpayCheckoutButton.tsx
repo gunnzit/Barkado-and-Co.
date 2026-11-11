@@ -93,7 +93,7 @@ export default function RazorpayCheckoutButton({
         name: user?.fullName ?? undefined,
         email: user?.primaryEmailAddress?.emailAddress ?? undefined,
       },
-      theme: { color: "#c97a56" },
+      theme: { color: "#6e1e3b" },
       handler: async (response: any) => {
         const verifyRes = await fetch("/api/checkout/verify", {
           method: "POST",

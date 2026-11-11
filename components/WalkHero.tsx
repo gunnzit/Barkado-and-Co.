@@ -109,10 +109,10 @@ export default function WalkHero({
       {walksThisWeek > 0 && (
         <div
           className="absolute top-3 left-3 sm:top-5 sm:left-5 flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full"
-          style={{ background: "rgba(232,169,74,0.9)", zIndex: 4 }}
+          style={{ background: "rgba(249,221,138,0.9)", zIndex: 4 }}
         >
-          <Flame size={12} color="#16281f" />
-          <span className="text-[11px] sm:text-xs font-bold" style={{ color: "#16281f" }}>
+          <Flame size={12} color="#3d1426" />
+          <span className="text-[11px] sm:text-xs font-bold" style={{ color: "#3d1426" }}>
             {walksThisWeek} walk{walksThisWeek > 1 ? "s" : ""} this week
           </span>
         </div>
@@ -147,7 +147,7 @@ export default function WalkHero({
           <button
             onClick={() => setShowWalkAnim(true)}
             className="tap-scale walkhero-pulse flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full w-fit text-xs sm:text-sm"
-            style={{ background: "var(--terracotta, #c97a56)", color: "white" }}
+            style={{ background: "var(--terracotta, #6e1e3b)", color: "white" }}
           >
             <PawPrint size={13} />
             <span className="font-bold">Book {petName ?? "a"} walk</span>
@@ -183,8 +183,8 @@ export default function WalkHero({
 
       <style jsx>{`
         @keyframes walkheroPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(201, 122, 86, 0.5); }
-          50% { box-shadow: 0 0 0 8px rgba(201, 122, 86, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(110, 30, 59, 0.5); }
+          50% { box-shadow: 0 0 0 8px rgba(110, 30, 59, 0); }
         }
         .walkhero-pulse {
           animation: walkheroPulse 2s ease-in-out infinite;

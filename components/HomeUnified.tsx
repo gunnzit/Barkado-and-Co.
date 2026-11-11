@@ -3,80 +3,95 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import {
-  Sparkles, RotateCcw, History, Footprints, Bath, Stethoscope, Utensils,
-  GraduationCap, Home as HomeIcon, BadgeCheck, AlertTriangle, ArrowRight,
-  ChevronRight, ShieldCheck, MapPin, Truck, Clock, SlidersHorizontal, Zap,
-  Radar, HeartPulse, PhoneCall, Gift, Plus, Star, Check, PawPrint, MoreVertical,
+  ArrowRight, ChevronRight, ShieldCheck, BadgeCheck, RotateCcw, CalendarClock,
+  Syringe, Sparkles, Plus, Star, PawPrint, Lock, Undo2, Footprints, Scissors,
+  GraduationCap, ShoppingBag, Phone, Mail,
 } from "lucide-react";
-import EmergencyButton from "@/components/EmergencyButton";
 import HomeMobileHeader from "@/components/HomeMobileHeader";
-import UpcomingEvents from "@/components/UpcomingEvents";
-import PetSwitcher from "@/components/PetSwitcher";
-import { derivePassportNumber } from "@/lib/passportId";
-import { formatPetAge } from "@/lib/petAge";
-import { vaccineStatusChip } from "@/lib/petVaccineStatus";
+
+/*
+ * Home page — rebuilt around the four things Barkado & Co. actually sells:
+ * Walking, Grooming, Training and the Shop. Every price, count and guarantee
+ * on this page comes from real data or a real policy (see app/page.tsx and
+ * /legal/refund). Sections with no real data hide themselves instead of
+ * showing samples or placeholders.
+ */
 
 const H = { fontFamily: "var(--font-heading)" } as const;
-const SUPPORT_PHONE = "+91 00000 00000";
+const PLUM = "#6e1e3b";
+const INK = "#3d1426";
+const YELLOW = "#f9dd8a";
+const IVORY = "#fbf0d9";
+const MUTED = "#5e4752";
+const CARD_SHADOW = "0 8px 24px -4px rgba(61,20,38,0.06)";
+const SUPPORT_PHONE_DISPLAY = "+91 99888 75745";
+const SUPPORT_PHONE_TEL = "+919988875745";
+const SUPPORT_EMAIL = "hello@barkadoandco.com";
 
-const SERVICE_LABEL: Record<string, string> = {
-  WALKING: "Adventure Walk", SITTING: "Home Staycation", GROOMING: "Luxury Spa Session", TRAINING: "Good Manners Programme",
-};
-const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", SITTING: "/sitting", GROOMING: "/grooming", TRAINING: "/training" };
+const SERVICE_NAME: Record<string, string> = { WALKING: "Walk", GROOMING: "Grooming", TRAINING: "Training", SITTING: "Sitting" };
+const SERVICE_HREF: Record<string, string> = { WALKING: "/walk-booking", GROOMING: "/grooming", TRAINING: "/training", SITTING: "/sitting" };
 
-const ON_DEMAND = [
-  { label: "Walk in 15m", icon: Footprints, href: "/walk-booking", badge: "⚡ 15M", badgeBg: "#904c2c" },
-  { label: "Mobile Spa", icon: Bath, href: "/grooming", badge: "20% OFF", badgeBg: "#fcba5a" },
-  { label: "Vet At Home", icon: Stethoscope, href: "/owner/pets", badge: "24/7", badgeBg: "#02120a" },
-  { label: "10m Treats", icon: Utensils, href: "/accessories", badge: "FAST", badgeBg: "#904c2c" },
-  { label: "Manners", icon: GraduationCap, href: "/training", badge: null },
-  { label: "Staycation", icon: HomeIcon, href: "/sitting", badge: null },
-  { label: "Passport", icon: BadgeCheck, href: "/owner/pets", badge: null },
-];
+type Prices = { walkFromPaise: number; walkFirstPaise: number | null; groomFromPaise: number | null; trainFromPaise: number | null };
+type Counts = { walkers: number; groomers: number; trainers: number; products: number };
+type Pro = { id: string; name: string; photoUrl: string; ratingAvg: number; completed: number; services: string[] };
+type Product = { id: string; name: string; price: number; compareAtPrice: number | null; imageUrls: string[] };
+type Upcoming = { id: string; type: string; startTime: Date; status: string; providerName: string; petName: string };
+type LastCompleted = { type: string; providerName: string; petName: string; priceAmount: number };
 
-type Pet = {
-  id: string; name: string; breed: string | null; photoUrl: string | null;
-  birthday: Date | null; microchipId: string | null; size: string;
-  gender?: string | null; weightKg?: number | null;
-  vaccinations: { nextDueDate: Date | null }[];
-};
-type Provider = { id: string; user: { name: string }; photoUrl: string | null; ratingAvg: number; _count: { bookings: number } };
-type Product = { id: string; name: string; price: number; compareAtPrice?: number | null; imageUrls: string[] };
-type GroomingBundle = { id: string; name: string; startingPricePaise: number; providerName: string };
-type TrainingBundle = { id: string; name: string; cadence: string; pricePaise: number; providerName: string };
+const rupees = (paise: number) => `₹${Math.round(paise / 100).toLocaleString("en-IN")}`;
+
+function WaveEdge() {
+  return <span className="brand-wave" aria-hidden="true" />;
+}
+
+function SectionTitle({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
+  return (
+    <div className="flex items-end justify-between gap-3 mb-3">
+      <div>
+        <h2 className="font-bold text-[22px] leading-7 tracking-tight" style={{ ...H, color: PLUM }}>{title}</h2>
+        {sub && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>}
+      </div>
+      {href && cta && (
+        <Link href={href} className="text-xs font-bold underline underline-offset-2 shrink-0 pb-0.5" style={{ color: PLUM }}>
+          {cta}
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function HomeUnified({
   isSignedIn,
   userName,
   userAddress,
   userPhone,
-  activePet,
-  pawPointsBalance,
   cartCount,
-  hasHistory,
-  rebookCandidate,
-  verifiedCount,
-  activeProviderCount,
-  providers,
+  pawPointsBalance,
+  pawPointsValuePaise,
+  activePet,
+  nextVaccine,
+  upcoming,
+  lastCompleted,
+  prices,
+  counts,
+  featuredPros,
   products,
-  groomingBundles,
-  trainingBundles,
 }: {
   isSignedIn: boolean;
   userName: string | null;
   userAddress: string | null;
   userPhone: string | null;
-  activePet: Pet | null;
-  pawPointsBalance: number;
   cartCount: number;
-  hasHistory: boolean;
-  rebookCandidate: { type: string; provider: { id: string; user: { name: string } } | null; pet: { name: string } | null; startTime: Date | null; priceAmount: number | null } | null;
-  verifiedCount: number;
-  activeProviderCount: number;
-  providers: Provider[];
+  pawPointsBalance: number;
+  pawPointsValuePaise: number;
+  activePet: { id: string; name: string; breed: string | null; photoUrl: string | null } | null;
+  nextVaccine: { name: string; dueDate: Date } | null;
+  upcoming: Upcoming | null;
+  lastCompleted: LastCompleted | null;
+  prices: Prices;
+  counts: Counts;
+  featuredPros: Pro[];
   products: Product[];
-  groomingBundles: GroomingBundle[];
-  trainingBundles: TrainingBundle[];
 }) {
   const { openSignIn } = useClerk();
   const gate = (e: React.MouseEvent) => {
@@ -86,369 +101,355 @@ export default function HomeUnified({
     }
   };
 
-  const age = activePet ? formatPetAge(activePet.birthday) : null;
-  const vChip = activePet ? vaccineStatusChip(activePet.vaccinations) : null;
+  const isReturning = isSignedIn && (!!upcoming || !!lastCompleted);
+  const petName = activePet?.name ?? null;
+  const firstName = userName?.split(" ")[0] ?? null;
+
+  const services = [
+    {
+      key: "WALKING",
+      title: "Dog Walking",
+      line: "30, 45 or 60 minutes with an ID-verified walker.",
+      icon: Footprints,
+      img: "/images/tab-walking.jpg",
+      imgAlt: "A dog out on a leash walk",
+      price: prices.walkFirstPaise
+        ? { now: rupees(prices.walkFirstPaise), was: rupees(prices.walkFromPaise), note: "first walk" }
+        : { now: rupees(prices.walkFromPaise), was: null, note: null },
+      href: "/walk-booking",
+      cta: "Book a walk",
+      count: counts.walkers,
+      noun: "walker",
+    },
+    {
+      key: "GROOMING",
+      title: "Home Grooming",
+      line: "Bath, trim and tidy-up at your door, priced by your dog's size.",
+      icon: Scissors,
+      img: "/images/brand/golden-bandana.jpg",
+      imgAlt: "A freshly groomed golden retriever",
+      price: prices.groomFromPaise ? { now: rupees(prices.groomFromPaise), was: null, note: null } : null,
+      href: "/grooming",
+      cta: "Book grooming",
+      count: counts.groomers,
+      noun: "groomer",
+    },
+    {
+      key: "TRAINING",
+      title: "Training",
+      line: "Puppy basics, manners and behaviour, with a trainer you choose.",
+      icon: GraduationCap,
+      img: "/images/hero-dog-german-shepherd.jpg",
+      imgAlt: "An alert German shepherd mid-stride",
+      price: prices.trainFromPaise ? { now: rupees(prices.trainFromPaise), was: null, note: null } : null,
+      href: "/training",
+      cta: "Find a trainer",
+      count: counts.trainers,
+      noun: "trainer",
+    },
+  ];
+  const [walk, ...otherServices] = services;
 
   return (
-    <div style={{ background: "#fbfaee" }}>
-      <EmergencyButton />
+    <div style={{ background: IVORY }}>
       <HomeMobileHeader userAddress={userAddress} userPhone={userPhone} cartCount={cartCount} pawPointsBalance={pawPointsBalance} />
 
-      <main className="flex flex-col relative w-full pt-2 pb-24" style={{ background: "#fbfaee" }}>
-        <div className="max-w-6xl mx-auto w-full">
+      <main className="w-full pt-2 pb-28" style={{ background: IVORY }}>
+        <div className="max-w-2xl mx-auto w-full">
 
-          {activeProviderCount > 0 && (
-            <div className="px-4 py-2">
-              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl" style={{ background: "#02120a", color: "white" }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#34d399" }} />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: "#10b981" }} />
+          {/* ===== Returning customer: what's next for their dog ===== */}
+          {isSignedIn && (upcoming || lastCompleted || nextVaccine) && (
+            <section className="enter-up px-4 pt-2 pb-1 space-y-2.5">
+              {upcoming && (
+                <Link href="/owner/bookings" className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: `1.5px solid ${PLUM}`, boxShadow: CARD_SHADOW }}>
+                  <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}>
+                    <CalendarClock size={20} color={PLUM} />
                   </span>
-                  <div className="truncate text-xs">
-                    <span className="font-bold text-white">{activeProviderCount} Pro{activeProviderCount === 1 ? "" : "s"} active</span>
-                    <span style={{ color: "rgba(228,227,215,0.8)" }}> around your area</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>
+                      {upcoming.status === "IN_PROGRESS" ? "Happening now" : upcoming.status === "REQUESTED" ? "Waiting for confirmation" : "Coming up"}
+                    </p>
+                    <p className="font-bold text-[15px] leading-snug truncate" style={{ ...H, color: INK }}>
+                      {SERVICE_NAME[upcoming.type]} for {upcoming.petName} with {upcoming.providerName.split(" ")[0]}
+                    </p>
+                    <p className="text-xs" style={{ color: MUTED }}>
+                      {new Date(upcoming.startTime).toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                    </p>
                   </div>
-                </div>
-                <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#904c2c", color: "white", ...H }} title="Not a real ETA yet">
-                  ⚡ ETA
-                </span>
-              </div>
-            </div>
-          )}
-
-          <section className="px-4 pt-2 pb-2.5">
-            {activePet ? (
-              <div className="relative overflow-hidden rounded-2xl p-4" style={{ background: "#ffffff", border: "1px solid rgba(19,42,31,0.15)", boxShadow: "0 4px 20px -2px rgba(19,42,31,0.05)" }}>
-                <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: "#132a1f" }} />
-                <div className="pl-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <PetSwitcher display="viewing" hideThemeSwitch />
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: "#132a1f", color: "#faf8f2" }}>Active</span>
-                      <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="w-7 h-7 rounded-lg flex items-center justify-center" aria-label="Pet options">
-                        <MoreVertical size={16} color="#a29887" />
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#ebe5d8", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                        {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={22} color="#a29887" />}
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full" style={{ border: "2px solid #1e8e47", background: "white" }} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium" style={{ color: "#6f6759" }}>
-                        {[activePet.breed ?? "Mixed", activePet.gender ? (activePet.gender === "MALE" ? "Male" : "Female") : null].filter(Boolean).join(" • ")}
-                      </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: "#8f8574" }}>
-                        {[age, activePet.weightKg ? `${activePet.weightKg} kg` : null].filter(Boolean).join(" • ")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid #f2ece1" }}>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#ebf5ee", color: "#1d693b", border: "1px solid #d5ebdc" }}>
-                      <Check size={11} /> PawPassport™ #{derivePassportNumber(activePet.id)}
-                    </span>
-                    {vChip && (
-                      <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#faf2e6", color: "#a6611b", border: "1px solid #f2e0c7" }}>
-                        {vChip.text}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3.5 pt-2" style={{ borderTop: "1px solid #f5f0e6" }}>
-                    {rebookCandidate ? (
-                      <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: "#877d6d" }}>
-                        <MapPin size={11} /> Next: {SERVICE_LABEL[rebookCandidate.type]}
-                        {rebookCandidate.startTime ? ` ${rebookCandidate.startTime.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}
-                      </span>
-                    ) : (
-                      <span />
-                    )}
-                    <Link href={`/owner/pets/${activePet.id}`} onClick={gate} className="inline-flex items-center text-xs font-bold tap-scale ml-auto" style={{ color: "#132a1f" }}>
-                      Passport &amp; Care <ChevronRight size={14} className="ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <Link href="/owner/pets" onClick={gate} className="rounded-2xl p-4 flex items-center justify-center text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                <p className="text-sm font-semibold" style={{ color: "#02120a" }}>{isSignedIn ? "Add your first pet" : "Sign in to create your dog's Paw Passport"}</p>
-              </Link>
-            )}
-
-            {rebookCandidate && (
-              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl mt-2.5" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1 text-[11px] font-bold truncate" style={{ ...H, color: "#02120a" }}>
-                    <History size={14} color="#904c2c" />
-                    <span>{SERVICE_LABEL[rebookCandidate.type]}</span>
-                  </div>
-                  <div className="text-[10px] truncate" style={{ color: "#424844" }}>
-                    {rebookCandidate.startTime ? rebookCandidate.startTime.toLocaleString("en-IN", { weekday: "long", hour: "numeric", minute: "2-digit" }) : ""}
-                    {rebookCandidate.provider ? ` with ${rebookCandidate.provider.user.name}` : ""}
-                    {rebookCandidate.priceAmount ? ` • ₹${(rebookCandidate.priceAmount / 100).toFixed(0)}` : ""}
-                  </div>
-                </div>
-                <Link href={SERVICE_HREF[rebookCandidate.type]} onClick={gate} className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
-                  <RotateCcw size={14} /> 1-Tap Rebook
+                  <ChevronRight size={18} color={PLUM} className="shrink-0" />
                 </Link>
-              </div>
-            )}
-          </section>
+              )}
 
-          <section className="py-2.5">
-            <div className="flex items-center justify-between px-4 mb-2">
-              <div>
-                <h3 className="font-bold text-sm tracking-tight" style={{ ...H, color: "#02120a" }}>Instant On-Demand Care</h3>
-                <p className="text-[11px]" style={{ color: "#424844" }}>Book real appointments in a few taps</p>
-              </div>
-              <Link href="/walk-booking" onClick={gate} className="text-[11px] font-semibold flex items-center gap-0.5" style={{ color: "#904c2c" }}>
-                Explore All <ChevronRight size={13} />
-              </Link>
-            </div>
-            <div className="flex gap-2.5 px-4 overflow-x-auto pb-1.5">
-              {ON_DEMAND.map((o) => {
-                const Icon = o.icon;
-                return (
-                  <Link key={o.label} href={o.href} onClick={gate} className="shrink-0 flex flex-col items-center text-center p-2 rounded-2xl tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)", minWidth: 76 }}>
-                    <div className="relative w-12 h-12 rounded-xl flex items-center justify-center mb-1.5" style={{ background: "#efeee3" }}>
-                      <Icon size={22} color="#02120a" />
-                      {o.badge && (
-                        <span className="absolute -top-1.5 -right-1 px-1 py-0.5 rounded-full text-[8px] font-extrabold uppercase" style={{ background: o.badgeBg, color: "white" }} title="Placeholder — no real instant-dispatch timing exists yet">
-                          {o.badge}
+              {!upcoming && lastCompleted && (
+                <div className="flex items-center gap-3 p-4 rounded-[1.75rem]" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>Last time</p>
+                    <p className="font-bold text-[15px] leading-snug truncate" style={{ ...H, color: INK }}>
+                      {SERVICE_NAME[lastCompleted.type]} for {lastCompleted.petName} with {lastCompleted.providerName.split(" ")[0]}
+                    </p>
+                    <p className="text-xs" style={{ color: MUTED }}>{rupees(lastCompleted.priceAmount)}</p>
+                  </div>
+                  <Link href={SERVICE_HREF[lastCompleted.type]} className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tap-scale" style={{ background: PLUM, color: "white", ...H }}>
+                    <RotateCcw size={14} /> Book again
+                  </Link>
+                </div>
+              )}
+
+              {activePet && (nextVaccine || pawPointsBalance > 0) && (
+                <Link href={`/owner/pets/${activePet.id}`} className="flex items-center gap-3 p-3.5 rounded-[1.75rem] tap-scale" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+                  <span className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center" style={{ background: IVORY, boxShadow: `0 0 0 2px ${YELLOW}` }}>
+                    {activePet.photoUrl ? <img src={activePet.photoUrl} alt={activePet.name} className="w-full h-full object-cover" /> : <PawPrint size={18} color={PLUM} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>{activePet.name}&rsquo;s Paw Passport</p>
+                    <p className="text-xs flex flex-wrap gap-x-2" style={{ color: MUTED }}>
+                      {nextVaccine && (
+                        <span className="inline-flex items-center gap-1">
+                          <Syringe size={11} />
+                          {nextVaccine.name} {new Date(nextVaccine.dueDate) < new Date() ? "overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
                         </span>
                       )}
+                      {pawPointsBalance > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <Sparkles size={11} /> {pawPointsBalance} pts = {rupees(pawPointsValuePaise)} off
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <ChevronRight size={18} color={PLUM} className="shrink-0" />
+                </Link>
+              )}
+            </section>
+          )}
+
+          {/* ===== Hero: one job — book a walk ===== */}
+          {!isReturning && (
+            <section className="px-4 pt-2 pb-4">
+              <div className="enter-up relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
+                <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
+                <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-9">
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
+                      <PawPrint size={11} /> Chandigarh
+                    </span>
+                    <h1 className="font-script mt-2 text-[30px] leading-[1.05] text-white">
+                      {firstName && petName ? `A walk for ${petName}?` : "A Hug in every Paw"}
+                    </h1>
+                    <p className="mt-2 text-sm leading-snug" style={{ color: "rgba(251,240,217,0.9)" }}>
+                      Dog walks from{" "}
+                      <span className="font-bold" style={{ color: YELLOW }}>{rupees(prices.walkFirstPaise ?? prices.walkFromPaise)}</span>
+                      {prices.walkFirstPaise && <span className="line-through ml-1 opacity-70">{rupees(prices.walkFromPaise)}</span>}
+                    </p>
+                    {prices.walkFirstPaise && (
+                      <p className="text-xs" style={{ color: "rgba(251,240,217,0.75)" }}>10% off your first walk</p>
+                    )}
+                    <Link href="/walk-booking" onClick={gate} className="mt-4 inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
+                      Book a walk <ArrowRight size={15} />
+                    </Link>
+                  </div>
+                  <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="enter-pop w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)", ["--d" as string]: "80ms" }} />
+                </div>
+                <WaveEdge />
+              </div>
+            </section>
+          )}
+
+          {/* ===== The three services ===== */}
+          <section className="px-4 py-3">
+            <SectionTitle title={isReturning ? "Book again" : "What we do"} sub="Walking, grooming and training, booked in a few taps" />
+
+            {/* Walking leads — the most frequent, most repeatable service */}
+            <Link href={walk.href} onClick={gate} className="enter-up hover-lift block relative overflow-hidden rounded-[1.75rem] mb-3 tap-scale" style={{ ["--d" as string]: "120ms", background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+              <div className="img-frame !rounded-none relative h-40">
+                <img src={walk.img} alt={walk.imgAlt} className="w-full h-full object-cover object-[center_78%]" />
+                <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: YELLOW, color: INK }}>
+                  <walk.icon size={13} /> Most booked
+                </span>
+              </div>
+              <div className="p-4 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-lg leading-tight" style={{ ...H, color: PLUM }}>{walk.title}</h3>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>{walk.line}</p>
+                  {walk.price && (
+                    <p className="mt-2 text-sm" style={{ color: INK }}>
+                      from <span className="font-bold text-base" style={H}>{walk.price.now}</span>
+                      {walk.price.was && <span className="ml-1 text-xs line-through" style={{ color: MUTED }}>{walk.price.was}</span>}
+                      {walk.price.note && <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#dbe5f3" }}>{walk.price.note}</span>}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 inline-flex items-center gap-1 px-4 py-2.5 rounded-full text-xs font-bold" style={{ background: PLUM, color: "white", ...H }}>
+                  {walk.cta} <ArrowRight size={13} />
+                </span>
+              </div>
+            </Link>
+
+            <div className="grid grid-cols-2 gap-3">
+              {otherServices.map((s, i) => (
+                <Link key={s.key} href={s.href} onClick={gate} className="enter-up hover-lift flex flex-col overflow-hidden rounded-[1.5rem] tap-scale" style={{ ["--d" as string]: `${180 + i * 50}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                  <div className="img-frame !rounded-none h-28">
+                    <img src={s.img} alt={s.imgAlt} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="font-bold text-[15px] leading-tight flex items-center gap-1.5" style={{ ...H, color: PLUM }}>
+                      <s.icon size={15} /> {s.title}
+                    </h3>
+                    <p className="text-[11px] mt-1 leading-snug" style={{ color: MUTED }}>{s.line}</p>
+                    <div className="mt-auto pt-2.5 flex items-center justify-between gap-1">
+                      <span className="text-xs" style={{ color: INK }}>
+                        {s.price ? <>from <span className="font-bold text-sm" style={H}>{s.price.now}</span></> : <span style={{ color: MUTED }}>See prices</span>}
+                      </span>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true">
+                        <ArrowRight size={14} />
+                      </span>
                     </div>
-                    <span className="font-bold text-[11px] leading-tight" style={{ ...H, color: "#02120a" }}>{o.label}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* ===== How it works + real guarantees (new visitors) ===== */}
+          {!isReturning && (
+            <section className="px-4 py-3">
+              <div className="enter-up rounded-[1.75rem] p-5" style={{ ["--d" as string]: "280ms", background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+                <h2 className="font-bold text-[20px] leading-7 tracking-tight mb-3" style={{ ...H, color: PLUM }}>How it works</h2>
+                <ol className="space-y-3">
+                  {[
+                    { t: "Pick a service and a time", d: "Walking, grooming or training, at a slot that suits you." },
+                    { t: "Choose a verified pro", d: "See their rating and completed bookings before you pick." },
+                    { t: "Pay securely and relax", d: "Track the booking in the app and rebook in one tap." },
+                  ].map((step, i) => (
+                    <li key={step.t} className="flex items-start gap-3">
+                      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold" style={{ background: YELLOW, color: INK, border: `2px solid ${PLUM}`, ...H }}>{i + 1}</span>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: INK }}>{step.t}</p>
+                        <p className="text-xs" style={{ color: MUTED }}>{step.d}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className="grid grid-cols-3 gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(61,20,38,0.1)" }}>
+                  {[
+                    { icon: ShieldCheck, t: "ID-verified pros", d: "Checked before going live" },
+                    { icon: Undo2, t: "Cancel any time", d: "Full refund before it starts" },
+                    { icon: Lock, t: "Secure payments", d: "Processed by Razorpay" },
+                  ].map((g) => (
+                    <div key={g.t} className="flex flex-col items-center text-center gap-1">
+                      <g.icon size={18} color={PLUM} />
+                      <span className="font-bold text-[11px] leading-tight" style={{ color: INK }}>{g.t}</span>
+                      <span className="text-[10px] leading-tight" style={{ color: MUTED }}>{g.d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ===== Pros — only with real photos and real ratings ===== */}
+          {featuredPros.length > 0 ? (
+            <section className="px-4 py-3">
+              <SectionTitle title="Top-rated pros" sub="Real ratings from Barkado bookings" />
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                {featuredPros.map((p) => (
+                  <Link key={p.id} href={`/provider/${p.id}`} className="hover-lift shrink-0 w-40 p-3 rounded-[1.5rem] text-center tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                    <img src={p.photoUrl} alt={p.name} className="w-16 h-16 rounded-full object-cover mx-auto" style={{ boxShadow: `0 0 0 2px ${YELLOW}` }} />
+                    <p className="font-bold text-sm mt-2 flex items-center justify-center gap-1 truncate" style={{ ...H, color: PLUM }}>
+                      {p.name.split(" ")[0]} <BadgeCheck size={14} color="#a5bde1" />
+                    </p>
+                    <p className="text-xs flex items-center justify-center gap-1" style={{ color: MUTED }}>
+                      <Star size={11} fill="#e9b949" color="#e9b949" /> {p.ratingAvg.toFixed(1)} · {p.completed} done
+                    </p>
+                    <p className="text-[10px] mt-1" style={{ color: MUTED }}>{p.services.map((s) => SERVICE_NAME[s]).join(" · ")}</p>
                   </Link>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="px-4 py-2.5">
-            <div className="p-4 rounded-2xl flex flex-col gap-3.5" style={{ background: "linear-gradient(135deg, #e9e9dd, #efeee3, #f5f4e8)", border: "1px solid rgba(194,200,194,0.3)" }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-extrabold text-base tracking-tight leading-tight" style={{ ...H, color: "#02120a" }}>Grooming &amp; Training Care Bundles</h3>
-                  <p className="text-[11px] mt-0.5" style={{ color: "#424844" }}>
-                    {(groomingBundles.length > 0 || trainingBundles.length > 0) ? "Real multi-session packages from your local providers." : "Sample layout — no real packages created yet."}
-                  </p>
-                </div>
-                <Link href="/grooming" onClick={gate} className="shrink-0 text-xs font-bold flex items-center gap-0.5 pt-1" style={{ color: "#904c2c" }}>
-                  All Bundles <ChevronRight size={14} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-2.5">
-                {(groomingBundles.length > 0 || trainingBundles.length > 0) ? (
-                  <>
-                    {groomingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹{(b.startingPricePaise / 100).toFixed(0)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                          <Link href="/grooming" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#904c2c", color: "white", ...H }}>
-                            Choose Bundle <ArrowRight size={12} />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                    {trainingBundles.map((b) => (
-                      <div key={b.id} className="p-3 rounded-xl flex flex-col justify-between gap-2.5" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.25)" }}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Bundle</span>
-                            <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>{b.name}</h4>
-                            <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>{b.providerName} · {b.cadence.toLowerCase()}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹{(b.pricePaise / 100).toFixed(0)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end pt-2" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                          <Link href="/training" onClick={gate} className="px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
-                            Choose Bundle <ArrowRight size={12} />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#ffdbcd", color: "#904c2c", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Groom &amp; Glow Ritual (4 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>from ₹1,599</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-xl flex flex-col justify-between gap-2.5 opacity-70" style={{ background: "#ffffff", border: "1px dashed rgba(194,200,194,0.5)" }} title="Sample — create real packages via a provider dashboard">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Sample</span>
-                          <h4 className="font-bold text-sm leading-snug mt-1" style={{ ...H, color: "#02120a" }}>Master Manners &amp; Social (6 Sessions)</h4>
-                          <p className="text-[10px] mt-0.5" style={{ color: "#424844" }}>Example only — no provider has created this yet</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>₹3,899</div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {products.length > 0 && (
-            <section className="px-4 py-3">
-              <div className="flex items-center justify-between mb-2.5">
-                <div>
-                  <h3 className="font-bold text-base tracking-tight" style={{ ...H, color: "#02120a" }}>Artisanal Accessories &amp; Essentials</h3>
-                  <p className="text-[11px]" style={{ color: "#424844" }}>Handcrafted goods for your dog</p>
-                </div>
-                <Link href="/accessories" className="text-xs font-bold flex items-center shrink-0" style={{ color: "#904c2c" }}>
-                  View All <ChevronRight size={14} />
-                </Link>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {products.slice(0, 6).map((p) => (
-                  <div key={p.id} className="shrink-0 rounded-2xl p-2.5 flex flex-col justify-between" style={{ width: 156, background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-                    <div>
-                      <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2" style={{ background: "#f5f4e8" }}>
-                        {p.imageUrls[0] && <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />}
-                      </div>
-                      <h4 className="font-bold text-xs line-clamp-1" style={{ ...H, color: "#02120a" }}>{p.name}</h4>
-                    </div>
-                    <div className="flex items-center justify-between mt-2 pt-1" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                      <div className="flex flex-col">
-                        <span className="font-extrabold text-xs" style={{ ...H, color: "#02120a" }}>₹{(p.price / 100).toFixed(0)}</span>
-                        {p.compareAtPrice && p.compareAtPrice > p.price && (
-                          <span className="text-[9px] line-through" style={{ color: "#737874" }}>₹{(p.compareAtPrice / 100).toFixed(0)}</span>
-                        )}
-                      </div>
-                      <Link href={`/accessories/${p.id}`} className="px-2.5 py-1 rounded-lg font-bold text-[11px] tap-scale" style={{ background: "#e9e9dd", color: "#02120a", ...H }}>
-                        <Plus size={12} className="inline" /> ADD
-                      </Link>
-                    </div>
-                  </div>
                 ))}
               </div>
             </section>
-          )}
-
-          {providers.length > 0 && (
-            <section className="px-4 py-3">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="font-bold text-base tracking-tight" style={{ ...H, color: "#02120a" }}>Pros Ready Right Now</h3>
-                  <p className="text-[11px]" style={{ color: "#424844" }}>{verifiedCount} verified handlers in your network</p>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#efeee3", color: "#02120a", border: "1px solid rgba(194,200,194,0.3)" }}>
-                  <SlidersHorizontal size={13} /> Filter
-                </div>
-              </div>
-              <div className="flex flex-col gap-3">
-                {providers.map((p) => (
-                  <div key={p.id} className="p-3.5 rounded-2xl flex flex-col gap-3" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0" style={{ boxShadow: "0 0 0 2px rgba(2,18,10,0.2)" }}>
-                          {p.photoUrl ? <img src={p.photoUrl} alt={p.user.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ background: "#efeee3" }} />}
-                          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full" style={{ background: "#10b981", border: "2px solid white" }} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-bold text-sm" style={{ ...H, color: "#02120a" }}>{p.user.name}</h4>
-                            <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#02120a", color: "white" }}>★ {p.ratingAvg.toFixed(2)}</span>
-                          </div>
-                          <p className="text-xs" style={{ color: "#424844" }}>{p._count.bookings} completed</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-1" style={{ borderTop: "1px solid rgba(194,200,194,0.15)" }}>
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md font-bold text-[11px]" style={{ background: "#d2e8d9", color: "#0d1f16" }}>
-                        <Clock size={14} />
-                        <span>Available now</span>
-                      </div>
-                      <Link href="/walk-booking" onClick={gate} className="px-4 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1 tap-scale" style={{ background: "#02120a", color: "white", ...H }}>
-                        Book <Zap size={14} />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="px-4 py-2">
-            <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: "#f5f4e8", border: "1px solid rgba(194,200,194,0.3)" }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={20} color="#904c2c" />
-                  <h3 className="font-extrabold text-sm" style={{ ...H, color: "#02120a" }}>Barkado Assured Standard</h3>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#d2e8d9", color: "#0d1f16", ...H }}>Coming Soon</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
+          ) : counts.walkers + counts.groomers + counts.trainers > 0 ? (
+            <section className="px-4 py-2">
+              <p className="flex items-center justify-center gap-1.5 text-xs text-center" style={{ color: MUTED }}>
+                <ShieldCheck size={14} color={PLUM} />
                 {[
-                  { icon: BadgeCheck, label: "100% Vetted", sub: "Background checks" },
-                  { icon: Radar, label: "Live GPS", sub: "Not built yet" },
-                  { icon: HeartPulse, label: "Cashless Vet", sub: "Not built yet" },
-                ].map((b) => (
-                  <div key={b.label} className="p-2.5 rounded-xl flex flex-col items-center opacity-60" style={{ background: "#ffffff", border: "1px solid rgba(194,200,194,0.2)" }} title="Coming soon">
-                    <b.icon size={20} color="#02120a" className="mb-1" />
-                    <span className="font-bold text-[11px] leading-tight" style={{ ...H, color: "#02120a" }}>{b.label}</span>
-                    <span className="text-[9px] mt-0.5" style={{ color: "#424844" }}>{b.sub}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  counts.walkers > 0 && `${counts.walkers} walker${counts.walkers === 1 ? "" : "s"}`,
+                  counts.groomers > 0 && `${counts.groomers} groomer${counts.groomers === 1 ? "" : "s"}`,
+                  counts.trainers > 0 && `${counts.trainers} trainer${counts.trainers === 1 ? "" : "s"}`,
+                ].filter(Boolean).join(", ")}{" "}
+                ID-verified and ready to book
+              </p>
+            </section>
+          ) : null}
+
+          {/* ===== Shop ===== */}
+          <section className="px-4 py-3">
+            {products.length >= 2 ? (
+              <>
+                <SectionTitle title="From the Shop" sub="Collars, beds, treats and toys" href="/accessories" cta="Shop all" />
+                <div className="grid grid-cols-2 gap-3">
+                  {products.slice(0, 4).map((p) => (
+                    <Link key={p.id} href={`/accessories/${p.id}`} className="hover-lift rounded-[1.5rem] p-2 tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                      <div className="img-frame aspect-square !rounded-[1.1rem]" style={{ background: IVORY }}>
+                        <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="px-1 pt-2 pb-1">
+                        <p className="font-bold text-sm line-clamp-1" style={{ ...H, color: PLUM }}>{p.name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="font-bold text-sm" style={{ ...H, color: INK }}>{rupees(p.price)}</span>
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={14} /></span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : counts.products > 0 ? (
+              <Link href="/accessories" className="hover-lift relative flex items-center gap-3 overflow-hidden rounded-[1.75rem] p-4 pb-6 tap-scale" style={{ background: PLUM }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: YELLOW }}>The Artisan Shelf</p>
+                  <p className="font-script text-[26px] leading-tight text-white">Spoil them a little EXTRA</p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(251,240,217,0.85)" }}>{counts.products} collars, beds, treats and toys</p>
+                  <span className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-bold" style={{ background: YELLOW, color: INK, ...H }}>
+                    <ShoppingBag size={13} /> Shop now
+                  </span>
+                </div>
+                <img src="/images/brand/collar-plum.jpg" alt="" className="w-28 h-28 object-cover rounded-2xl shrink-0" />
+                <WaveEdge />
+              </Link>
+            ) : null}
           </section>
 
-          <section className="px-4 py-2.5">
-            <div className="flex items-center justify-between mb-2.5">
-              <div>
-                <h3 className="font-bold text-sm tracking-tight" style={{ ...H, color: "#02120a" }}>Community Pack Meetups</h3>
-                <p className="text-[11px]" style={{ color: "#424844" }}>Socialize your pet with neighborhood dogs</p>
-              </div>
-            </div>
-          </section>
-          <UpcomingEvents />
+          {/* ===== Paw Passport — free with every account ===== */}
+          {!activePet && (
+            <section className="px-4 py-3">
+              <Link href="/owner/pets" onClick={gate} className="hover-lift flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#dbe5f3" }}>
+                  <BadgeCheck size={22} color={PLUM} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[16px] leading-tight" style={{ ...H, color: PLUM }}>Free Paw Passport</p>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>Vaccines, care notes and every booking for your dog, in one place.</p>
+                </div>
+                <ChevronRight size={18} color={PLUM} className="shrink-0" />
+              </Link>
+            </section>
+          )}
 
-          <section className="px-4 py-2">
-            <div className="flex items-center justify-between p-3 rounded-2xl" style={{ background: "rgba(255,218,214,0.4)", border: "1px solid rgba(186,26,26,0.25)" }}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#ba1a1a", color: "white" }}>
-                  <PhoneCall size={18} />
-                </div>
-                <div>
-                  <div className="font-extrabold text-xs" style={{ ...H, color: "#93000a" }}>24/7 Urgent Pet Helpline</div>
-                  <div className="text-[10px]" style={{ color: "rgba(147,0,10,0.8)" }}>Placeholder number for now</div>
-                </div>
+          {/* ===== Help ===== */}
+          <section className="px-4 pt-4 pb-2">
+            <div className="rounded-[1.75rem] p-4 flex items-center justify-between gap-3" style={{ background: "#fef3dc" }}>
+              <div className="min-w-0">
+                <p className="font-bold text-sm" style={{ ...H, color: PLUM }}>Questions? We&rsquo;re here.</p>
+                <p className="text-xs" style={{ color: MUTED }}>Talk to a real person at Barkado &amp; Co.</p>
               </div>
-              <a href={`tel:${SUPPORT_PHONE.replace(/\s/g, "")}`} className="px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1 shrink-0 tap-scale" style={{ background: "#ba1a1a", color: "white", ...H }}>
-                Call SOS
-              </a>
+              <div className="flex gap-2 shrink-0">
+                <a href={`tel:${SUPPORT_PHONE_TEL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: PLUM, color: "white" }} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
+                  <Phone size={16} />
+                </a>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="w-10 h-10 rounded-full flex items-center justify-center tap-scale" style={{ background: "#ffffff", color: PLUM, border: "1px solid rgba(61,20,38,0.1)" }} aria-label={`Email ${SUPPORT_EMAIL}`}>
+                  <Mail size={16} />
+                </a>
+              </div>
             </div>
+            <p className="font-script text-center text-lg mt-5" style={{ color: PLUM }}>A Hug in every Paw</p>
           </section>
         </div>
       </main>

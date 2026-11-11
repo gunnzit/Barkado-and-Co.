@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { parseBookingTime, isTooSoon } from "@/lib/istTime";
 import { getOrCreateUser } from "@/lib/auth";
 
 const bookingSchema = z.object({
@@ -51,8 +52,14 @@ export async function POST(req: Request) {
   });
   if (!provider) return NextResponse.json({ error: "Provider not found" }, { status: 404 });
 
-  const start = new Date(parsed.data.startTime);
-  const end = new Date(parsed.data.endTime);
+  const start = parseBookingTime(parsed.data.startTime);
+  const end = parseBookingTime(parsed.data.endTime);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+    return NextResponse.json({ error: "Invalid time" }, { status: 400 });
+  }
+  if (isTooSoon(start)) {
+    return NextResponse.json({ error: "That time has passed or is too soon. Please pick a later slot." }, { status: 400 });
+  }
 
   let priceAmount = 0;
   let isFreeFirstWalk = false;

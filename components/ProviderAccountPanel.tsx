@@ -43,7 +43,7 @@ function SettingsRow({
       }}
     >
       <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-        <Icon size={18} color="var(--forest, #16281f)" />
+        <Icon size={18} color="var(--forest, #3d1426)" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm flex items-center gap-2 flex-wrap">

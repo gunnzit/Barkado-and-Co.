@@ -104,7 +104,7 @@ export default async function TrainerProfilePage({
       <main className="max-w-5xl mx-auto px-4 md:px-8 pb-16 md:grid md:grid-cols-12 md:gap-8">
         {/* ===== Left column: hero, about, specialties, certifications ===== */}
         <div className="md:col-span-4 space-y-4 mb-6 md:mb-0">
-          <section className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+          <section className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
             <div className="relative" style={{ height: 160, background: "var(--cream)" }}>
               {/* Same real photo used for both the banner and the avatar
                   below — there's only one real photo field on Provider,
@@ -114,7 +114,7 @@ export default async function TrainerProfilePage({
               )}
               <div
                 className="absolute -bottom-12 left-6 w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
-                style={{ border: "4px solid var(--card)", background: "var(--cream)", boxShadow: "0 8px 20px -4px rgba(22,40,31,0.12)" }}
+                style={{ border: "4px solid var(--card)", background: "var(--cream)", boxShadow: "0 8px 20px -4px rgba(61,20,38,0.12)" }}
               >
                 {provider.photoUrl ? (
                   <img src={provider.photoUrl} alt={provider.user.name} className="w-full h-full object-cover" />
@@ -137,7 +137,7 @@ export default async function TrainerProfilePage({
             </div>
           </section>
 
-          <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+          <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
             <h3 className="font-bold text-lg mb-3">About {provider.user.name.split(" ")[0]}</h3>
             <p className="text-sm mb-5" style={{ color: "var(--muted)" }}>
               {provider.bio || "This trainer hasn't added a bio yet."}
@@ -147,7 +147,7 @@ export default async function TrainerProfilePage({
               <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--muted)" }}>Specialties</p>
               <div className="flex flex-wrap gap-2">
                 {specialties.map((tag) => (
-                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #16281f)" }}>
+                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "var(--cream)", color: "var(--forest, #3d1426)" }}>
                     {tag}
                   </span>
                 ))}
@@ -160,7 +160,7 @@ export default async function TrainerProfilePage({
                 {certifications.map((cert) => (
                   <div key={cert} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--cream)" }}>
-                      <Award size={14} color="var(--forest, #16281f)" />
+                      <Award size={14} color="var(--forest, #3d1426)" />
                     </div>
                     <span className="text-sm">{cert}</span>
                   </div>
@@ -180,13 +180,13 @@ export default async function TrainerProfilePage({
             to showing whichever sections genuinely apply. ===== */}
         <div className="md:col-span-8 space-y-4">
           {(service ? service === "TRAINING" : provider.servicesOffered.includes("TRAINING")) && (
-            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
               <ProviderPlansTabs basePricePaise={provider.pricePerTrain ?? 50000} />
             </section>
           )}
 
           {(service ? service === "GROOMING" : provider.servicesOffered.includes("GROOMING")) && (
-            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+            <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
               <ProviderGroomingPackages
                 providerId={provider.id}
                 packages={provider.groomingPackages.map((p) => ({ id: p.id, name: p.name, pricesBySize: p.pricesBySize as any }))}
@@ -200,7 +200,7 @@ export default async function TrainerProfilePage({
             </section>
           )}
 
-          <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(22,40,31,0.06)" }}>
+          <section className="rounded-2xl p-6" style={{ background: "var(--card)", boxShadow: "0 4px 20px -2px rgba(61,20,38,0.06)" }}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-bold text-lg">Recent Reviews</h3>
               {reviews.length > 0 && (

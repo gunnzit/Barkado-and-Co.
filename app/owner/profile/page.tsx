@@ -102,8 +102,8 @@ export default async function OwnerProfile() {
         {/* ===== Top bar — logo/wordmark left, real points/bell/cart right ===== */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "#02120a" }}>
-              <PawPrint size={15} color="#fcba5a" />
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "#6e1e3b" }}>
+              <PawPrint size={15} color="#f9dd8a" />
             </div>
             <span className="font-bold text-base">Barkado &amp; Co.</span>
           </div>
@@ -129,7 +129,7 @@ export default async function OwnerProfile() {
         {/* ===== User identity card ===== */}
         <div className="card flex items-center gap-3 mb-4">
           <div className="relative shrink-0">
-            <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "#16281f" }}>
+            <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "#6e1e3b" }}>
               <UserButton
                 appearance={{ elements: { userButtonAvatarBox: "w-14 h-14" } }}
               />
@@ -166,24 +166,24 @@ export default async function OwnerProfile() {
 
             {/* Primary pet preview — dark card, same treatment as the Passport page */}
             {primaryPet && (
-              <Link href={`/owner/pets/${primaryPet.id}`} className="block rounded-2xl bg-[#02120a] text-[#fbfaee] p-4 mb-6 tap-scale">
+              <Link href={`/owner/pets/${primaryPet.id}`} className="block rounded-2xl bg-[#6e1e3b] text-[#fffaf0] p-4 mb-6 tap-scale">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center" style={{ background: "#16281f" }}>
-                    {primaryPet.photoUrl ? <img src={primaryPet.photoUrl} alt={primaryPet.name} className="w-full h-full object-cover" /> : <PawPrint size={20} color="#fcba5a" />}
+                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center" style={{ background: "#6e1e3b" }}>
+                    {primaryPet.photoUrl ? <img src={primaryPet.photoUrl} alt={primaryPet.name} className="w-full h-full object-cover" /> : <PawPrint size={20} color="#f9dd8a" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-sm">{primaryPet.name}</p>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#fcba5a] text-[#291800]">Primary Pet</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#f9dd8a] text-[#291800]">Primary Pet</span>
                     </div>
-                    <p className="text-xs text-[#d2e8d9] mt-0.5">
+                    <p className="text-xs text-[#dbe5f3] mt-0.5">
                       {[primaryPet.breed, ageFromBirthday(primaryPet.birthday)].filter(Boolean).join(" · ")}
                     </p>
-                    <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: primaryPetVaxSummary === "Booster overdue" ? "#ff9d9d" : "#d2e8d9" }}>
+                    <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: primaryPetVaxSummary === "Booster overdue" ? "#ff9d9d" : "#dbe5f3" }}>
                       <Syringe size={11} /> {primaryPetVaxSummary} · {passportNumber(primaryPet.id)}
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-[#16281f] text-[#d2e8d9] shrink-0">Switch Pet</span>
+                  <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-[#6e1e3b] text-[#dbe5f3] shrink-0">Switch Pet</span>
                 </div>
               </Link>
             )}

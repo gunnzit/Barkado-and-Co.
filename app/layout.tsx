@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/components/CartProvider";
@@ -10,16 +10,19 @@ import ActivityTracker from "@/components/ActivityTracker";
 import OwnerSideMenu from "@/components/OwnerSideMenu";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+// Stand-ins until the brand fonts (Gulfs Display / Artifakt Element / Sugar Loved)
+// are supplied — see BRAND.md. Outfit = rounded display headings, Plus Jakarta
+// Sans = UI/body text (the pairing from the Stitch design system).
+const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-heading",
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-outfit",
   display: "swap",
 });
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-body",
   display: "swap",
 });
@@ -48,9 +51,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // this drawer trigger instead, self-hiding on Home/provider/admin/auth
   // pages via its own pathname check.
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable}`}>
       <body>
-        <ClerkProvider>
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: "#6e1e3b",
+              colorBackground: "#fffaf0",
+              colorForeground: "#3d1426",
+              colorInput: "#ffffff",
+              colorInputForeground: "#3d1426",
+            },
+          }}
+        >
           <SplashScreen />
           <ActivityTracker />
           <CartProvider initialItems={[]}>

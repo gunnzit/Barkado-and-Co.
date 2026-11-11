@@ -161,10 +161,10 @@ const SERVICE_LABEL: Record<string, string> = {
 };
 
 const SERVICE_STYLE: Record<string, { bg: string; fg: string; Icon: any }> = {
-  WALKING: { bg: "#16281f", fg: "#d2e8d9", Icon: Footprints },
-  SITTING: { bg: "#904c2c", fg: "#ffffff", Icon: HomeIcon },
-  GROOMING: { bg: "#ffdbcd", fg: "#360f00", Icon: Scissors },
-  TRAINING: { bg: "#ffddb3", fg: "#624000", Icon: Brain },
+  WALKING: { bg: "#6e1e3b", fg: "#dbe5f3", Icon: Footprints },
+  SITTING: { bg: "#6e1e3b", fg: "#ffffff", Icon: HomeIcon },
+  GROOMING: { bg: "#f9dd8a", fg: "#3d1426", Icon: Scissors },
+  TRAINING: { bg: "#fcebb8", fg: "#624000", Icon: Brain },
 };
 
 const REBOOK_HREF: Record<string, string | null> = {
@@ -344,19 +344,20 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
 
       <div className="px-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#ffdbcd] text-[#360f00] text-[11px] font-bold tracking-wider">01</span>
-          <span className="font-bold text-xs tracking-wider uppercase text-[#424844]">Authenticated Canine Dossier</span>
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#f9dd8a] text-[#3d1426] text-[11px] font-bold tracking-wider">01</span>
+          <span className="font-bold text-xs tracking-wider uppercase text-[#5e4752]">Authenticated Canine Dossier</span>
         </div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#e9e9dd] text-[#16281f] text-xs font-semibold shadow-sm">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f3e2c4] text-[#3d1426] text-xs font-semibold shadow-sm">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
           <span>Live Sync Active</span>
         </div>
       </div>
 
       <div className="px-4 py-2">
-        <div className="relative overflow-hidden rounded-2xl bg-[#02120a] text-[#fbfaee] shadow-2xl border border-[#16281f]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#6e1e3b] text-[#fffaf0]" style={{ boxShadow: "0 12px 28px -6px rgba(110,30,59,0.28)" }}>
+          <span className="brand-wave" aria-hidden="true" />
           <div className="absolute -right-12 -top-12 w-64 h-64 opacity-5 pointer-events-none">
-            <svg className="w-full h-full text-[#ffdbcd]" fill="currentColor" viewBox="0 0 200 200">
+            <svg className="w-full h-full text-[#f9dd8a]" fill="currentColor" viewBox="0 0 200 200">
               <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="6"></circle>
               <path d="M100 40 C115 40 125 55 125 70 C125 85 110 95 100 95 C90 95 75 85 75 70 C75 55 85 40 100 40 Z"></path>
               <ellipse cx="65" cy="85" rx="14" ry="22"></ellipse>
@@ -367,94 +368,96 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </svg>
           </div>
 
-          <div className="p-5 sm:p-6">
+          <div className="p-5 pb-8 sm:p-6 sm:pb-9">
             <div className="flex items-start justify-between relative z-10">
               <div className="flex items-center gap-2">
-                <BadgeCheck size={20} color="#fcba5a" />
+                <BadgeCheck size={20} color="#f9dd8a" />
                 <div>
-                  <span className="tracking-widest text-[10px] font-bold uppercase text-[#fcba5a] block">PawPassport™ • Official Document</span>
-                  <p className="text-[11px] text-[#d2e8d9] tracking-widest uppercase font-mono mt-0.5">Barkado &amp; Co. • Republic of Canines</p>
+                  <span className="tracking-widest text-[10px] font-bold uppercase text-[#f9dd8a] block">PawPassport™ • Official Document</span>
+                  <p className="text-[11px] text-[#dbe5f3] tracking-widest uppercase font-mono mt-0.5">Barkado &amp; Co. • Chandigarh</p>
                 </div>
               </div>
-              <span className="inline-block px-2.5 py-1 rounded-full bg-[#16281f] text-[#fcba5a] text-[11px] font-mono font-bold tracking-wider shadow-inner border border-[#fcba5a]/20 shrink-0">
+              <span className="inline-block px-2.5 py-1 rounded-full bg-[#6e1e3b] text-[#f9dd8a] text-[11px] font-mono font-bold tracking-wider shadow-inner border border-[#f9dd8a]/20 shrink-0">
                 {passportNumber(pet.id)}
               </span>
             </div>
 
-            <div className="w-full h-0.5 bg-gradient-to-r from-[#fcba5a]/0 via-[#fcba5a] to-[#fcba5a]/0 my-3.5 opacity-70"></div>
+            <div className="w-full h-0.5 bg-gradient-to-r from-[#f9dd8a]/0 via-[#f9dd8a] to-[#f9dd8a]/0 my-3.5 opacity-70"></div>
 
             <div className="flex gap-4 items-center relative z-10">
               <div className="relative shrink-0">
                 <label
                   className="w-24 h-24 rounded-full p-1 block relative cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #fcba5a, #fea67f, #904c2c)" }}
+                  style={{ background: "linear-gradient(135deg, #f9dd8a, #f9dd8a, #6e1e3b)" }}
                 >
                   {pet.photoUrl ? (
                     <img className="w-full h-full object-cover rounded-full" src={pet.photoUrl} alt={pet.name} />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-[#16281f] flex items-center justify-center">
-                      <PawPrint size={30} color="#fcba5a" />
+                    <div className="w-full h-full rounded-full bg-[#6e1e3b] flex items-center justify-center">
+                      <PawPrint size={30} color="#f9dd8a" />
                     </div>
                   )}
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                  <span className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#16281f] flex items-center justify-center shadow-md border border-[#fcba5a]/30">
-                    <Camera size={12} color="#fcba5a" />
+                  <span className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#6e1e3b] flex items-center justify-center shadow-md border border-[#f9dd8a]/30">
+                    <Camera size={12} color="#f9dd8a" />
                   </span>
                 </label>
-                {uploadingPhoto && <p className="text-[9px] mt-1 text-center text-[#d2e8d9]">Uploading…</p>}
+                {uploadingPhoto && <p className="text-[9px] mt-1 text-center text-[#dbe5f3]">Uploading…</p>}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-1">
                   {editing ? (
                     <input
-                      className="text-lg font-bold rounded-lg px-2 py-1 text-[#02120a]"
+                      className="text-lg font-bold rounded-lg px-2 py-1 text-[#2a0c18]"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                     />
                   ) : (
-                    <h2 className="font-bold text-xl text-[#fbfaee] tracking-tight truncate">{pet.name}</h2>
+                    <h2 className="font-bold text-xl text-[#fffaf0] tracking-tight truncate">{pet.name}</h2>
                   )}
                   {isVerified && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ffffff] text-[#02120a] text-[10px] font-bold tracking-tight shadow-sm shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ffffff] text-[#2a0c18] text-[10px] font-bold tracking-tight shadow-sm shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                       VERIFIED
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[#d2e8d9] font-medium mt-0.5">{subtitle}</p>
+                <p className="text-xs text-[#dbe5f3] font-medium mt-0.5">{subtitle}</p>
                 <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
                   <div>
-                    <span className="text-[#7c9084] block text-[9px] uppercase tracking-wider font-semibold">Age / DOB</span>
+                    <span className="text-[#fbf0d9]/60 block text-[9px] uppercase tracking-wider font-semibold">Age / DOB</span>
                     <span className="font-semibold text-[#ffffff]">{ageDobLine}</span>
                   </div>
                   <div>
-                    <span className="text-[#7c9084] block text-[9px] uppercase tracking-wider font-semibold">Weight &amp; Coat</span>
+                    <span className="text-[#fbf0d9]/60 block text-[9px] uppercase tracking-wider font-semibold">Weight &amp; Coat</span>
                     <span className="font-semibold text-[#ffffff]">{weightCoatLine}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-3.5 pt-2.5 rounded-lg bg-[#16281f]/80 p-3 relative z-10 flex flex-col gap-2 shadow-inner border border-[#c2c8c2]/10">
+            <div className="mt-3.5 pt-2.5 rounded-lg bg-[#6e1e3b]/80 p-3 relative z-10 flex flex-col gap-2 shadow-inner border border-[#e3cfc4]/10">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5">
-                  <QrCode size={16} color="#fcba5a" />
-                  <span className="text-[10px] uppercase font-bold text-[#7c9084] tracking-wider">ISO Microchip</span>
+                  <QrCode size={16} color="#f9dd8a" />
+                  <span className="text-[10px] uppercase font-bold text-[#fbf0d9]/60 tracking-wider">ISO Microchip</span>
                 </div>
                 <span className="font-mono text-xs font-semibold tracking-wider text-[#ffffff]">{microchipDisplay}</span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#e9e9dd]/10">
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#f3e2c4]/10">
                 <div className="flex items-center gap-1.5">
-                  <UserIcon size={16} color="#fcba5a" />
-                  <span className="text-[10px] uppercase font-bold text-[#7c9084] tracking-wider">Guardian</span>
+                  <UserIcon size={16} color="#f9dd8a" />
+                  <span className="text-[10px] uppercase font-bold text-[#fbf0d9]/60 tracking-wider">Guardian</span>
                 </div>
-                <span className="text-xs font-medium text-[#f5f4e8] truncate">{guardianDisplay}</span>
+                <span className="text-xs font-medium text-[#fbf0d9] truncate">{guardianDisplay}</span>
               </div>
             </div>
 
-            <div className="mt-3.5 pt-2.5 pb-1 px-3 rounded bg-black/40 border border-[#fcba5a]/20 font-mono text-[9px] tracking-widest text-[#fcba5a]/90 uppercase overflow-hidden leading-relaxed">
+            <div className="mt-3.5 pt-2.5 pb-1 px-3 rounded bg-black/40 border border-[#f9dd8a]/20 font-mono text-[9px] tracking-widest text-[#f9dd8a]/90 uppercase overflow-hidden leading-relaxed">
               <div className="truncate">{buildMrzLine(pet)}</div>
             </div>
+
+            <p className="mt-3 text-right text-sm italic relative z-10" style={{ color: "#f9dd8a", fontFamily: "var(--font-script)" }}>A Hug in every Paw</p>
           </div>
         </div>
       </div>
@@ -463,27 +466,27 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => alert("Share Pass is coming soon.")}
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
+            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#e3cfc4]/30 active:scale-95"
           >
-            <Share2 size={22} color="#904c2c" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#02120a] leading-tight">Share Pass</span>
-            <span className="text-[9px] text-[#424844] font-medium">Public link</span>
+            <Share2 size={22} color="#6e1e3b" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#2a0c18] leading-tight">Share Pass</span>
+            <span className="text-[9px] text-[#5e4752] font-medium">Public link</span>
           </button>
           <button
             onClick={() => alert("Travel Dossier PDF is coming soon.")}
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#c2c8c2]/30 active:scale-95"
+            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all text-center border border-[#e3cfc4]/30 active:scale-95"
           >
-            <Download size={22} color="#02120a" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#02120a] leading-tight">Travel Dossier</span>
-            <span className="text-[9px] text-[#424844] font-medium">Official PDF</span>
+            <Download size={22} color="#2a0c18" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#2a0c18] leading-tight">Travel Dossier</span>
+            <span className="text-[9px] text-[#5e4752] font-medium">Official PDF</span>
           </button>
           <button
             disabled
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f5f4e8] shadow-sm text-center border border-dashed border-[#737874]/30 relative"
+            className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#fbf0d9] shadow-sm text-center border border-dashed border-[#735c68]/30 relative"
           >
-            <ClipboardList size={22} color="#424844" className="mb-1" />
-            <span className="text-[11px] font-bold text-[#424844] leading-tight">Vet Summary</span>
-            <span className="text-[9px] font-bold text-[#904c2c] bg-[#ffdbcd] px-1.5 py-0.5 rounded-full mt-0.5">Coming Soon</span>
+            <ClipboardList size={22} color="#5e4752" className="mb-1" />
+            <span className="text-[11px] font-bold text-[#5e4752] leading-tight">Vet Summary</span>
+            <span className="text-[9px] font-bold text-[#6e1e3b] bg-[#f9dd8a] px-1.5 py-0.5 rounded-full mt-0.5">Coming Soon</span>
           </button>
         </div>
       </div>
@@ -535,38 +538,38 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       )}
 
       <div className="px-4 pt-3 pb-2 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
-          <div className="flex items-center justify-between pb-3 border-b border-[#efeee3]">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20">
+          <div className="flex items-center justify-between pb-3 border-b border-[#f6e6c8]">
             <div className="flex items-center gap-2">
-              <Syringe size={22} color="#02120a" />
+              <Syringe size={22} color="#2a0c18" />
               <div>
-                <h3 className="font-bold text-sm text-[#02120a]">Vaccination &amp; Health Records</h3>
-                <p className="text-[10px] text-[#424844]">Certified Medical Ledger</p>
+                <h3 className="font-bold text-sm text-[#2a0c18]">Vaccination &amp; Health Records</h3>
+                <p className="text-[10px] text-[#5e4752]">Certified Medical Ledger</p>
               </div>
             </div>
             <Link
               href="/owner/vaccines"
-              className="px-2.5 py-1 rounded-lg bg-[#d2e8d9] text-[#02120a] text-xs font-bold flex items-center gap-1 hover:bg-[#16281f] hover:text-white transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-[#dbe5f3] text-[#2a0c18] text-xs font-bold flex items-center gap-1 hover:bg-[#6e1e3b] hover:text-white transition-colors"
             >
               <Plus size={14} />
               <span>Add Record</span>
             </Link>
           </div>
 
-          <div className="my-3 p-2.5 rounded-xl bg-[#efeee3] flex items-center justify-around text-center text-xs">
+          <div className="my-3 p-2.5 rounded-xl bg-[#f6e6c8] flex items-center justify-around text-center text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-              <span className="font-bold text-[#02120a]">{vaxCounts.VALID} Valid</span>
+              <span className="font-bold text-[#2a0c18]">{vaxCounts.VALID} Valid</span>
             </div>
-            <div className="h-3 w-px bg-[#c2c8c2]"></div>
+            <div className="h-3 w-px bg-[#e3cfc4]"></div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#fcba5a]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#f9dd8a]"></span>
               <span className="font-bold text-[#352000]">{vaxCounts.DUE_SOON} Booster Due</span>
             </div>
-            <div className="h-3 w-px bg-[#c2c8c2]"></div>
+            <div className="h-3 w-px bg-[#e3cfc4]"></div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#ba1a1a]"></span>
-              <span className="font-medium text-[#424844]">{vaxCounts.OVERDUE} Overdue</span>
+              <span className="font-medium text-[#5e4752]">{vaxCounts.OVERDUE} Overdue</span>
             </div>
           </div>
 
@@ -607,21 +610,21 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
                 if (status === "DUE_SOON") {
                   const daysUntil = Math.floor((new Date(v.nextDueDate).getTime() - Date.now()) / 86400000);
                   return (
-                    <div key={v.id} className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#fcba5a]/40 flex flex-col gap-2.5">
+                    <div key={v.id} className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f9dd8a]/40 flex flex-col gap-2.5">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-xs text-[#02120a]">{v.vaccineName}</h4>
-                            <span className="px-2 py-0.5 rounded bg-[#fcba5a] text-[#291800] text-[10px] font-bold">Due in {daysUntil}d</span>
+                            <h4 className="font-bold text-xs text-[#2a0c18]">{v.vaccineName}</h4>
+                            <span className="px-2 py-0.5 rounded bg-[#f9dd8a] text-[#291800] text-[10px] font-bold">Due in {daysUntil}d</span>
                           </div>
-                          {detailLine && <p className="text-[10px] text-[#424844] font-mono mt-0.5">{detailLine}</p>}
+                          {detailLine && <p className="text-[10px] text-[#5e4752] font-mono mt-0.5">{detailLine}</p>}
                         </div>
-                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#904c2c] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
+                        <Link href="/owner/vaccines" className="px-2 py-1 rounded bg-[#6e1e3b] text-white text-[10px] font-bold shadow-sm hover:opacity-90 shrink-0">
                           Book Booster
                         </Link>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#efeee3]">
-                        <span className="text-[#424844]">Scheduled window:</span>
+                      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#f6e6c8]">
+                        <span className="text-[#5e4752]">Scheduled window:</span>
                         <span className="font-bold text-[#352000]">{formatDate(v.nextDueDate, { month: "long", year: "numeric" })}</span>
                       </div>
                     </div>
@@ -629,29 +632,29 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
                 }
 
                 return (
-                  <div key={v.id} className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#efeee3] flex flex-col gap-2.5">
+                  <div key={v.id} className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8] flex flex-col gap-2.5">
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-bold text-xs text-[#02120a]">{v.vaccineName}</h4>
+                          <h4 className="font-bold text-xs text-[#2a0c18]">{v.vaccineName}</h4>
                           <span className="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-800 text-[10px] font-bold border border-emerald-600/20">Valid</span>
                         </div>
-                        {detailLine && <p className="text-[10px] text-[#424844] font-mono mt-0.5">{detailLine}</p>}
+                        {detailLine && <p className="text-[10px] text-[#5e4752] font-mono mt-0.5">{detailLine}</p>}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-[#efeee3]">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-[#f6e6c8]">
                       <div>
-                        <span className="text-[9px] uppercase font-semibold text-[#424844] block">Administered</span>
-                        <span className="font-bold text-[#02120a]">{formatDate(v.dateGiven)}</span>
+                        <span className="text-[9px] uppercase font-semibold text-[#5e4752] block">Administered</span>
+                        <span className="font-bold text-[#2a0c18]">{formatDate(v.dateGiven)}</span>
                       </div>
                       {v.nextDueDate && (
                         <div>
-                          <span className="text-[9px] uppercase font-semibold text-[#424844] block">Expires</span>
+                          <span className="text-[9px] uppercase font-semibold text-[#5e4752] block">Expires</span>
                           <span className="font-bold text-emerald-700">{formatDate(v.nextDueDate)}</span>
                         </div>
                       )}
                     </div>
-                    {v.clinicName && <p className="text-[10px] text-[#424844] italic">{v.clinicName}</p>}
+                    {v.clinicName && <p className="text-[10px] text-[#5e4752] italic">{v.clinicName}</p>}
                   </div>
                 );
               })}
@@ -663,10 +666,10 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       <div className="px-4 pt-3 pb-2 mb-2">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <Award size={20} color="#904c2c" />
-            <h3 className="font-bold text-sm text-[#02120a]">Care Profile &amp; Passport Endorsements</h3>
+            <Award size={20} color="#6e1e3b" />
+            <h3 className="font-bold text-sm text-[#2a0c18]">Care Profile &amp; Passport Endorsements</h3>
           </div>
-          <span className="text-[10px] font-mono uppercase text-[#424844]">{stampsIssued} Stamps Issued</span>
+          <span className="text-[10px] font-mono uppercase text-[#5e4752]">{stampsIssued} Stamps Issued</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {hasAllergyAlert && (
@@ -682,36 +685,36 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             </div>
           )}
 
-          <div className="p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex flex-col justify-between -rotate-1">
+          <div className="p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex flex-col justify-between -rotate-1">
             <div>
               <div className="w-9 h-9 rounded-full bg-emerald-600/10 text-emerald-700 flex items-center justify-center mb-2">
                 <ShieldCheck size={18} />
               </div>
-              <h4 className="font-bold text-xs text-[#02120a]">Pack Social Certified</h4>
-              <p className="text-[10px] text-[#424844] mt-1 leading-snug">Temperament evaluation not yet available — coming soon.</p>
+              <h4 className="font-bold text-xs text-[#2a0c18]">Pack Social Certified</h4>
+              <p className="text-[10px] text-[#5e4752] mt-1 leading-snug">Temperament evaluation not yet available — coming soon.</p>
             </div>
-            <span className="text-[9px] font-mono text-[#904c2c] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
+            <span className="text-[9px] font-mono text-[#6e1e3b] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex flex-col justify-between rotate-1">
+          <div className="p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex flex-col justify-between rotate-1">
             <div>
-              <div className="w-9 h-9 rounded-full bg-[#ffddb3] text-[#624000] flex items-center justify-center mb-2">
+              <div className="w-9 h-9 rounded-full bg-[#fcebb8] text-[#624000] flex items-center justify-center mb-2">
                 <Sparkles size={18} />
               </div>
-              <h4 className="font-bold text-xs text-[#02120a]">Approved Rewards</h4>
-              <p className="text-[10px] text-[#424844] mt-1 leading-snug">Reward tracking not yet available — coming soon.</p>
+              <h4 className="font-bold text-xs text-[#2a0c18]">Approved Rewards</h4>
+              <p className="text-[10px] text-[#5e4752] mt-1 leading-snug">Reward tracking not yet available — coming soon.</p>
             </div>
-            <span className="text-[9px] font-mono text-[#904c2c] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
+            <span className="text-[9px] font-mono text-[#6e1e3b] font-bold mt-2 uppercase tracking-wider">Not yet issued</span>
           </div>
 
           {hasHandlingNotes && (
-            <div className="col-span-2 p-3.5 rounded-xl bg-white border border-[#c2c8c2]/30 shadow-sm flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#16281f] text-[#d2e8d9] flex items-center justify-center shrink-0 mt-0.5">
+            <div className="col-span-2 p-3.5 rounded-xl bg-white border border-[#e3cfc4]/30 shadow-sm flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#6e1e3b] text-[#dbe5f3] flex items-center justify-center shrink-0 mt-0.5">
                 <Hand size={18} />
               </div>
               <div>
-                <h4 className="font-bold text-xs text-[#02120a]">Handling &amp; Leash Protocols</h4>
-                <p className="text-[11px] text-[#424844] mt-0.5 leading-snug">{pet.notes}</p>
+                <h4 className="font-bold text-xs text-[#2a0c18]">Handling &amp; Leash Protocols</h4>
+                <p className="text-[11px] text-[#5e4752] mt-0.5 leading-snug">{pet.notes}</p>
               </div>
             </div>
           )}
@@ -719,59 +722,59 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
       </div>
 
       <div className="px-4 pt-3 pb-2 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20 space-y-3">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HeartPulse size={22} color="#02120a" />
-              <h3 className="font-bold text-sm text-[#02120a]">Insurance &amp; Medical Coverage</h3>
+              <HeartPulse size={22} color="#2a0c18" />
+              <h3 className="font-bold text-sm text-[#2a0c18]">Insurance &amp; Medical Coverage</h3>
             </div>
             {hasInsurance ? (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${insuranceExpired ? "bg-[#ffdad6] text-[#93000a]" : "bg-[#d2e8d9] text-[#02120a]"}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${insuranceExpired ? "bg-[#ffdad6] text-[#93000a]" : "bg-[#dbe5f3] text-[#2a0c18]"}`}>
                 {insuranceExpired ? "Policy Expired" : "Active Policy"}
               </span>
             ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#e9e9dd] text-[#424844]">No Policy on File</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f3e2c4] text-[#5e4752]">No Policy on File</span>
             )}
           </div>
 
           {hasInsurance ? (
-            <div className="p-3.5 rounded-xl bg-[#f5f4e8] border border-[#efeee3]">
+            <div className="p-3.5 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8]">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs font-bold text-[#02120a]">{pet.insuranceProvider}</p>
-                  <p className="text-[10px] font-mono text-[#424844] mt-0.5">
+                  <p className="text-xs font-bold text-[#2a0c18]">{pet.insuranceProvider}</p>
+                  <p className="text-[10px] font-mono text-[#5e4752] mt-0.5">
                     Policy #{pet.insurancePolicy}
                     {pet.insuranceExpiryDate ? ` • Valid thru ${formatDate(pet.insuranceExpiryDate, { month: "short", year: "numeric" })}` : ""}
                   </p>
                 </div>
                 {pet.insuranceCoveragePaise != null && (
-                  <span className="text-xs font-bold text-[#02120a] shrink-0">₹{(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}</span>
+                  <span className="text-xs font-bold text-[#2a0c18] shrink-0">₹{(pet.insuranceCoveragePaise / 100).toLocaleString("en-IN")}</span>
                 )}
               </div>
-              <div className="mt-2 pt-2 border-t border-[#efeee3] flex items-center justify-end text-[11px]">
-                <button onClick={() => setEditing(true)} className="font-bold text-[#904c2c] hover:underline text-xs">
+              <div className="mt-2 pt-2 border-t border-[#f6e6c8] flex items-center justify-end text-[11px]">
+                <button onClick={() => setEditing(true)} className="font-bold text-[#6e1e3b] hover:underline text-xs">
                   Edit Insurance Details
                 </button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setEditing(true)} className="w-full p-3.5 rounded-xl bg-[#f5f4e8] border border-dashed border-[#737874]/30 text-xs font-semibold text-[#424844] hover:text-[#02120a]">
+            <button onClick={() => setEditing(true)} className="w-full p-3.5 rounded-xl bg-[#fbf0d9] border border-dashed border-[#735c68]/30 text-xs font-semibold text-[#5e4752] hover:text-[#2a0c18]">
               No insurance on file — tap to add policy details
             </button>
           )}
 
           <div className="space-y-2 pt-1">
-            <span className="text-[10px] uppercase font-bold text-[#424844] tracking-wider block">Emergency Dispatch Hotlines</span>
+            <span className="text-[10px] uppercase font-bold text-[#5e4752] tracking-wider block">Emergency Dispatch Hotlines</span>
 
             {knownClinic ? (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-[#efeee3]">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f6e6c8]">
                 <div className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-[#ba1a1a] text-white flex items-center justify-center shrink-0">
                     <Hospital size={16} />
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-[#02120a]">{knownClinic.clinicName}</p>
-                    <p className="text-[10px] text-[#424844]">From latest vaccination record • no phone on file</p>
+                    <p className="text-xs font-bold text-[#2a0c18]">{knownClinic.clinicName}</p>
+                    <p className="text-[10px] text-[#5e4752]">From latest vaccination record • no phone on file</p>
                   </div>
                 </div>
               </div>
@@ -780,46 +783,46 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
             )}
 
             {pet.owner.phone ? (
-              <a href={`tel:${pet.owner.phone}`} className="flex items-center justify-between p-3 rounded-lg bg-[#efeee3] hover:bg-[#e9e9dd] transition-colors">
+              <a href={`tel:${pet.owner.phone}`} className="flex items-center justify-between p-3 rounded-lg bg-[#f6e6c8] hover:bg-[#f3e2c4] transition-colors">
                 <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#ffdbcd] text-[#360f00] flex items-center justify-center shrink-0">
+                  <span className="w-8 h-8 rounded-full bg-[#f9dd8a] text-[#3d1426] flex items-center justify-center shrink-0">
                     <Phone size={16} />
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-[#02120a]">{pet.owner.name} (Guardian)</p>
-                    <p className="text-[10px] text-[#424844]">{pet.owner.phone}</p>
+                    <p className="text-xs font-bold text-[#2a0c18]">{pet.owner.name} (Guardian)</p>
+                    <p className="text-[10px] text-[#5e4752]">{pet.owner.phone}</p>
                   </div>
                 </div>
-                <PhoneCall size={18} color="#02120a" />
+                <PhoneCall size={18} color="#2a0c18" />
               </a>
             ) : (
               <p className="text-[11px] px-1" style={{ color: "var(--muted)" }}>No guardian phone on file yet.</p>
             )}
 
-            <div className="p-3 rounded-lg bg-[#16281f] text-[#fbfaee] flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-[#6e1e3b] text-[#fffaf0] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-[#fea67f] text-[#78391b] flex items-center justify-center shrink-0">
+                <span className="w-8 h-8 rounded-full bg-[#f9dd8a] text-[#78391b] flex items-center justify-center shrink-0">
                   <Siren size={16} />
                 </span>
                 <div>
-                  <p className="text-xs font-bold text-[#fbfaee]">Barkado Concierge Pet Ambulance</p>
-                  <p className="text-[10px] text-[#d2e8d9]">Not yet available</p>
+                  <p className="text-xs font-bold text-[#fffaf0]">Barkado Concierge Pet Ambulance</p>
+                  <p className="text-[10px] text-[#dbe5f3]">Not yet available</p>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded bg-[#904c2c] text-white text-[10px] font-bold">Coming Soon</span>
+              <span className="px-2 py-0.5 rounded bg-[#6e1e3b] text-white text-[10px] font-bold">Coming Soon</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="px-4 pt-3 pb-6 mb-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#c2c8c2]/20">
+        <div className="rounded-2xl bg-white p-4 shadow-sm border border-[#e3cfc4]/20">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <History size={22} color="#02120a" />
-              <h3 className="font-bold text-sm text-[#02120a]">{pet.name}'s Care Timeline</h3>
+              <History size={22} color="#2a0c18" />
+              <h3 className="font-bold text-sm text-[#2a0c18]">{pet.name}'s Care Timeline</h3>
             </div>
-            <span className="text-[10px] font-bold text-[#fea67f] bg-[#02120a] px-2 py-0.5 rounded-full">{completedCount} Completed</span>
+            <span className="text-[10px] font-bold text-[#f9dd8a] bg-[#6e1e3b] px-2 py-0.5 rounded-full">{completedCount} Completed</span>
           </div>
 
           <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
@@ -834,8 +837,8 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
                 onClick={() => setCareFilter(f.key)}
                 className={`px-3 py-1 rounded-full text-xs shrink-0 ${
                   careFilter === f.key
-                    ? "bg-[#02120a] text-[#fbfaee] font-bold shadow-sm"
-                    : "bg-[#efeee3] text-[#424844] font-semibold hover:text-[#02120a]"
+                    ? "bg-[#6e1e3b] text-[#fffaf0] font-bold shadow-sm"
+                    : "bg-[#f6e6c8] text-[#5e4752] font-semibold hover:text-[#2a0c18]"
                 }`}
               >
                 {f.label}
@@ -846,7 +849,7 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
           {filteredBookings.length === 0 ? (
             <p className="text-sm text-center py-4" style={{ color: "var(--muted)" }}>No bookings in this category yet.</p>
           ) : (
-            <div className="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-[#efeee3]">
+            <div className="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[15px] before:w-0.5 before:bg-[#f6e6c8]">
               {filteredBookings.map((b) => {
                 const style = SERVICE_STYLE[b.type] ?? SERVICE_STYLE.WALKING;
                 const Icon = style.Icon;
@@ -859,25 +862,25 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
                     >
                       <Icon size={16} />
                     </div>
-                    <div className="flex-1 p-3 rounded-xl bg-[#f5f4e8] border border-[#efeee3]">
+                    <div className="flex-1 p-3 rounded-xl bg-[#fbf0d9] border border-[#f6e6c8]">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="font-bold text-xs text-[#02120a]">{SERVICE_LABEL[b.type] ?? b.type}</h4>
-                        <span className="text-[10px] font-mono text-[#424844] shrink-0">{formatDate(b.startTime)}</span>
+                        <h4 className="font-bold text-xs text-[#2a0c18]">{SERVICE_LABEL[b.type] ?? b.type}</h4>
+                        <span className="text-[10px] font-mono text-[#5e4752] shrink-0">{formatDate(b.startTime)}</span>
                       </div>
-                      <p className="text-[11px] text-[#424844] mt-0.5">
+                      <p className="text-[11px] text-[#5e4752] mt-0.5">
                         With <strong>{b.provider.user.name}</strong>
                       </p>
 
                       {b.report && (b.report.distanceKm || b.report.photos.length > 0) && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px] text-[#904c2c] font-medium">
+                        <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px] text-[#6e1e3b] font-medium">
                           {b.report.distanceKm != null && (
-                            <span className="inline-flex items-center gap-1 bg-[#efeee3] px-2 py-0.5 rounded">
+                            <span className="inline-flex items-center gap-1 bg-[#f6e6c8] px-2 py-0.5 rounded">
                               <Route size={13} />
                               {b.report.distanceKm} km Tracked
                             </span>
                           )}
                           {b.report.photos.length > 0 && (
-                            <span className="inline-flex items-center gap-1 bg-[#efeee3] px-2 py-0.5 rounded">
+                            <span className="inline-flex items-center gap-1 bg-[#f6e6c8] px-2 py-0.5 rounded">
                               <CameraIcon size={13} />
                               {b.report.photos.length} Photos
                             </span>
@@ -886,23 +889,23 @@ export default function PetProfileClient({ pet: initialPet }: { pet: Pet }) {
                       )}
 
                       {b.report?.notes && (
-                        <p className="text-[10px] text-[#424844] mt-1 italic">{b.report.notes}</p>
+                        <p className="text-[10px] text-[#5e4752] mt-1 italic">{b.report.notes}</p>
                       )}
 
                       {b.review && (
                         <div className="mt-2 flex items-center gap-1 text-[#624000] text-[11px] font-bold">
-                          <Star size={14} color="#fcba5a" fill="#fcba5a" />
+                          <Star size={14} color="#f9dd8a" fill="#f9dd8a" />
                           <span>{b.review.rating.toFixed(1)} / 5.0{b.review.comment ? ` — ${b.review.comment}` : ""}</span>
                         </div>
                       )}
 
                       {(b.status !== "COMPLETED" || rebookHref) && (
-                        <div className="mt-2 pt-2 border-t border-[#efeee3] flex items-center justify-between text-xs">
+                        <div className="mt-2 pt-2 border-t border-[#f6e6c8] flex items-center justify-between text-xs">
                           {b.status !== "COMPLETED" ? (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e9e9dd] text-[#424844]">{b.status}</span>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#f3e2c4] text-[#5e4752]">{b.status}</span>
                           ) : <span />}
                           {rebookHref && (
-                            <Link href={rebookHref} className="px-2 py-0.5 rounded bg-[#d2e8d9] text-[#02120a] font-bold text-[10px]">
+                            <Link href={rebookHref} className="px-2 py-0.5 rounded bg-[#dbe5f3] text-[#2a0c18] font-bold text-[10px]">
                               Re-book
                             </Link>
                           )}

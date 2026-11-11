@@ -98,7 +98,7 @@ export default function ProviderGroomingPackages({
                 className="tap-scale px-3 py-1.5 rounded-full text-xs font-semibold"
                 style={{
                   background: selectedSize === s ? "var(--card)" : "transparent",
-                  color: selectedSize === s ? "var(--forest, #16281f)" : "var(--muted)",
+                  color: selectedSize === s ? "var(--forest, #3d1426)" : "var(--muted)",
                   boxShadow: selectedSize === s ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
                 }}
               >
@@ -134,7 +134,7 @@ export default function ProviderGroomingPackages({
                 className="w-full py-2.5 rounded-lg text-sm font-semibold tap-scale flex items-center justify-center gap-2"
                 style={{
                   background: isAdded ? "var(--cream)" : "var(--panel-dark)",
-                  color: isAdded ? "var(--forest, #16281f)" : "white",
+                  color: isAdded ? "var(--forest, #3d1426)" : "white",
                   opacity: price == null || !canAddToCart ? 0.5 : 1,
                   cursor: price == null || !canAddToCart ? "not-allowed" : "pointer",
                 }}

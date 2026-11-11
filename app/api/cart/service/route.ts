@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { parseBookingTime, isTooSoon } from "@/lib/istTime";
 import { getOrCreateUser } from "@/lib/auth";
 
 const serviceSchema = z.object({
   serviceType: z.enum(["WALKING", "SITTING", "GROOMING", "TRAINING"]),
   providerId: z.string(),
   petId: z.string(),
-  startTime: z.string(), // ISO datetime-local value
+  startTime: z.string(), // ISO or India-time wall clock (see lib/istTime)
   endTime: z.string(),
   address: z.string(),
   phone: z.string(),
@@ -56,6 +57,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
+  const startAt = parseBookingTime(data.startTime);
+  const endAt = parseBookingTime(data.endTime);
+  if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || endAt <= startAt) {
+    return NextResponse.json({ error: "Invalid time" }, { status: 400 });
+  }
+  if (isTooSoon(startAt)) {
+    return NextResponse.json({ error: "That time has passed or is too soon. Please pick a later slot." }, { status: 400 });
+  }
 
   const [provider, pet] = await Promise.all([
     prisma.provider.findUnique({ where: { id: data.providerId } }),
@@ -72,7 +81,7 @@ export async function POST(req: Request) {
     // Never trust a client-supplied price for a platform-fixed service —
     // derive it from the actual start/end duration, and reject anything
     // that doesn't match one of the real tiers.
-    const durationMin = Math.round((new Date(data.endTime).getTime() - new Date(data.startTime).getTime()) / 60000);
+    const durationMin = Math.round((endAt.getTime() - startAt.getTime()) / 60000);
     const walkPrice = WALK_PRICING_PAISE[durationMin];
     if (walkPrice === undefined) {
       return NextResponse.json({ error: "Invalid walk duration — must be 30, 45, or 60 minutes" }, { status: 400 });
@@ -81,9 +90,19 @@ export async function POST(req: Request) {
     const priorPaidWalk = await prisma.booking.findFirst({
       where: { ownerId: user.id, type: "WALKING", paidAt: { not: null } },
     });
-    priceAmount = priorPaidWalk ? walkPrice : Math.round(walkPrice * FIRST_WALK_DISCOUNT_RATE);
+    // Rounded to whole rupees so the charge matches the price shown on screen.
+    priceAmount = priorPaidWalk ? walkPrice : Math.round((walkPrice * FIRST_WALK_DISCOUNT_RATE) / 100) * 100;
+  } else if (data.serviceType === "GROOMING" && !data.groomingPackageId) {
+    // Groomer without packages: book their standard groom at the base rate
+    // they set on their profile.
+    if (!provider.pricePerGroom || provider.pricePerGroom <= 0) {
+      return NextResponse.json({ error: "This groomer hasn't set a price yet." }, { status: 400 });
+    }
+    priceAmount = provider.pricePerGroom;
+    groomingPackageName = "Standard groom";
+    groomingSize = pet.size;
   } else if (data.serviceType === "GROOMING") {
-    if (!data.groomingPackageId || !data.groomingSize) {
+    if (!data.groomingSize) {
       return NextResponse.json({ error: "Choose a package and size." }, { status: 400 });
     }
     const pkg = await prisma.groomingPackage.findUnique({ where: { id: data.groomingPackageId } });
@@ -100,6 +119,9 @@ export async function POST(req: Request) {
     groomingSize = data.groomingSize;
   } else {
     priceAmount = priceForFlatService(data.serviceType, provider);
+    if (priceAmount <= 0) {
+      return NextResponse.json({ error: "This pro hasn't set a price yet." }, { status: 400 });
+    }
   }
 
   const item = await prisma.cartItem.create({
@@ -109,8 +131,8 @@ export async function POST(req: Request) {
       serviceType: data.serviceType,
       providerId: provider.id,
       petId: pet.id,
-      startTime: new Date(data.startTime),
-      endTime: new Date(data.endTime),
+      startTime: startAt,
+      endTime: endAt,
       address: data.address,
       phone: data.phone,
       priceAmount,

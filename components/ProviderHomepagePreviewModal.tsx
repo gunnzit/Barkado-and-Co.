@@ -34,7 +34,7 @@ export default function ProviderHomepagePreviewModal({
           <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--terracotta)" }}>Offers</p>
           <p className="text-xl font-bold mb-4">On us, and 10% off.</p>
 
-          <div className="rounded-2xl p-6 mb-4" style={{ background: "linear-gradient(135deg, #e8a94a 0%, #c97a56 100%)" }}>
+          <div className="rounded-2xl p-6 mb-4" style={{ background: "linear-gradient(135deg, #f9dd8a 0%, #6e1e3b 100%)" }}>
             <p className="font-bold text-lg text-white">Your dog's first walk is free 🎉</p>
           </div>
 
