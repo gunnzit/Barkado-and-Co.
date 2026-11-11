@@ -252,7 +252,7 @@ export default function WalkBookingFlow({
   const activePeriod = PERIODS.find((p) => p.key === period)!;
 
   return (
-    <div className="pb-44">
+    <div className="pb-[calc(env(safe-area-inset-bottom)+190px)] lg:pb-28">
       {/* ===== Hero ===== */}
       <section className="px-4 pt-1 pb-4">
         <div className="relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
@@ -510,8 +510,12 @@ export default function WalkBookingFlow({
         </p>
       </div>
 
-      {/* ===== Sticky book bar (sits above the bottom menu) ===== */}
-      <div className="fixed left-0 right-0 z-[45] px-3" style={{ bottom: "calc(env(safe-area-inset-bottom) + 92px)" }}>
+      {/* ===== Sticky book bar =====
+          Sits 12px above the floating bottom menu (BottomNav: bottom 32px +
+          safe area, 64px tall). On desktop the menu is hidden, so the bar
+          drops to the bottom edge. */}
+      <style>{BAR_CSS}</style>
+      <div className="walk-book-bar fixed left-0 right-0 z-[45] px-3">
         <div className="max-w-lg mx-auto">
           {error && <p className="mb-2 text-xs font-semibold text-center px-3 py-2 rounded-xl" style={{ background: "#fdf1d6", color: "#8a2a4d" }}>{error}</p>}
           <div className="flex items-center gap-3 pl-5 pr-2 py-2 rounded-full" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(61,20,38,0.45)" }}>
@@ -537,6 +541,12 @@ export default function WalkBookingFlow({
     </div>
   );
 }
+
+// Bottom menu is lg:hidden, so only lift the bar above it below the lg breakpoint.
+const BAR_CSS = `
+.walk-book-bar { bottom: calc(env(safe-area-inset-bottom) + 32px + 64px + 12px); }
+@media (min-width: 1024px) { .walk-book-bar { bottom: 24px; } }
+`;
 
 function Radio({ on }: { on: boolean }) {
   return (
