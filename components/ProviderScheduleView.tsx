@@ -227,7 +227,7 @@ export default function ProviderScheduleView({
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="relative shrink-0">
                         <img
-                          src={b.pet.photoUrl || `https://i.pravatar.cc/150?u=pet-${b.id}`}
+                          src={b.pet.photoUrl || "/images/brand/pet-placeholder.svg"}
                           alt={b.pet.name}
                           className="w-14 h-14 rounded-full object-cover"
                           style={{ border: "1px solid var(--border)" }}

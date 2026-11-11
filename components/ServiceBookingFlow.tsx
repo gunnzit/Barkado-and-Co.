@@ -644,7 +644,7 @@ export default function ServiceBookingFlow({
                 return (
                   <button key={p.id} onClick={() => setSelectedPetId(p.id)} className="tap-scale text-center">
                     <img
-                      src={p.photoUrl || `https://i.pravatar.cc/150?u=pet-${p.id}`}
+                      src={p.photoUrl || "/images/brand/pet-placeholder.svg"}
                       alt={p.name}
                       className="w-16 h-16 rounded-full object-cover mb-1.5"
                       style={{ border: `2px solid ${selected ? "var(--panel-dark)" : "var(--border)"}`, boxShadow: selected ? "0 0 0 3px var(--gold)" : undefined }}

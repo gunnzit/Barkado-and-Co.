@@ -146,7 +146,7 @@ function UpcomingScheduleRow({ booking }: { booking: ProviderBooking }) {
       </div>
       <div className="w-1 rounded-full shrink-0 self-stretch" style={{ background: CATEGORY_COLOR[booking.type], opacity: 0.5 }} />
       <img
-        src={booking.pet.photoUrl || `https://i.pravatar.cc/150?u=pet-${booking.id}`}
+        src={booking.pet.photoUrl || "/images/brand/pet-placeholder.svg"}
         alt={booking.pet.name}
         className="w-11 h-11 rounded-full object-cover shrink-0"
         style={{ border: "1px solid var(--border)" }}
