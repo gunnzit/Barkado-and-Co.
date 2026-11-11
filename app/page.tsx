@@ -20,7 +20,7 @@ export default async function Home() {
   const user = await getOrCreateUser().catch(() => null);
   const now = new Date();
 
-  const [verifiedProviders, groomingPackages, trainingPackages, productsWithPhotos, activeProductCount] = await Promise.all([
+  const [verifiedProviders, groomingPackages, trainingPackages, productsWithPhotos, activeProductCount, reviewRows] = await Promise.all([
     prisma.provider.findMany({
       where: { verified: true },
       select: {
@@ -44,7 +44,30 @@ export default async function Home() {
       select: { id: true, name: true, price: true, compareAtPrice: true, imageUrls: true },
     }),
     prisma.product.count({ where: { active: true } }),
+    // Real, written reviews only (4★ and up, with a comment of some substance).
+    prisma.review.findMany({
+      where: { rating: { gte: 4 }, comment: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        booking: { select: { type: true, pet: { select: { name: true } }, owner: { select: { name: true } } } },
+      },
+    }),
   ]);
+  const reviews = reviewRows
+    .filter((r) => (r.comment ?? "").trim().length >= 20)
+    .slice(0, 6)
+    .map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment!.trim(),
+      ownerFirstName: (r.booking.owner.name ?? "A pet parent").split(" ")[0],
+      petName: r.booking.pet.name,
+      service: r.booking.type,
+    }));
 
   const offers = (type: string) => verifiedProviders.filter((p) => p.servicesOffered.includes(type as never));
   const walkers = offers("WALKING");
@@ -155,6 +178,7 @@ export default async function Home() {
         counts={{ walkers: walkers.length, groomers: groomers.length, trainers: trainers.length, products: activeProductCount }}
         featuredPros={featuredPros}
         products={productsWithPhotos}
+        reviews={reviews}
       />
     </div>
   );
