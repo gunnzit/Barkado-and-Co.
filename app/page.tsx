@@ -162,7 +162,7 @@ export default async function Home() {
   const shopPicks = [...productsWithPhotos]
     .map((p) => ({ ...p, fits: !!petSize && p.suitableSizes.includes(petSize) }))
     .sort((a, b) => Number(b.fits) - Number(a.fits) || Number(b.imageUrls.length > 0) - Number(a.imageUrls.length > 0))
-    .slice(0, 4)
+    .slice(0, 6)
     .map(({ suitableSizes: _s, ...p }) => p);
 
   const passport = activePet

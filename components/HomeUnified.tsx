@@ -161,9 +161,53 @@ export default function HomeUnified({
       <main className="w-full pt-2 pb-2" style={{ background: IVORY }}>
         <div className="max-w-2xl mx-auto w-full">
 
+          {/* ===== Greeting + one-tap starts: everything fits on the first screen ===== */}
+          <section className="px-4 pt-2 pb-2">
+            <div className="enter-up flex items-end justify-between gap-3 mb-3">
+              <div className="min-w-0">
+                <p className="text-[13px]" style={{ color: MUTED }}>{firstName ? `Hi ${firstName},` : "Hello,"}</p>
+                <h1 className="font-bold text-[24px] leading-tight tracking-tight truncate" style={{ ...H, color: PLUM }}>
+                  {petName ? `What does ${petName} need today?` : "What does your dog need today?"}
+                </h1>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { href: "/walk-booking", label: "Walk", img: "/images/tab-walking.jpg", price: rupees(prices.walkFirstPaise ?? prices.walkFromPaise), gated: true },
+                { href: "/grooming", label: "Groom", img: "/images/brand/golden-bandana.jpg", price: prices.groomFromPaise ? rupees(prices.groomFromPaise) : null, gated: true },
+                { href: "/training", label: "Train", img: "/images/hero-dog-german-shepherd.jpg", price: prices.trainFromPaise ? rupees(prices.trainFromPaise) : null, gated: true },
+                { href: "/accessories", label: "Shop", img: "/images/brand/collar-plum.jpg", price: counts.products > 0 ? `${counts.products} items` : null, gated: false },
+              ].map((t, i) => (
+                <Link
+                  key={t.href}
+                  href={t.href}
+                  onClick={t.gated ? gate : undefined}
+                  className="enter-up hover-lift tap-scale flex flex-col items-center rounded-[1.25rem] pt-2 pb-2.5 px-1"
+                  style={{ ["--d" as string]: `${40 + i * 40}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}
+                >
+                  <span className="w-14 h-14 rounded-full overflow-hidden" style={{ boxShadow: `0 0 0 2px ${t.label === "Shop" ? PLUM : YELLOW}` }}>
+                    <img src={t.img} alt="" className="w-full h-full object-cover" />
+                  </span>
+                  <span className="mt-1.5 font-bold text-[13px] leading-tight" style={{ ...H, color: PLUM }}>{t.label}</span>
+                  <span className="text-[10px] leading-tight" style={{ color: MUTED }}>{t.price ? (t.label === "Shop" ? t.price : `from ${t.price}`) : " "}</span>
+                </Link>
+              ))}
+            </div>
+            {prices.walkFirstPaise && !isReturning && (
+              <Link href="/walk-booking" onClick={gate} className="enter-up tap-scale mt-2.5 flex items-center justify-between gap-2 rounded-full pl-4 pr-1.5 py-1.5" style={{ ["--d" as string]: "200ms", background: YELLOW }}>
+                <span className="text-xs font-bold truncate" style={{ color: INK }}>
+                  First walk <span style={{ color: PLUM }}>{rupees(prices.walkFirstPaise)}</span> <span className="line-through opacity-60">{rupees(prices.walkFromPaise)}</span> · 10% off
+                </span>
+                <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold" style={{ background: PLUM, color: "white", ...H }}>
+                  Book <ArrowRight size={12} />
+                </span>
+              </Link>
+            )}
+          </section>
+
           {/* ===== Returning customer: what's next for their dog ===== */}
           {isSignedIn && (upcoming || lastCompleted) && (
-            <section className="enter-up px-4 pt-2 pb-1 space-y-2.5">
+            <section className="enter-up px-4 pt-1 pb-1 space-y-2.5">
               {upcoming && (
                 <Link href="/owner/bookings" className="flex items-center gap-3 p-4 rounded-[1.75rem] tap-scale" style={{ background: "#ffffff", border: `1.5px solid ${PLUM}`, boxShadow: CARD_SHADOW }}>
                   <span className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}>
@@ -202,155 +246,87 @@ export default function HomeUnified({
             </section>
           )}
 
-          {/* ===== Hero: one job — book a walk ===== */}
-          {!isReturning && (
-            <section className="px-4 pt-2 pb-4">
-              <div className="enter-up relative overflow-hidden rounded-[2rem]" style={{ background: PLUM, boxShadow: "0 12px 28px -6px rgba(110,30,59,0.22)" }}>
-                <PawPrint size={150} className="absolute -top-6 -right-6 pointer-events-none" style={{ color: "rgba(255,255,255,0.07)" }} aria-hidden="true" />
-                <div className="relative z-10 flex items-end justify-between gap-2 pl-5 pr-3 pt-5 pb-9">
-                  <div className="flex-1 min-w-0">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: YELLOW, color: INK }}>
-                      <PawPrint size={11} /> Chandigarh
-                    </span>
-                    <h1 className="font-script mt-2 text-[30px] leading-[1.05] text-white">
-                      {firstName && petName ? `A walk for ${petName}?` : "A Hug in every Paw"}
-                    </h1>
-                    <p className="mt-2 text-sm leading-snug" style={{ color: "rgba(251,240,217,0.9)" }}>
-                      Dog walks from{" "}
-                      <span className="font-bold" style={{ color: YELLOW }}>{rupees(prices.walkFirstPaise ?? prices.walkFromPaise)}</span>
-                      {prices.walkFirstPaise && <span className="line-through ml-1 opacity-70">{rupees(prices.walkFromPaise)}</span>}
-                    </p>
-                    {prices.walkFirstPaise && (
-                      <p className="text-xs" style={{ color: "rgba(251,240,217,0.75)" }}>10% off your first walk</p>
-                    )}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Link href="/walk-booking" onClick={gate} className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold shadow-md tap-scale" style={{ background: YELLOW, color: INK, ...H }}>
-                        Book a walk <ArrowRight size={15} />
-                      </Link>
-                      <Link href="/accessories" className="inline-flex items-center gap-1.5 px-4 py-3 rounded-full text-sm font-bold tap-scale" style={{ background: "rgba(255,255,255,0.12)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.3)", ...H }}>
-                        <ShoppingBag size={14} /> Shop
-                      </Link>
-                    </div>
-                  </div>
-                  <img src="/images/brand/hero-golden.jpg" alt="Happy golden retriever with its tongue out" className="enter-pop w-32 h-44 sm:w-44 sm:h-56 object-cover rounded-2xl shrink-0" style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.25)", ["--d" as string]: "80ms" }} />
-                </div>
-                <WaveEdge />
-              </div>
-            </section>
-          )}
-
-          {/* ===== PawPassport: what only Barkado has ===== */}
-          <section className="px-4 pt-1 pb-3">
+          {/* ===== PawPassport: one slim row, what only Barkado has ===== */}
+          <section className="px-4 py-2">
             {activePet && passport ? (
-              <div className="enter-up relative overflow-hidden rounded-[2rem] p-4 pb-6" style={{ ["--d" as string]: "60ms", background: PLUM, boxShadow: "0 14px 30px -12px rgba(110,30,59,0.5)" }}>
-                <div className="relative flex items-center gap-3.5">
-                  <Link href={`/owner/pets/${activePet.id}`} className="shrink-0 tap-scale" aria-label={`Open ${activePet.name}'s PawPassport`}>
-                    <span className="block w-16 h-16 rounded-full p-[3px]" style={{ background: YELLOW }}>
-                      {activePet.photoUrl ? (
-                        <img src={activePet.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        <span className="w-full h-full rounded-full flex items-center justify-center" style={{ background: "#5a1830" }}><PawPrint size={22} color={YELLOW} /></span>
-                      )}
+              <div className="enter-up relative overflow-hidden flex items-center gap-3 rounded-[1.5rem] p-3 pr-2" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
+                <Link href={`/owner/pets/${activePet.id}`} className="flex items-center gap-3 min-w-0 flex-1 tap-scale" aria-label={`Open ${activePet.name}'s PawPassport`}>
+                  <span className="block w-12 h-12 rounded-full p-[2px] shrink-0" style={{ background: YELLOW }}>
+                    {activePet.photoUrl ? (
+                      <img src={activePet.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full rounded-full flex items-center justify-center" style={{ background: "#5a1830" }}><PawPrint size={18} color={YELLOW} /></span>
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: YELLOW }}>PawPassport</span>
+                    <span className="block font-bold text-[15px] leading-tight truncate" style={{ ...H, color: "#fffaf0" }}>{activePet.name}</span>
+                    <span className="block text-[11px] truncate" style={{ color: "rgba(251,240,217,0.8)" }}>
+                      {nextVaccine
+                        ? `${nextVaccine.name} ${new Date(nextVaccine.dueDate) < new Date() ? "is overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}`
+                        : passport.pct < 100
+                          ? `${passport.pct}% done · ${passport.next ? passport.next.toLowerCase() : ""}`
+                          : "Complete"}
                     </span>
-                  </Link>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: YELLOW }}>PawPassport · {passport.number}</p>
-                    <p className="font-bold text-[18px] leading-tight truncate mt-0.5" style={{ ...H, color: "#fffaf0" }}>{activePet.name}&rsquo;s passport</p>
-                    {passport.pct < 100 ? (
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <span className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }} aria-hidden="true">
-                          <span className="block h-full rounded-full origin-left bar-in" style={{ background: YELLOW, transform: `scaleX(${passport.pct / 100})` }} />
-                        </span>
-                        <span className="text-[11px] font-bold shrink-0" style={{ color: YELLOW }}>{passport.pct}%</span>
-                      </div>
-                    ) : (
-                      <p className="text-xs mt-1 font-semibold" style={{ color: YELLOW }}>Complete. Good human!</p>
-                    )}
-                  </div>
-                </div>
-                {(nextVaccine || (passport.pct < 100 && passport.next)) && (
-                  <p className="relative mt-3 text-xs flex items-center gap-1.5" style={{ color: "rgba(251,240,217,0.9)" }}>
-                    {nextVaccine ? (
-                      <>
-                        <Syringe size={12} color={YELLOW} />
-                        {nextVaccine.name} {new Date(nextVaccine.dueDate) < new Date() ? "is overdue" : `due ${new Date(nextVaccine.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={12} color={YELLOW} /> Next: {passport.next!.toLowerCase()}
-                      </>
-                    )}
-                  </p>
+                  </span>
+                </Link>
+                <Link href={`/owner/pets/${activePet.id}?share=1`} aria-label={`Share ${activePet.name}'s PawPassport`} className="tap-scale shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: YELLOW }}>
+                  <Share2 size={16} color={PLUM} />
+                </Link>
+                {passport.pct < 100 && (
+                  <span className="absolute left-0 bottom-0 h-[3px] origin-left bar-in" style={{ width: "100%", background: YELLOW, transform: `scaleX(${passport.pct / 100})` }} aria-hidden="true" />
                 )}
-                <div className="relative grid grid-cols-2 gap-2 mt-3.5">
-                  <Link href={`/owner/pets/${activePet.id}`} className="tap-scale h-11 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
-                    Open passport
-                  </Link>
-                  <Link href={`/owner/pets/${activePet.id}?share=1`} className="tap-scale h-11 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-bold" style={{ ...H, background: "rgba(255,255,255,0.1)", color: "#fffaf0", border: "1px solid rgba(251,240,217,0.25)" }}>
-                    <Share2 size={14} /> {passport.shared ? "Shared" : "Share"}
-                  </Link>
-                </div>
-                <WaveEdge />
               </div>
             ) : (
-              <Link href={isSignedIn ? "/owner/pets/new" : "/owner/pets"} onClick={gate} className="enter-up hover-lift tap-scale block relative overflow-hidden rounded-[2rem] p-5 pb-7" style={{ ["--d" as string]: "60ms", background: PLUM, boxShadow: "0 14px 30px -12px rgba(110,30,59,0.5)" }}>
-                <span className="absolute -right-5 -bottom-6 w-32 h-32 opacity-[0.08] pointer-events-none" aria-hidden="true"><MonogramMark className="w-full h-full" color="#fbf0d9" title="" /></span>
-                <p className="relative text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: YELLOW }}>Only at Barkado &amp; Co.</p>
-                <p className="relative font-bold text-[22px] leading-tight mt-1" style={{ ...H, color: "#fffaf0" }}>Every good dog deserves a PawPassport</p>
-                <ul className="relative mt-3 space-y-1.5 text-[13px]" style={{ color: "rgba(251,240,217,0.92)" }}>
-                  <li className="flex items-center gap-2"><Syringe size={14} color={YELLOW} /> Vaccines, with reminders before they&rsquo;re due</li>
-                  <li className="flex items-center gap-2"><QrCode size={14} color={YELLOW} /> Share with your vet or boarder by QR code</li>
-                  <li className="flex items-center gap-2"><Star size={14} color={YELLOW} /> Stamps for every walk, groom and lesson</li>
-                </ul>
-                <span className="relative mt-4 inline-flex items-center gap-1.5 px-5 py-3 rounded-full text-sm font-bold" style={{ ...H, background: YELLOW, color: INK }}>
-                  Create a free passport <ArrowRight size={15} />
+              <Link href={isSignedIn ? "/owner/pets/new" : "/owner/pets"} onClick={gate} className="enter-up tap-scale flex items-center gap-3 rounded-[1.5rem] p-3 pr-3.5" style={{ ["--d" as string]: "160ms", background: PLUM, boxShadow: "0 10px 24px -12px rgba(110,30,59,0.55)" }}>
+                <span className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: YELLOW }}><QrCode size={20} color={PLUM} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: YELLOW }}>Free · only at Barkado</span>
+                  <span className="block font-bold text-[15px] leading-tight" style={{ ...H, color: "#fffaf0" }}>Get your dog a PawPassport</span>
+                  <span className="block text-[11px] truncate" style={{ color: "rgba(251,240,217,0.8)" }}>Vaccine reminders, QR share, visit stamps</span>
                 </span>
-                <WaveEdge />
+                <ChevronRight size={18} color={YELLOW} className="shrink-0" />
               </Link>
             )}
           </section>
 
-          {/* ===== Shop: the shelf, sized for the dog where we know it ===== */}
+          {/* ===== Shop: a swipeable row, sized for the dog where we know it ===== */}
           {products.length > 0 && (
-            <section className="px-4 py-3">
-              <SectionTitle
-                title={petName && products.some((p) => p.fits) ? `Shop for ${petName}` : "From the Shop"}
-                sub="Collars, beds, treats and toys, delivered"
-                href="/accessories"
-                cta={counts.products > products.length ? `Shop all ${counts.products}` : "Shop all"}
-              />
-              <div className="grid grid-cols-2 gap-3">
+            <section className="pt-3 pb-2">
+              <div className="px-4">
+                <SectionTitle
+                  title={petName && products.some((p) => p.fits) ? `Shop for ${petName}` : "From the Shop"}
+                  sub="Free delivery over ₹500"
+                  href="/accessories"
+                  cta={counts.products > products.length ? `See all ${counts.products}` : "See all"}
+                />
+              </div>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 scroll-px-4 pb-2 snap-x">
                 {products.map((p, i) => (
-                  <Link key={p.id} href={`/accessories/${p.id}`} className="enter-up hover-lift rounded-[1.5rem] p-2 tap-scale" style={{ ["--d" as string]: `${100 + i * 50}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
-                    <div className="relative img-frame aspect-square !rounded-[1.1rem] flex items-center justify-center" style={{ background: "#fef3dc" }}>
+                  <Link key={p.id} href={`/accessories/${p.id}`} className="enter-up hover-lift tap-scale shrink-0 snap-start w-[138px] rounded-[1.25rem] p-2" style={{ ["--d" as string]: `${120 + i * 40}ms`, background: "#ffffff", border: "1px solid rgba(61,20,38,0.07)", boxShadow: CARD_SHADOW }}>
+                    <div className="relative img-frame aspect-square !rounded-[0.9rem] flex items-center justify-center" style={{ background: "#fef3dc" }}>
                       {p.imageUrls[0] ? (
                         <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
                       ) : (
-                        <MonogramMark className="w-12 h-12 opacity-30" color={PLUM} title="" />
+                        <MonogramMark className="w-10 h-10 opacity-30" color={PLUM} title="" />
                       )}
                       {p.fits && petName && (
-                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: YELLOW, color: INK }}>
-                          <PawPrint size={10} /> Fits {petName}
+                        <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: YELLOW, color: INK }}>
+                          <PawPrint size={9} /> Fits {petName}
                         </span>
                       )}
                     </div>
-                    <div className="px-1 pt-2 pb-1">
-                      <p className="font-bold text-sm line-clamp-1" style={{ ...H, color: PLUM }}>{p.name}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-sm" style={{ color: INK }}>
-                          <span className="font-bold" style={H}>{rupees(p.price)}</span>
-                          {p.compareAtPrice && p.compareAtPrice > p.price && <span className="ml-1 text-[11px] line-through" style={{ color: MUTED }}>{rupees(p.compareAtPrice)}</span>}
-                        </span>
-                        <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={14} /></span>
-                      </div>
+                    <p className="font-bold text-[13px] line-clamp-1 mt-2 px-0.5" style={{ ...H, color: PLUM }}>{p.name}</p>
+                    <div className="flex items-center justify-between mt-0.5 px-0.5">
+                      <span className="text-[13px]" style={{ color: INK }}>
+                        <span className="font-bold" style={H}>{rupees(p.price)}</span>
+                        {p.compareAtPrice && p.compareAtPrice > p.price && <span className="ml-1 text-[10px] line-through" style={{ color: MUTED }}>{rupees(p.compareAtPrice)}</span>}
+                      </span>
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: PLUM, color: "white" }} aria-hidden="true"><Plus size={12} /></span>
                     </div>
                   </Link>
                 ))}
               </div>
-              <Link href="/accessories" className="hover-lift tap-scale mt-3 flex items-center justify-between gap-3 rounded-[1.5rem] px-4 py-3" style={{ background: YELLOW }}>
-                <span className="text-sm font-bold" style={{ ...H, color: INK }}>Free delivery on orders over ₹500</span>
-                <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: PLUM }}>Shop <ArrowRight size={13} /></span>
-              </Link>
             </section>
           )}
 
