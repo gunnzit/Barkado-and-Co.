@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { PawPrint } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PawPrint, Search, X } from "lucide-react";
 import { AccessoryCard, type Accessory } from "@/components/AccessoryCard";
 import FreeDeliveryBar from "@/components/FreeDeliveryBar";
 
@@ -14,16 +14,29 @@ const fits = (p: Accessory, size: string | null) => !size || !p.suitableSizes ||
 export default function AccessoriesListClient({
   products,
   query,
+  onQueryChange,
   petName = null,
   petSize = null,
 }: {
   products: Accessory[];
   query: string;
+  onQueryChange: (q: string) => void;
   petName?: string | null;
   petSize?: string | null;
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Shadow on the pinned bar only once it's actually stuck to the top.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Only categories with two or more products get their own chip; single
   // items stay reachable under "All" instead of cluttering the row.
@@ -72,12 +85,37 @@ export default function AccessoriesListClient({
 
   return (
     <div>
-      {/* Chips stay pinned while browsing */}
+      {/* Search + chips stay pinned together while browsing */}
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
       <div
         id="shop-products"
-        className="sticky top-0 z-30 scroll-mt-2 py-2.5 mb-2"
-        style={{ background: "rgba(255,250,240,0.9)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}
+        className="sticky top-0 z-30 scroll-mt-2 pt-2 pb-2.5 mb-2"
+        style={{
+          background: "rgba(255,250,240,0.92)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          boxShadow: stuck ? "0 10px 24px -14px rgba(61,20,38,0.35)" : "0 0 0 0 rgba(61,20,38,0)",
+          transition: "box-shadow 200ms ease",
+        }}
       >
+        <div className="px-4 mb-2">
+          <label className="flex items-center gap-2 h-11 px-3.5 rounded-full" style={{ background: "#ffffff", border: "1px solid rgba(61,20,38,0.1)" }}>
+            <Search size={16} color="#735c68" className="shrink-0" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => { onQueryChange(e.target.value); setVisibleCount(PAGE_SIZE); }}
+              placeholder="Search collars, beds, treats…"
+              aria-label="Search the shop"
+              className="flex-1 bg-transparent text-sm outline-none min-w-0 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {query && (
+              <button type="button" onClick={() => onQueryChange("")} aria-label="Clear search" className="enter-pop w-7 h-7 -mr-1.5 rounded-full flex items-center justify-center tap-scale" style={{ background: "#fef3dc" }}>
+                <X size={14} color="#6e1e3b" />
+              </button>
+            )}
+          </label>
+        </div>
         <div className="px-4 flex gap-2 overflow-x-auto no-scrollbar">
           {petName && petSize && fitCount > 0 && chip(FITS, <><PawPrint size={13} /> Fits {petName}</>)}
           {chip(null, `All (${products.length})`)}
@@ -93,8 +131,8 @@ export default function AccessoriesListClient({
         {filtered.length === 0 ? (
           <p className="enter-fade text-sm py-10 text-center" style={{ color: "var(--muted)" }}>No products match your search.</p>
         ) : (
-          // Re-keyed on every filter change so the new set rises in, one card after another.
-          <div key={`${active ?? "all"}|${query}`} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          // Re-keyed when the chip changes (not on every keystroke) so the new set rises in, one card after another.
+          <div key={active ?? "all"} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {visible.map((item, i) => (
               <div key={item.id} className="enter-up flex" style={{ ["--d" as string]: `${Math.min(i % PAGE_SIZE, 7) * 40}ms` }}>
                 <div className="flex-1 min-w-0 flex flex-col [&>*]:flex-1">

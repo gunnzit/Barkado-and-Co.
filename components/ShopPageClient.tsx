@@ -41,7 +41,7 @@ export default function ShopPageClient({
 
   return (
     <>
-      <ShopHeader userAddress={userAddress} query={query} onQueryChange={setQuery} />
+      <ShopHeader userAddress={userAddress} />
 
       {/* Hero from the Stitch Shop design (design/stitch/03-shop) */}
       <section className="px-4 pt-1 pb-5">
@@ -69,7 +69,7 @@ export default function ShopPageClient({
 
       {partnerBrandName && <PartnerBrandBanner partnerBrandName={partnerBrandName} />}
       {/* Products first: shoppers came to browse. Deals, bundles and add-ons follow. */}
-      <AccessoriesListClient products={products} query={query} petName={petName} petSize={petSize} />
+      <AccessoriesListClient products={products} query={query} onQueryChange={setQuery} petName={petName} petSize={petSize} />
       <div className="mt-8">
         <ShopHighlights
           featuredProduct={featuredProduct}
