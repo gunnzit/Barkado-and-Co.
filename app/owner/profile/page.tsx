@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { getPawPointsBalance, redemptionValuePaise } from "@/lib/pawPoints";
-import HomeMobileHeader from "@/components/HomeMobileHeader";
+import TaskHeader from "@/components/TaskHeader";
 import ProfileView, { type ProfilePet } from "@/components/ProfileView";
 
 const DUE_SOON_DAYS = 30;
@@ -14,7 +14,7 @@ export default async function OwnerProfile() {
   if (!user) redirect("/sign-in");
   const now = new Date();
 
-  const [pets, bookingCount, activeBookingCount, wishlist, favorites, addressCount, pawPoints, cartCount, upcoming] = await Promise.all([
+  const [pets, bookingCount, activeBookingCount, wishlist, favorites, addressCount, pawPoints, upcoming] = await Promise.all([
     prisma.pet.findMany({
       where: { ownerId: user.id },
       orderBy: { createdAt: "asc" },
@@ -29,7 +29,6 @@ export default async function OwnerProfile() {
     prisma.favorite.count({ where: { userId: user.id, providerId: { not: null } } }),
     prisma.address.count({ where: { userId: user.id } }),
     getPawPointsBalance(user.id),
-    prisma.cartItem.count({ where: { userId: user.id } }),
     prisma.booking.findFirst({
       where: { ownerId: user.id, status: { in: ["REQUESTED", "ACCEPTED", "IN_PROGRESS"] }, endTime: { gte: now } },
       orderBy: { startTime: "asc" },
@@ -58,8 +57,9 @@ export default async function OwnerProfile() {
 
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
-      <HomeMobileHeader userAddress={user.address} userPhone={user.phone} cartCount={cartCount} pawPointsBalance={pawPoints} />
-      <main className="max-w-lg mx-auto pt-4 pb-32 lg:pb-12">
+      <main className="max-w-lg mx-auto pb-12">
+        <TaskHeader title="Profile" showCart={false} />
+        <div className="h-2" />
         <Suspense>
           <ProfileView
             data={{

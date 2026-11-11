@@ -11,7 +11,7 @@ import { useCart } from "@/components/CartProvider";
  * No logo, points or profile here — those belong on browse screens, not in
  * the middle of a booking.
  */
-export default function TaskHeader({ title, fallbackHref = "/" }: { title: string; fallbackHref?: string }) {
+export default function TaskHeader({ title, fallbackHref = "/", showCart = true }: { title: string; fallbackHref?: string; showCart?: boolean }) {
   const router = useRouter();
   const { totalCount } = useCart();
 
@@ -45,6 +45,7 @@ export default function TaskHeader({ title, fallbackHref = "/" }: { title: strin
           {title}
         </h1>
 
+        {showCart ? (
         <Link
           href="/cart"
           aria-label={totalCount > 0 ? `Cart, ${totalCount} item${totalCount === 1 ? "" : "s"}` : "Cart"}
@@ -58,6 +59,9 @@ export default function TaskHeader({ title, fallbackHref = "/" }: { title: strin
             </span>
           )}
         </Link>
+        ) : (
+          <span className="w-10 h-10" aria-hidden="true" />
+        )}
       </div>
     </header>
   );

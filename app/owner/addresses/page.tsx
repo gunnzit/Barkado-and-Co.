@@ -16,8 +16,8 @@ export default async function AddressesPage() {
 
   return (
     <div className="w-full" style={{ backgroundColor: "var(--cream)", minHeight: "100vh" }}>
-      <main className="max-w-lg mx-auto pb-32">
-        <TaskHeader title="Saved addresses" fallbackHref="/owner/profile" />
+      <main className="max-w-lg mx-auto pb-12">
+        <TaskHeader title="Saved addresses" fallbackHref="/owner/profile" showCart={false} />
         <div className="px-4 pt-2">
           <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
             The address marked <b>In use</b> is where walkers, groomers and trainers come, and where we deliver.

@@ -145,7 +145,7 @@ export default function BottomNav() {
   // search) or no navigation need (auth pages). This is a MOBILE-ONLY
   // pattern (see lg:hidden on the <nav> below) — desktop never uses it,
   // full stop, regardless of route.
-  const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up", "/accessories/"];
+  const HIDDEN_PREFIXES = ["/provider", "/admin", "/cart", "/search", "/sign-in", "/sign-up", "/accessories/", "/owner/profile", "/owner/addresses"];
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
