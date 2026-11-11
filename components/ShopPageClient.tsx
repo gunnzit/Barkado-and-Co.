@@ -25,6 +25,7 @@ export default function ShopPageClient({
   bundles,
   impulseProducts,
   partnerBrandName,
+  petSize = null,
 }: {
   userAddress: string | null;
   products: Accessory[];
@@ -34,6 +35,7 @@ export default function ShopPageClient({
   bundles: Bundle[];
   impulseProducts: Product[];
   partnerBrandName?: string | null;
+  petSize?: string | null;
 }) {
   const [query, setQuery] = useState("");
 
@@ -66,14 +68,17 @@ export default function ShopPageClient({
       </section>
 
       {partnerBrandName && <PartnerBrandBanner partnerBrandName={partnerBrandName} />}
-      <ShopHighlights
-        featuredProduct={featuredProduct}
-        tailoredProducts={tailoredProducts}
-        petName={petName}
-        bundles={bundles}
-        impulseProducts={impulseProducts}
-      />
-      <AccessoriesListClient products={products} query={query} />
+      {/* Products first: shoppers came to browse. Deals, bundles and add-ons follow. */}
+      <AccessoriesListClient products={products} query={query} petName={petName} petSize={petSize} />
+      <div className="mt-8">
+        <ShopHighlights
+          featuredProduct={featuredProduct}
+          tailoredProducts={tailoredProducts}
+          petName={petName}
+          bundles={bundles}
+          impulseProducts={impulseProducts}
+        />
+      </div>
     </>
   );
 }

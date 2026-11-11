@@ -44,7 +44,8 @@ export default function ProductGallery({
       onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientX)}
     >
       {imageUrls.length > 0 ? (
-        <img src={imageUrls[index]} alt="" className="w-full h-full object-cover" />
+        // Re-keyed per photo so changing photos cross-fades instead of jumping.
+        <img key={index} data-product-photo src={imageUrls[index]} alt="" className="enter-fade w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">{fallbackIcon}</div>
       )}

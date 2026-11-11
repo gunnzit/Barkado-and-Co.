@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Search, SlidersHorizontal, ShoppingBag, User, MapPin, ChevronDown } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import LocationPickerModal from "@/components/LocationPickerModal";
+import { useCartBump } from "@/lib/cartMotion";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
 
@@ -22,6 +23,7 @@ export default function ShopHeader({
   onQueryChange: (q: string) => void;
 }) {
   const { items } = useCart();
+  const cartRef = useCartBump<HTMLAnchorElement>();
   const [pawPointsBalance, setPawPointsBalance] = useState(0);
   useEffect(() => {
     fetch("/api/owner/pawpoints")
@@ -81,16 +83,16 @@ export default function ShopHeader({
           />
           <SlidersHorizontal size={15} color="#6e1e3b" className="shrink-0" />
         </div>
-        <Link href="/cart" className="flex items-center gap-1.5 h-10 px-3 rounded-xl shrink-0" style={{ background: "#6e1e3b", color: "white" }}>
+        <Link ref={cartRef} href="/cart" data-cart-target aria-label="Cart" className="flex items-center gap-1.5 h-10 px-3 rounded-xl shrink-0" style={{ background: "#6e1e3b", color: "white" }}>
           <span className="relative">
             <ShoppingBag size={16} />
             {items.length > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ background: "#6e1e3b" }}>
-                {items.length}
+              <span className="absolute -top-2 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center overflow-hidden" style={{ background: "#f9dd8a", color: "#3d1426" }}>
+                <span key={items.length} className="num-roll">{items.length}</span>
               </span>
             )}
           </span>
-          <span className="text-xs font-bold" style={H}>₹{(cartTotal / 100).toFixed(0)}</span>
+          <span className="text-xs font-bold overflow-hidden" style={H}><span key={cartTotal} className="num-roll">₹{(cartTotal / 100).toFixed(0)}</span></span>
         </Link>
       </div>
 

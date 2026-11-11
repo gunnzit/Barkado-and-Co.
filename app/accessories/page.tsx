@@ -57,6 +57,7 @@ export default async function AccessoriesPage() {
     colorOptions: item.colorOptions,
     sizeOptions: item.sizeOptions,
     partnerBrand: item.partnerBrand ? { id: item.partnerBrand.id, name: item.partnerBrand.name } : null,
+    suitableSizes: item.suitableSizes as string[],
   }));
 
   let featuredProduct: (typeof serialized[number] & { percentOff: number }) | null = null;
@@ -114,6 +115,7 @@ export default async function AccessoriesPage() {
             bundles={bundles}
             impulseProducts={impulseProducts}
             partnerBrandName={activePartnerBrandName}
+            petSize={activePet?.size ?? null}
           />
         )}
       </main>

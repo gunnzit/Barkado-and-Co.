@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Truck, RefreshCw, ShieldCheck, Gift, Timer, Plus } from "lucide-react";
+import { Sparkles, Truck, ShieldCheck, Timer, Plus } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 
 const H = { fontFamily: "var(--font-heading)" } as const;
@@ -233,43 +233,20 @@ export default function ShopHighlights({
         </div>
       )}
 
-      {/* ===== VIP Cross-Perk — TODO: no dynamic coupon-generation system
-          exists (only static WELCOME10). Kept as a visual placeholder
-          per instruction. See NOT_BUILT.md. ===== */}
+      {/* Only promises the shop actually keeps (free delivery rule is in
+          lib/checkoutPricing; payments go through Razorpay). The "coming soon"
+          perks panel and exchanges tile were removed on 2026-11-11. */}
       <div className="px-4 mb-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] p-4 pb-6" style={{ background: "#6e1e3b", color: "white" }}>
-          <span className="brand-wave" aria-hidden="true" />
-          <div className="flex items-start gap-3">
-            <span className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#f9dd8a" }}>
-              <Gift size={20} color="#6e1e3b" />
-            </span>
-            <div className="flex-1 opacity-80" title="Placeholder — no dynamic coupon system exists yet">
-              <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1" style={{ background: "rgba(255,255,255,0.15)" }}>
-                Coming Soon
-              </div>
-              <h4 className="font-bold text-sm leading-snug" style={H}>Cross-service perks for gear purchases</h4>
-              <p className="text-xs mt-1" style={{ color: "#dbe5f3" }}>Automatic booking discounts aren't wired up yet.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 mb-6">
-        <div className="grid grid-cols-3 gap-2 py-3 px-2 rounded-[1.75rem] text-center" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
+        <div className="grid grid-cols-2 gap-2 py-3 px-2 rounded-[1.75rem] text-center" style={{ background: "#fef3dc", border: "1px solid rgba(61,20,38,0.06)" }}>
           <div className="flex flex-col items-center gap-1">
             <Truck size={18} color="#6e1e3b" />
-            <span className="font-bold text-[11px]" style={{ ...H, color: "#2a0c18" }}>Free Shipping</span>
-            <span className="text-[10px]" style={{ color: "#5e4752" }}>On orders ₹500+</span>
+            <span className="font-bold text-[11px]" style={{ ...H, color: "#2a0c18" }}>Free delivery</span>
+            <span className="text-[10px]" style={{ color: "#5e4752" }}>On orders over ₹500</span>
           </div>
-          <div className="flex flex-col items-center gap-1 opacity-60" title="Placeholder — no real return/exchange system exists yet">
-            <RefreshCw size={18} color="#6e1e3b" />
-            <span className="font-bold text-[11px]" style={{ ...H, color: "#2a0c18" }}>Exchanges</span>
-            <span className="text-[10px]" style={{ color: "#5e4752" }}>Coming soon</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1" style={{ borderLeft: "1px solid rgba(61,20,38,0.1)" }}>
             <ShieldCheck size={18} color="#6e1e3b" />
-            <span className="font-bold text-[11px]" style={{ ...H, color: "#2a0c18" }}>Pet-Safe</span>
-            <span className="text-[10px]" style={{ color: "#5e4752" }}>Sterilized &amp; checked</span>
+            <span className="font-bold text-[11px]" style={{ ...H, color: "#2a0c18" }}>Secure payment</span>
+            <span className="text-[10px]" style={{ color: "#5e4752" }}>Processed by Razorpay</span>
           </div>
         </div>
       </div>

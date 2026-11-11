@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
+import { useCartBump } from "@/lib/cartMotion";
 
 // Booking pages (walks, grooming, training) have their own sticky price + Book bar in the same spot.
 const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", "/sign-up", "/walk-booking", "/grooming", "/training"];
@@ -11,6 +12,7 @@ const HIDDEN_PREFIXES = ["/cart", "/admin", "/provider", "/search", "/sign-in", 
 export default function CartPill() {
   const { totalCount, items } = useCart();
   const pathname = usePathname();
+  const pillRef = useCartBump<HTMLAnchorElement>();
 
   if (totalCount === 0) return null;
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
@@ -22,7 +24,9 @@ export default function CartPill() {
   return (
     <div className="fixed left-0 right-0 flex justify-center px-6 z-40 cart-pill-in" style={{ bottom: "calc(112px + env(safe-area-inset-bottom))" }}>
       <Link
+        ref={pillRef}
         href="/cart"
+        data-cart-target
         className="tap-scale inline-flex items-center gap-2 rounded-full pl-3 pr-2.5 py-2"
         style={{
           background: "rgba(61, 20, 38, 0.62)",

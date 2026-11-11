@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Minus, Plus, Check } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
+import { flyToCart } from "@/lib/cartMotion";
 
 const COLOR_DOT: Record<string, string> = {
   brown: "#8b5a3c", tan: "#c9a876", black: "#2b2b2b", white: "#f5f5f0",
@@ -49,7 +50,10 @@ export default function ProductDetailActions({
       }),
     });
     setAdding(false);
-    if (res.ok) setJustAdded(true);
+    if (res.ok) {
+      setJustAdded(true);
+      flyToCart(document.querySelector<HTMLElement>("[data-product-photo]"));
+    }
     else {
       const body = await res.json().catch(() => ({}));
       setError(body.error || "Couldn't add to cart.");
@@ -119,7 +123,7 @@ export default function ProductDetailActions({
                 {justAdded ? (<><Check size={16} /> Added to Cart</>) : adding ? "Adding…" : "Add to cart"}
               </button>
             ) : qty === 0 ? (
-              <button onClick={() => setQuantity(productId, 1)} className="btn-primary w-full tap-scale">
+              <button onClick={() => { flyToCart(document.querySelector<HTMLElement>("[data-product-photo]")); setQuantity(productId, 1); }} className="btn-primary w-full tap-scale">
                 Add to cart
               </button>
             ) : (
